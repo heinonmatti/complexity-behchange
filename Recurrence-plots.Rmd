@@ -1,7 +1,7 @@
 ---
 title: "Recurrence plots"
 ---
-<div style="line-height: 1.7em;">
+<!-- <div style="line-height: 1.7em;"> -->
 
 Source code for this document is found [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/Recurrence-plots.Rmd).
 
@@ -910,4 +910,4 @@ devtools::session_info()
 pander::pander(sessionInfo())
 ```
 
-</div>
+<!-- </div> -->
