@@ -431,7 +431,7 @@ div.tocify {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">Visualising baseline characteristics</a>
+      <a class="navbar-brand" href="index.html">Complexity in behaviour change</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -475,58 +475,46 @@ div.tocify {
 </div>
 
 
-<p>Source code for this document is found <a href="https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/data/Recurrence-plots.Rmd">here</a>.</p>
+<div style="line-height: 1.7em;">
+<p>Source code for this document is found <a href="https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/Recurrence-plots.Rmd">here</a>.</p>
 <p>In this document, we provide supplementary information about recurrence measures and examples of them, as well as provide code for the figures in the manuscript.</p>
-<div id="recurrence-measures" class="section level1 tabset">
-<h1>Recurrence measures</h1>
-<div id="trend" class="section level2">
-<h2>Trend</h2>
+<h1 id="recurrence-measures" class="tabset">Recurrence measures</h1>
+<h2 id="trend">Trend</h2>
 <p>What it depicts: The stationarity of the system, i.e. whether the recurrent patterns emerge homogenously across the plot (indicating system stationarity), or if they fade to the lower right or and upper left corners (indicating the system changes in time, is non-stationarity). For example, a time series of any gradually but surely increasing or decreasing numbers would show a high trend value, whereas a series in which values fluctuate around more or less the same values, would exhibit a low trend value.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"></a>
 <a class="sourceLine" id="cb1-2" title="2">knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/trendlo.PNG&quot;</span>)</a></code></pre></div>
 <p><img src="figures/RQA_measures/trendlo.PNG" width="640" /></p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/trendhi.PNG&quot;</span>)</a></code></pre></div>
 <p><img src="figures/RQA_measures/trendhi.PNG" width="640" /></p>
-</div>
-<div id="determinism" class="section level2">
-<h2>Determinism</h2>
+<h2 id="determinism">Determinism</h2>
 <p>What it depicts: The proportion of all recurrent points which land on diagonal lines, meaning that there is a pattern to re-occurrence. For example, motivation for physical activity might be high (or low) on the same weekdays for several weeks in a row, indicating high determinism. Sleep-wake cycles would also show high determinism, whereas random numbers would show no discernable patterns and the lowest possible determinism values.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"></a>
 <a class="sourceLine" id="cb3-2" title="2">knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/determinismlo.PNG&quot;</span>)</a></code></pre></div>
 <p><img src="figures/RQA_measures/determinismlo.PNG" width="640" /></p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1">knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/determinismhi.PNG&quot;</span>)</a></code></pre></div>
 <p><img src="figures/RQA_measures/determinismhi.PNG" width="640" /></p>
-</div>
-<div id="trapping-time" class="section level2">
-<h2>Trapping time</h2>
+<h2 id="trapping-time">Trapping time</h2>
 <p>What it depicts: The average length of vertical line structures; quantifies the time series’ tendency to get “stuck” on particular values or states. Trapping time could indicate a lack of healthy variability <span class="citation">[@navarroHealthyVariabilityOrganizational2015]</span>, which in turn could be indicative of a system performing suboptimally or exhibiting maladaptive behaviour.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"></a>
 <a class="sourceLine" id="cb5-2" title="2">knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/trappingtimelo.PNG&quot;</span>)</a></code></pre></div>
 <p><img src="figures/RQA_measures/trappingtimelo.PNG" width="640" /></p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1">knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/trappingtimehi.PNG&quot;</span>)</a></code></pre></div>
 <p><img src="figures/RQA_measures/trappingtimehi.PNG" width="640" /></p>
-</div>
-<div id="entropy" class="section level2">
-<h2>Entropy</h2>
+<h2 id="entropy">Entropy</h2>
 <p>What it depicts: The complexity or unpredictability of pattern lengths (i.e. variability in the length of the lines that are parallel to the diagonal); the heart rate of a person playing in a soccer match would show high entropy, whereas their heart rate in a training session of regular timed sprints would show low entropy.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"></a>
 <a class="sourceLine" id="cb7-2" title="2">knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/entropylo.PNG&quot;</span>)</a></code></pre></div>
 <p><img src="figures/RQA_measures/entropylo.PNG" width="640" /></p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1">knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/entropyhi.PNG&quot;</span>)</a></code></pre></div>
 <p><img src="figures/RQA_measures/entropyhi.PNG" width="640" /></p>
-</div>
-<div id="average-diagonal-line-length" class="section level2">
-<h2>Average diagonal line length</h2>
+<h2 id="average-diagonal-line-length">Average diagonal line length</h2>
 <p>What it depicts: The average length of the diagonal line structures, that is, the average time the system repeats a behavioural sequence it has exhibited previously. This can be thought of e.g. as a person’s (or their motivational system’s) consistency in repeating habitual behaviour, such as walking many steps during weekdays and little during weekends; a weekend with many steps (or a weekday with few steps) would break this pattern and reduce the average diagonal line length. Hence: While entropy can be thought of as a type of variance of the diagonal lines lengths, average diagonal line length would represent their mean length. Average diagonal line length can also be interpreted as the mean prediction time.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" title="1"></a>
 <a class="sourceLine" id="cb9-2" title="2">knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/averagelinelengthlo.PNG&quot;</span>)</a></code></pre></div>
 <p><img src="figures/RQA_measures/averagelinelengthlo.PNG" width="640" /></p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1">knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/averagelinelengthhi.PNG&quot;</span>)</a></code></pre></div>
 <p><img src="figures/RQA_measures/averagelinelengthhi.PNG" width="640" /></p>
-</div>
-</div>
-<div id="section" class="section level1 unnumbered">
-<h1></h1>
+<h1 id="section" class="unnumbered"></h1>
 <p>Possible substantive research questions include:</p>
 <ul>
 <li>Is trapping time related to inflexible behaviour (e.g., inability to adapt to environmental demands), and are interventions that lessen it analogous to “loosening up” a person’s reaction repertoire?</li>
@@ -535,9 +523,7 @@ div.tocify {
 <li>How is determinism connected to facets of habit theory?</li>
 <li>Does average diagonal line length go down (conferring decreased predictability with past data) when an intervention is introduced, indicating a shift in the system’s dynamics?</li>
 </ul>
-</div>
-<div id="rqa-figure-in-manuscript" class="section level1">
-<h1>RQA figure in manuscript</h1>
+<h1 id="rqa-figure-in-manuscript">RQA figure in manuscript</h1>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1">emadata &lt;-<span class="st"> </span>readr<span class="op">::</span><span class="kw">read_rds</span>(<span class="st">&quot;./data/EMA_data_Moti13.RDS&quot;</span>)</a>
 <a class="sourceLine" id="cb11-2" title="2"></a>
 <a class="sourceLine" id="cb11-3" title="3">emadata_nested &lt;-<span class="st"> </span>emadata <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(User) <span class="op">%&gt;%</span><span class="st"> </span></a>
@@ -758,9 +744,7 @@ div.tocify {
 <a class="sourceLine" id="cb16-17" title="17"><span class="co">## 6 gtable[bi_rp_dim]</span></a>
 <a class="sourceLine" id="cb16-18" title="18"></a>
 <a class="sourceLine" id="cb16-19" title="19"><span class="kw">ggsave</span>(<span class="st">&quot;./figures/rqa_multiplot.png&quot;</span>, rqa_plot, <span class="dt">width =</span> <span class="fl">11.69</span>, <span class="dt">height =</span> <span class="fl">8.27</span>, <span class="dt">dpi =</span> <span class="dv">300</span>)</a></code></pre></div>
-</div>
-<div id="recurrence-network-demo" class="section level1">
-<h1>Recurrence network demo</h1>
+<h1 id="recurrence-network-demo">Recurrence network demo</h1>
 <p>Here’s the 6-dimensional motivation system’s recurrence plot, weighted by similarity.</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
 <a class="sourceLine" id="cb17-2" title="2"></a>
@@ -1067,8 +1051,7 @@ div.tocify {
 <a class="sourceLine" id="cb19-239" title="239">                                                               percentage_of_total, <span class="st">&quot;)&quot;</span>)))</a>
 <a class="sourceLine" id="cb19-240" title="240">                             }</a>
 <a class="sourceLine" id="cb19-241" title="241">                  ))</a></code></pre></div>
-<div id="spiral-graph-with-colored-nodes" class="section level3">
-<h3>Spiral graph with colored nodes</h3>
+<h3 id="spiral-graph-with-colored-nodes">Spiral graph with colored nodes</h3>
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" title="1">emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></a>
 <a class="sourceLine" id="cb20-2" title="2"><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">node_colors =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> all_nodes_with_strengths,</a>
 <a class="sourceLine" id="cb20-3" title="3">                                         <span class="dt">.f =</span> <span class="op">~</span>{tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(.x, <span class="dt">names_from =</span> name) <span class="op">%&gt;%</span></a>
@@ -1111,9 +1094,7 @@ div.tocify {
 <a class="sourceLine" id="cb21-7" title="7">       <span class="dt">height =</span> <span class="dv">7</span>)</a>
 <a class="sourceLine" id="cb21-8" title="8"></a>
 <a class="sourceLine" id="cb21-9" title="9"><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></a></code></pre></div>
-</div>
-<div id="attractor-plot" class="section level3">
-<h3>Attractor plot</h3>
+<h3 id="attractor-plot">Attractor plot</h3>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" title="1">emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></a>
 <a class="sourceLine" id="cb22-2" title="2"><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">observations =</span> purrr<span class="op">::</span><span class="kw">map_dbl</span>(<span class="dt">.x =</span> data_firstlast_divided_by_max,</a>
 <a class="sourceLine" id="cb22-3" title="3">                                              <span class="dt">.f =</span> <span class="op">~</span><span class="kw">nrow</span>(.)))</a>
@@ -1158,18 +1139,13 @@ div.tocify {
 <a class="sourceLine" id="cb22-42" title="42">emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>attractor_plots[[<span class="dv">1</span>]]</a></code></pre></div>
 <p><img src="Recurrence-plots_files/figure-html/attractor-plots-1.png" width="672" /></p>
 <div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" title="1"><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></a></code></pre></div>
-</div>
-</div>
-<div id="section-1" class="section level1 unnumbered">
-<h1></h1>
+<h1 id="section-1" class="unnumbered"></h1>
 <p>Research questions to be studied with multidimensional recurrence networks:</p>
 <ul>
 <li>How are the variables in the multivariate system connected to each other; what is the structure (i.e. the centrality indices) of the recurrence network, and do behaviour change outcomes depend on it?</li>
 <li>Do new attractors in the multidimensional recurrence network emerge, after an intervention has been implemented?</li>
 </ul>
-</div>
-<div id="session-information" class="section level1">
-<h1>Session information</h1>
+<h1 id="session-information">Session information</h1>
 <p>Description of the R environment can be found below.</p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" title="1">devtools<span class="op">::</span><span class="kw">session_info</span>()</a>
 <a class="sourceLine" id="cb24-2" title="2"><span class="co">## - Session info -------------</span></a>

@@ -1,6 +1,7 @@
 ---
 title: "Complexity index"
 ---
+<div style="line-height: 1.7em;">
 
 **Welcome!**
 
@@ -18,4 +19,4 @@ Additional learning materials:
 
 For issues, please contact matti.tj.heino@gmail.com. 
 
-
+</div>

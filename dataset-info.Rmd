@@ -1,6 +1,7 @@
 ---
 title: "Information about the dataset used for demonstrations"
 ---
+<div style="line-height: 1.7em;">
 
 * Dataset of 20 individuals with 9 self-report variables (and time of response) each [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/data/data_20p_9var_plus_time.tsv).
 * Dataset of one of these participants used in examples of the manuscript [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/data/EMA_data_Moti13.RDS).
@@ -20,3 +21,5 @@ After installing package readr, the dataset with 20 individuals can be read to R
 The dataset with one individual can be read to R with:
 
 `emadata <- readr::read_rds("./my_path_name/EMA_data_Moti13.RDS")`
+
+</div>

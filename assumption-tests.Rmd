@@ -1,8 +1,9 @@
 ---
 title: "Assumption tests"
 ---
+<div style="line-height: 1.7em;">
 
-Source code for this document is found [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/data/assumption-tests.Rmd).
+Source code for this document is found [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/assumption-tests.Rmd).
 
 ```{r setup, include=FALSE}
 
@@ -557,7 +558,7 @@ nonlinearTseries::nonlinearityTest(c(20, 25, 15, 45, 45, 46, 8, 46, 44, 40, 24, 
 cat(data_assumptions[[3]]$competence, sep = ", ")
 ```
 
-In the tables below, where exact p-values are not reported, we choose the threshold of p < `r alphaLevel` to reject the test. The rationale for this is that we consider what's presented as the "Overview table" of four tests to consist of a family of tests, hence 0.05 / 4 = 0.0125. We also present the tables using an alpha level of 0.05 / 12 = `r 0.05/12 %>% round(., 6)`. Ultimately, many different choices would be justified, and we encourage the reader to do their own analysis with the shared data. Obviously, not correcting for multiple testing and using 0.05 as the cutoff, would reject much more time series. **Note: the KPSS test is built in such a way that it does not produce p-values < 0.01, hence interpretation is not sensible for alpha levels below that.**
+In those tables below, where exact p-values are not reported, we choose the threshold of p < `r alphaLevel` to reject the test. The rationale for this is that we consider what's presented as the "Overview table" of four tests to consist of a family of tests, hence 0.05 / 4 = 0.0125. We also present the tables using an alpha level of 0.05 / 12 = `r 0.05/12 %>% round(., 6)`. Ultimately, many different choices could be justified, and we encourage the reader to do their own analysis with the shared data. Obviously, not correcting for multiple testing and using 0.05 as the cutoff, would reject much more time series. **Note: the KPSS test is built in such a way that it does not produce p-values < 0.01, hence interpretation is not sensible for alpha levels below that.**
 
 The four tests presented in the Overview table, show what we consider the most important factors in this context: 
 
@@ -822,7 +823,7 @@ DT::datatable(alphaLo_segment_proportions %>%
 
 # Rejections per variable {.tabset}
 
-Interpretation instructions: One time series is one variable in one person's data. The top-left number indicates the number of rejections of the test indicated by row name, in the variable indicated by column name. The total possible number of tests would be the number of collected time series of that variable, that is, the number of individuals in the dataset (20).
+Interpretation instructions: One time series is one variable in one person's data. The top-left number indicates the number of rejected time series, using the test indicated by row name, in the variable indicated by column name. The total possible number of tested time series would be the number of collected time series of that variable, that is, the number of individuals in the dataset (20).
 
 ## Overview table (alpha = `r alphaLevel`)
 
@@ -884,7 +885,7 @@ DT::datatable(alphaLo_tests_number_of_series,
 
 # Rejections per person {.tabset}
 
-Interpretation instructions: One time series is one variable in one person's data. The top left number indicates how many time series for the person indicated by the column heading, were rejected by the test indicated by the row heading. The maximum possible number of rejections is the number of variables collected by the person, that is, nine.
+Interpretation instructions: One time series is one variable in one person's data. The top left number indicates how many time series---for the person indicated by the column heading---were rejected by the test indicated by the row heading. The maximum possible number of rejections is the number of variables collected by the person, that is, nine.
 
 ## Overview table (alpha = `r alphaLevel`)
 
@@ -952,7 +953,7 @@ test_results <- DT::datatable(test_nested_oneperson$data[[1]] %>%
               for tests of assumptions of data-generating processes") %>%
     DT::formatRound(columns = colnames(test_results), digits=3)
 
-cat('\n\n###', i, '\n\n  ')
+cat('\n\n##', i, '\n\n  ')
 
 cat(knitr::knit_print(test_results))
 
@@ -968,3 +969,5 @@ devtools::session_info()
 
 pander::pander(sessionInfo())
 ```
+
+</div>
