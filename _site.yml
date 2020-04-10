@@ -14,7 +14,7 @@ output:
     lib_dir: site_libs
 #    self_contained: FALSE
 navbar:
-  title: Visualising baseline characteristics
+  title: Complexity in behaviour change
   left:
   - text: About
     href: index.html
