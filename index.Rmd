@@ -1,0 +1,21 @@
+---
+title: "Complexity index"
+---
+
+**Welcome!**
+
+This site is a companion web page to a manuscript about studying behaviour change mechanisms in complex systems. See top bar for navigation.
+
+* GitHub repository for the files can be found [here](https://github.com/heinonmatti/complexity-behchange).  
+* The manuscript can be found [here]() INSERT PSYARXIV LINK.
+* Manuscript source code can be found [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/_complexity-manuscript.Rmd).
+
+Additional learning materials:
+
+* A list of video lectures explaining the relevant techniques and concepts can be found [here](https://mattiheino.com/complexity-channel).
+* A more generic course on dynamic systems and chaos can be found on [Complexity Explorer](https://www.complexityexplorer.org/courses), with videos [here](https://www.youtube.com/playlist?list=PLF0b3ThojznQwpDEClMZmHssMsuPnQxZT).
+* An excellent introductory course to fractals and scaling can be found [here](https://www.complexityexplorer.org/courses/102-fractals-and-scaling).
+
+For issues, please contact matti.tj.heino@gmail.com. 
+
+

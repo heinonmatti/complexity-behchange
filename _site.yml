@@ -1,0 +1,28 @@
+name: Complex systems in behaviour change research
+author: Matti Heino
+output_dir: docs
+output:
+  html_document:
+    toc: TRUE
+    toc_depth: 4
+    toc_float: TRUE
+    theme: readable # was "readable" before
+    highlight: tango
+    df_print: paged
+    paged_print: true
+    code_folding: hide
+    lib_dir: site_libs
+#    self_contained: FALSE
+navbar:
+  title: Visualising baseline characteristics
+  left:
+  - text: About
+    href: index.html
+  - text: Manuscript
+    href: psyarxiv-in-progress
+  - text: Assumption tests
+    href: assumption-tests.html
+  - text: Recurrence Quantification Analysis 
+    href: recurrence-plots.html
+  - text: Dataset 
+    href: dataset-info.html

@@ -1,0 +1,910 @@
+---
+title: "Recurrence plots"
+---
+
+Source code for this document is found [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/data/Recurrence-plots.Rmd).
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE,
+                      message = FALSE,
+                      error = FALSE,
+                      cache = TRUE, 
+                      collapse = TRUE,
+                      eval = TRUE,
+                      dpi = 300)
+
+```
+
+In this document, we provide supplementary information about recurrence measures and examples of them, as well as provide code for the figures in the manuscript.
+
+# Recurrence measures {.tabset}
+	
+## Trend	
+
+What it depicts: The stationarity of the system, i.e. whether the recurrent patterns emerge homogenously across the plot (indicating system stationarity), or if they fade to the lower right or and upper left corners (indicating the system changes in time, is non-stationarity). For example, a time series of any gradually but surely increasing or decreasing numbers would show a high trend value, whereas a series in which values fluctuate around more or less the same values, would exhibit a low trend value.
+
+```{r trend}
+
+knitr::include_graphics(path = "./figures/RQA_measures/trendlo.PNG")
+knitr::include_graphics(path = "./figures/RQA_measures/trendhi.PNG")
+
+```
+
+## Determinism	
+
+What it depicts: The proportion of all recurrent points which land on diagonal lines, meaning that there is a pattern to re-occurrence. For example, motivation for physical activity might be high (or low) on the same weekdays for several weeks in a row, indicating high determinism. Sleep-wake cycles would also show high determinism, whereas random numbers would show no discernable patterns and the lowest possible determinism values. 
+
+```{r determinism}
+
+knitr::include_graphics(path = "./figures/RQA_measures/determinismlo.PNG")
+knitr::include_graphics(path = "./figures/RQA_measures/determinismhi.PNG")
+
+```
+
+## Trapping time	
+
+What it depicts: The average length of vertical line structures; quantifies the time series’ tendency to get “stuck” on particular values or states. Trapping time could indicate a lack of healthy variability [@navarroHealthyVariabilityOrganizational2015], which in turn could be indicative of a system performing suboptimally or exhibiting maladaptive behaviour.
+
+```{r trapping-time}
+
+knitr::include_graphics(path = "./figures/RQA_measures/trappingtimelo.PNG")
+knitr::include_graphics(path = "./figures/RQA_measures/trappingtimehi.PNG")
+
+```
+
+## Entropy	
+
+What it depicts: The complexity or unpredictability of pattern lengths (i.e. variability in the length of the lines that are parallel to the diagonal); the heart rate  of a person playing in a soccer match would show high entropy, whereas their heart rate in a training session of regular timed sprints would show low entropy. 
+
+```{r entropy}
+
+knitr::include_graphics(path = "./figures/RQA_measures/entropylo.PNG")
+knitr::include_graphics(path = "./figures/RQA_measures/entropyhi.PNG")
+
+```
+
+## Average diagonal line length	
+
+What it depicts: The average length of the diagonal line structures, that is, the average time the system repeats a behavioural sequence it has exhibited previously. This can be thought of e.g. as a person’s (or their motivational system’s) consistency in repeating habitual behaviour, such as walking many steps during weekdays and little during weekends; a weekend with many steps (or a weekday with few steps) would break this pattern and reduce the average diagonal line length. Hence: While entropy can be thought of as a type of variance of the diagonal lines lengths, average diagonal line length would represent their mean length. Average diagonal line length can also be interpreted as the mean prediction time.
+
+```{r averagelinelength}
+
+knitr::include_graphics(path = "./figures/RQA_measures/averagelinelengthlo.PNG")
+knitr::include_graphics(path = "./figures/RQA_measures/averagelinelengthhi.PNG")
+
+```
+
+# {-}
+
+Possible substantive research questions include:
+
+*	Is trapping time related to inflexible behaviour (e.g., inability to adapt to environmental demands), and are interventions that lessen it analogous to “loosening up” a person’s reaction repertoire? 
+*	Does an intervention destabilise the dynamics of a maladaptive target behaviour, leading to increased entropy in recurrence structures?
+*	At which periods in a time series is the target behaviour stationary, and do initiations of trends collide with interventions, indicating intervention's impact?
+* How is determinism connected to facets of habit theory?
+* Does average diagonal line length go down (conferring decreased predictability with past data) when an intervention is introduced, indicating a shift in the system's dynamics?
+
+# RQA figure in manuscript
+
+```{r rqa-dataprep}
+emadata <- readr::read_rds("./data/EMA_data_Moti13.RDS")
+
+emadata_nested <- emadata %>% dplyr::group_by(User) %>% 
+                  dplyr::select(#autonomy, competence, relatedness,
+                                pleasure, interest, importance,
+                                situation_requires = required, 
+                                anxiety_guilt_avoidance = anxiety_guilt, 
+                                another_wants = for_others,
+                                Date = dateTime,
+                                User,
+                                task) %>% 
+                  na.omit() %>% ### NOTE! NAs removed!
+  tidyr::nest() 
+
+# Show sample size for each participant:
+# emadata_nested %>% 
+#   mutate(n = map_dbl(data, nrow))
+
+emadata_nested_wrangled <- emadata_nested %>%
+  dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(.x, 
+                                                       date = as.Date(Date),
+                                                       timediff = c(NA, diff(Date))))) %>% 
+  # Filter out answers less than 15 minutes from the last one, then remove the difference variable
+  dplyr::mutate(data = purrr::map(data, ~dplyr::filter(.x, timediff > 15))) %>% 
+  dplyr::mutate(data = purrr::map(data, ~dplyr::select(.x, -timediff))) %>% 
+  # Create "task-normed" variables, where the previous instance of the task is substracted from the current one:
+  dplyr::mutate(taskNormed = purrr::map(data, ~dplyr::group_by(., task))) %>%
+  dplyr::mutate(taskNormed = purrr::map(taskNormed, ~dplyr::mutate_if(.x, is.numeric, ~(.-lag(.))))) %>%
+  dplyr::mutate(taskNormed = purrr::map(taskNormed, ~na.omit(.x))) %>%
+  dplyr::mutate(taskNormed = purrr::map(taskNormed, ~dplyr::ungroup(.x))) %>%
+  #### Moving average (not taking into account the current time point)
+  # # Take daily averages to ensure ~equally spaced observations: 
+  dplyr::mutate(data_daily = purrr::map(data, 
+                                        ~dplyr::group_by(., date))) %>%
+  dplyr::mutate(data_daily = purrr::map(data_daily, 
+                                        ~dplyr::summarise_if(.x, is.numeric, mean, na.rm = TRUE))) %>%
+  # Remove day and task variables
+  dplyr::mutate(data_with_tasks_and_dates = data,
+                data = purrr::map(data, ~dplyr::select(.x, -Date, -date, -task))) %>% 
+  dplyr::mutate(data_daily_with_tasks_and_dates = data_daily,
+                data_daily = purrr::map(data_daily, ~dplyr::select(.x, -date))) %>% 
+  # Normalise all numeric variables
+  dplyr::mutate(data_standardised = purrr::map(data, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~((.x / max(.x)))))) %>% 
+  dplyr::mutate(data_daily_standardised = purrr::map(data_daily, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~((.x / max(.x)))))) %>% 
+  # Retain first and last observation of the day:
+  dplyr::mutate(data_firstlast_divided_by_max = purrr::map(.x = data_with_tasks_and_dates, 
+                                           .f = ~dplyr::group_by(.x, date) %>% 
+                                             dplyr::arrange(Date) %>%
+                                             dplyr::filter(row_number() == 1 | row_number() == n()) %>% 
+                                             dplyr::ungroup() %>% 
+                                             dplyr::mutate_if(., is.numeric,
+                                                              ~(. / max(., na.rm = TRUE)))),
+                data_firstlast_divided_by_max_with_tasks_and_dates = data_firstlast_divided_by_max,
+                data_firstlast_divided_by_max = purrr::map(data_firstlast_divided_by_max, 
+                                                           ~dplyr::select(.x, -Date, -date, -task)))
+
+```
+
+```{r rqa-plots, include = FALSE}
+emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled %>% 
+  dplyr::mutate(unthresholded = purrr::map(.x = data_firstlast_divided_by_max, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE)))
+
+
+emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled_unthresholded %>% 
+  dplyr::mutate(unthresholded_plot = purrr::map(.x = unthresholded, 
+                                                .f = ~casnet::rp_plot(.x, 
+                                                                      title = "C)",
+                                                                      xlabel = "6-dimensional motivation system",
+                                                                      ylabel = "6-dimensional motivation system",
+                                                                      plotRadiusRRbar = FALSE, 
+                                                                      plotDimensions = TRUE)))
+
+emadata_nested_wrangled_both <- emadata_nested_wrangled_unthresholded %>% 
+  dplyr::mutate(thresholded = purrr::map(.x = data_firstlast_divided_by_max, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE,
+                                                         emRad = NA,
+                                                         doPlot = TRUE,
+                                                         xlabel = " ",
+                                                         ylabel = " ")))
+
+
+
+# At 15 Dec 2019, crqa_rp is deprecated but called by rp_plot when plotMeasures = TRUE. This hack helps:
+crqa_rp <- casnet::rp_measures
+
+emadata_nested_wrangled_both <- emadata_nested_wrangled_both %>% 
+  dplyr::mutate(thresholded_plot = purrr::map(.x = thresholded, 
+                                              .f = ~casnet::rp_plot(.x,
+                                                                    title = "D)",
+                                                                    xlabel = "6-dimensional motivation system",
+                                                                    ylabel = "6-dimensional motivation system",
+                                                                    plotRadiusRRbar = FALSE, 
+                                                                    plotDimensions = TRUE,
+                                                                    plotMeasures = FALSE)))
+
+emadata_nested_wrangled_both_withMeasures <- emadata_nested_wrangled_both %>% 
+  dplyr::mutate(measures = purrr::map(.x = thresholded, 
+                                              .f = ~casnet::rp_measures(.x,
+                                                                        emRad = NA)))
+
+# Bring all the RQA measures into one data frame (from: https://stackoverflow.com/questions/2851327/convert-a-list-of-data-frames-into-one-data-frame):
+complexity_measures <- dplyr::bind_rows(emadata_nested_wrangled_both_withMeasures$measures, .id = "rowNumber")
+# User ID is not the same as row number, so take the id from the earlier object: 
+complexity_measures$userID <- emadata_nested_wrangled_both_withMeasures$User
+
+```
+
+```{r rqa-plots2, eval = FALSE}
+emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled %>% 
+  dplyr::mutate(unthresholded = purrr::map(.x = data_firstlast_divided_by_max, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE)))
+
+
+emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled_unthresholded %>% 
+  dplyr::mutate(unthresholded_plot = purrr::map(.x = unthresholded, 
+                                                .f = ~casnet::rp_plot(.x, 
+                                                                      title = "C)",
+                                                                      xlabel = "6-dimensional motivation system",
+                                                                      ylabel = "6-dimensional motivation system",
+                                                                      plotRadiusRRbar = FALSE, 
+                                                                      plotDimensions = TRUE)))
+
+emadata_nested_wrangled_both <- emadata_nested_wrangled_unthresholded %>% 
+  dplyr::mutate(thresholded = purrr::map(.x = data_firstlast_divided_by_max, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE,
+                                                         emRad = NA,
+                                                         doPlot = TRUE,
+                                                         xlabel = " ",
+                                                         ylabel = " ")))
+
+
+
+# At 15 Dec 2019, crqa_rp is deprecated but called by rp_plot when plotMeasures = TRUE. This hack helps:
+crqa_rp <- casnet::rp_measures
+
+emadata_nested_wrangled_both <- emadata_nested_wrangled_both %>% 
+  dplyr::mutate(thresholded_plot = purrr::map(.x = thresholded, 
+                                              .f = ~casnet::rp_plot(.x,
+                                                                    title = "D)",
+                                                                    xlabel = "6-dimensional motivation system",
+                                                                    ylabel = "6-dimensional motivation system",
+                                                                    plotRadiusRRbar = FALSE, 
+                                                                    plotDimensions = TRUE,
+                                                                    plotMeasures = FALSE)))
+
+emadata_nested_wrangled_both_withMeasures <- emadata_nested_wrangled_both %>% 
+  dplyr::mutate(measures = purrr::map(.x = thresholded, 
+                                              .f = ~casnet::rp_measures(.x,
+                                                                        emRad = NA)))
+
+# Bring all the RQA measures into one data frame (from: https://stackoverflow.com/questions/2851327/convert-a-list-of-data-frames-into-one-data-frame):
+complexity_measures <- dplyr::bind_rows(emadata_nested_wrangled_both_withMeasures$measures, .id = "rowNumber")
+# User ID is not the same as row number, so take the id from the earlier object: 
+complexity_measures$userID <- emadata_nested_wrangled_both_withMeasures$User
+
+```
+
+
+```{r cumsum-visu, eval = FALSE, include = FALSE}
+tibble(normal = emadata_nested_wrangled$data_daily[[1]]$interest,
+       cumsum = c(rep(NA, 5), emadata_nested_wrangled$data_daily_cumsum[[1]]$interest)) %>% 
+  ggplot() +
+  geom_line(aes(x = 1:49, y = normal), linetype = "dashed") +
+  geom_line(aes(x = 1:49, y = cumsum, color = "red"))  +
+  ggtitle("interest")
+
+tibble(normal = emadata_nested_wrangled$data_daily[[1]]$importance,
+       cumsum = c(rep(NA, 5), emadata_nested_wrangled$data_daily_cumsum[[1]]$importance)) %>% 
+  ggplot() +
+  geom_line(aes(x = 1:49, y = normal), linetype = "dashed") +
+  geom_line(aes(x = 1:49, y = cumsum, color = "red"))  +
+  ggtitle("importance")
+
+tibble(normal = emadata_nested_wrangled$data_daily[[1]]$situation_requires,
+       cumsum = c(rep(NA, 5), emadata_nested_wrangled$data_daily_cumsum[[1]]$situation_requires)) %>% 
+  ggplot() +
+  geom_line(aes(x = 1:49, y = normal), linetype = "dashed") +
+  geom_line(aes(x = 1:49, y = cumsum, color = "red"))  +
+  ggtitle("situation_requires")
+```
+
+```{r rqa-plots-shuffled, include = FALSE}
+
+set.seed(100)
+emadata_nested_wrangled_shuffled <- emadata_nested_wrangled %>% 
+  dplyr::mutate(data_daily_standardised_shuffled = 
+                  purrr::map(data_firstlast_divided_by_max, ~dplyr::mutate_if(.x, is.numeric,
+                                                                         ~(sample(., 
+                                                                                  size = length(.), 
+                                                                                  replace = FALSE)))))
+
+# # These are the same, i.e. shuffling didn't change summary stats:
+# emadata_nested_wrangled$data_daily_standardised[[1]] %>% summary()
+# emadata_nested_wrangled_shuffled$data_daily_standardised_shuffled[[1]] %>% summary()
+
+emadata_nested_wrangled_unthresholded_shuffled <- emadata_nested_wrangled_shuffled %>% 
+  dplyr::mutate(unthresholded_shuffled = purrr::map(.x = data_daily_standardised_shuffled, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE)))
+
+
+emadata_nested_wrangled_unthresholded_shuffled <- emadata_nested_wrangled_unthresholded_shuffled %>% 
+  dplyr::mutate(unthresholded_plot_shuffled = purrr::map(.x = unthresholded_shuffled, 
+                                                .f = ~casnet::rp_plot(.x, 
+                                                                      title = "E)",
+                                                                      xlabel = "Shuffled system",
+                                                                      ylabel = "Shuffled system",
+                                                                      plotRadiusRRbar = FALSE, 
+                                                                      plotDimensions = TRUE)))
+
+emadata_nested_wrangled_both_shuffled <- emadata_nested_wrangled_unthresholded_shuffled %>% 
+  dplyr::mutate(thresholded_shuffled = purrr::map(.x = data_daily_standardised_shuffled, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE,
+                                                         emRad = NA,
+                                                         doPlot = TRUE,
+                                                         xlabel = " ",
+                                                         ylabel = " ")))
+
+
+
+# At 15 Dec 2019, crqa_rp is deprecated but called by rp_plot when plotMeasures = TRUE. This hack helps:
+crqa_rp <- casnet::rp_measures
+
+emadata_nested_wrangled_both_shuffled <- emadata_nested_wrangled_both_shuffled %>% 
+  dplyr::mutate(thresholded_plot_shuffled = purrr::map(.x = thresholded_shuffled, 
+                                              .f = ~casnet::rp_plot(.x,
+                                                                    title = "F)",
+                                                                    xlabel = "Shuffled system",
+                                                                    ylabel = "Shuffled system",
+                                                                    plotRadiusRRbar = FALSE, 
+                                                                    plotDimensions = TRUE,
+                                                                    plotMeasures = FALSE)))
+
+emadata_nested_wrangled_both_withMeasures_shuffled <- emadata_nested_wrangled_both_shuffled %>% 
+  dplyr::mutate(measures_shuffled = purrr::map(.x = thresholded_shuffled, 
+                                              .f = ~casnet::rp_measures(.x,
+                                                                        emRad = NA)))
+```
+
+```{r rqa-plots-shuffled2, eval = FALSE}
+
+set.seed(100)
+emadata_nested_wrangled_shuffled <- emadata_nested_wrangled %>% 
+  dplyr::mutate(data_daily_standardised_shuffled = 
+                  purrr::map(data_firstlast_divided_by_max, ~dplyr::mutate_if(.x, is.numeric,
+                                                                         ~(sample(., 
+                                                                                  size = length(.), 
+                                                                                  replace = FALSE)))))
+
+# # These are the same, i.e. shuffling didn't change summary stats:
+# emadata_nested_wrangled$data_daily_standardised[[1]] %>% summary()
+# emadata_nested_wrangled_shuffled$data_daily_standardised_shuffled[[1]] %>% summary()
+
+emadata_nested_wrangled_unthresholded_shuffled <- emadata_nested_wrangled_shuffled %>% 
+  dplyr::mutate(unthresholded_shuffled = purrr::map(.x = data_daily_standardised_shuffled, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE)))
+
+
+emadata_nested_wrangled_unthresholded_shuffled <- emadata_nested_wrangled_unthresholded_shuffled %>% 
+  dplyr::mutate(unthresholded_plot_shuffled = purrr::map(.x = unthresholded_shuffled, 
+                                                .f = ~casnet::rp_plot(.x, 
+                                                                      title = "E)",
+                                                                      xlabel = "Shuffled system",
+                                                                      ylabel = "Shuffled system",
+                                                                      plotRadiusRRbar = FALSE, 
+                                                                      plotDimensions = TRUE)))
+
+emadata_nested_wrangled_both_shuffled <- emadata_nested_wrangled_unthresholded_shuffled %>% 
+  dplyr::mutate(thresholded_shuffled = purrr::map(.x = data_daily_standardised_shuffled, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE,
+                                                         emRad = NA,
+                                                         doPlot = TRUE,
+                                                         xlabel = " ",
+                                                         ylabel = " ")))
+
+
+
+# At 15 Dec 2019, crqa_rp is deprecated but called by rp_plot when plotMeasures = TRUE. This hack helps:
+crqa_rp <- casnet::rp_measures
+
+emadata_nested_wrangled_both_shuffled <- emadata_nested_wrangled_both_shuffled %>% 
+  dplyr::mutate(thresholded_plot_shuffled = purrr::map(.x = thresholded_shuffled, 
+                                              .f = ~casnet::rp_plot(.x,
+                                                                    title = "F)",
+                                                                    xlabel = "Shuffled system",
+                                                                    ylabel = "Shuffled system",
+                                                                    plotRadiusRRbar = FALSE, 
+                                                                    plotDimensions = TRUE,
+                                                                    plotMeasures = FALSE)))
+
+emadata_nested_wrangled_both_withMeasures_shuffled <- emadata_nested_wrangled_both_shuffled %>% 
+  dplyr::mutate(measures_shuffled = purrr::map(.x = thresholded_shuffled, 
+                                              .f = ~casnet::rp_measures(.x,
+                                                                        emRad = NA)))
+```
+
+```{r rqa-plots-uniform, include = FALSE}
+
+set.seed(999)
+emadata_dailyAverages <- emadata_nested_wrangled_both_withMeasures$data_firstlast_divided_by_max[[1]] %>% 
+  dplyr::mutate(uniform_noise = 
+                  runif(n = nrow(emadata_nested_wrangled_both_withMeasures$data_firstlast_divided_by_max[[1]]), 
+                                      min = 0, max = 49))
+
+emRad <- casnet::est_radius(y1 = emadata_dailyAverages$uniform_noise, emLag = 1, emDim = 1)$Radius
+
+# out <- casnet::crqa_cl(emadata_dailyAverages$uniform_noise, emDim = emDim, emLag = emLag, emRad = emRad)
+
+RM <- casnet::rp(y1 = emadata_dailyAverages$uniform_noise, emDim = 1, emLag = 1)
+
+uniform_noise_unthresholded <- casnet::rp_plot(RM, 
+                                               title = "A)",
+                                               xlabel = "Uniform noise",
+                                               ylabel = "Uniform noise",
+                                               plotRadiusRRbar = FALSE,
+                                               drawGrid = FALSE,
+                                               plotDimensions = TRUE)
+
+RM_thresholded <- casnet::di2bi(RM, emRad = emRad)
+
+uniform_noise_thresholded <- casnet::rp_plot(RM_thresholded, 
+                                             title = "B)",
+                                             xlabel = "Uniform noise",
+                                             ylabel = "Uniform noise",
+                                             plotDimensions = TRUE,
+                                             plotMeasures = FALSE)
+
+```
+
+```{r rqa-plots-uniform2, eval = FALSE}
+
+set.seed(999)
+emadata_dailyAverages <- emadata_nested_wrangled_both_withMeasures$data_firstlast_divided_by_max[[1]] %>% 
+  dplyr::mutate(uniform_noise = 
+                  runif(n = nrow(emadata_nested_wrangled_both_withMeasures$data_firstlast_divided_by_max[[1]]), 
+                                      min = 0, max = 49))
+
+emRad <- casnet::est_radius(y1 = emadata_dailyAverages$uniform_noise, emLag = 1, emDim = 1)$Radius
+
+# out <- casnet::crqa_cl(emadata_dailyAverages$uniform_noise, emDim = emDim, emLag = emLag, emRad = emRad)
+
+RM <- casnet::rp(y1 = emadata_dailyAverages$uniform_noise, emDim = 1, emLag = 1)
+
+uniform_noise_unthresholded <- casnet::rp_plot(RM, 
+                                               title = "A)",
+                                               xlabel = "Uniform noise",
+                                               ylabel = "Uniform noise",
+                                               plotRadiusRRbar = FALSE,
+                                               drawGrid = FALSE,
+                                               plotDimensions = TRUE)
+
+RM_thresholded <- casnet::di2bi(RM, emRad = emRad)
+
+uniform_noise_thresholded <- casnet::rp_plot(RM_thresholded, 
+                                             title = "B)",
+                                             xlabel = "Uniform noise",
+                                             ylabel = "Uniform noise",
+                                             plotDimensions = TRUE,
+                                             plotMeasures = FALSE)
+
+```
+
+```{r rqa-plots-create}
+
+rqa_plot <- gridExtra::grid.arrange(uniform_noise_unthresholded,
+                        uniform_noise_thresholded,
+                        emadata_nested_wrangled_both_withMeasures$unthresholded_plot[[1]],
+                        emadata_nested_wrangled_both_withMeasures$thresholded_plot[[1]],
+                        emadata_nested_wrangled_both_withMeasures_shuffled$unthresholded_plot_shuffled[[1]],
+                        emadata_nested_wrangled_both_withMeasures_shuffled$thresholded_plot_shuffled[[1]],
+                        layout_matrix = matrix(c(1, 2, 3,
+                                                 4, 5, 6), 
+                                               nrow = 2, byrow = FALSE))
+
+rqa_plot
+
+ggsave("./figures/rqa_multiplot.png", rqa_plot, width = 11.69, height = 8.27, dpi = 300)
+
+```
+
+# Recurrence network demo
+
+Here's the 6-dimensional motivation system's recurrence plot, weighted by similarity.
+
+```{r}
+set.seed(1)
+
+#######################
+
+# si = similarity under the radius
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled %>% 
+  dplyr::mutate(RN = purrr::map(.x = data_firstlast_divided_by_max,
+                                .f =  ~casnet::rn(.x %>% dplyr::select(#autonomy, competence, relatedness,
+                                                                       pleasure, interest, importance,
+                                                                       situation_requires, 
+                                                                       anxiety_guilt_avoidance, 
+                                                                       another_wants), 
+                                                  doEmbed = FALSE, 
+                                                  weighted = TRUE, 
+                                                  weightedBy = "si", 
+                                                  emRad = NA)))
+
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(graph_from_adjacency = purrr::map(.x = RN,
+                                                  .f = ~igraph::graph_from_adjacency_matrix(.x, 
+                                                                                            weighted = TRUE, 
+                                                                                            mode = "upper", 
+                                                                                            diag = FALSE)))
+
+# Edges with their distances
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(edges_with_distances = purrr::map(.x = graph_from_adjacency,
+                                                  .f = ~igraph::E(.x)$weight),
+                graph_from_adjacency_orig = graph_from_adjacency)
+
+# Larger values are closer to the state; inverse of weight makes it more intuitive
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets)) {
+igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$weight <- (1/emadata_nested_wrangled_both_recnets$edges_with_distances[[i]])
+}
+# A later note to self: Now weight is a measure of distance; how far apart two time points are
+# (under the radius, i.e. they're reasonably similar to begin with)
+
+####### To check:
+# igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[1]])$weight
+# igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency_orig[[1]])$weight
+
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(RN_plot = purrr::map(.x = RN,
+                                .f =  ~casnet::rn_plot(.x,
+                                                       plotDimensions = TRUE,
+                                                       xlab = "6-dimensional motivation system",
+                                                       ylab = "6-dimensional motivation system")))
+
+# Make node size equal to strength. Strength is the sum of a node's edge weights.
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets)) {
+igraph::V(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$size <- (igraph::strength(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]]))
+}
+
+# Rescaling weight as "width"; varies between 5 and 10
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets)) {
+igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$width <- 
+  casnet::elascer(igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$weight, lo = 5, hi = 10)
+}
+
+```
+
+The lengthy code chunk below extracts and marks attractors in the data.
+
+```{r}
+# Get number of maximally connected node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(max_connected_day = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~which.max(igraph::degree(.x))
+                                     ))
+
+
+
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(list_of_edges = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~igraph::get.data.frame(.x)
+                                     ))
+
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = 
+                  purrr::map2(.x = data_firstlast_divided_by_max,
+                              .y = graph_from_adjacency,
+                              .f = ~{
+                                data.frame(.x %>% 
+                                             dplyr::select(#autonomy, competence, relatedness,
+                                                                       pleasure, interest, importance,
+                                                                       situation_requires, anxiety_guilt_avoidance, another_wants), 
+                                           strength = igraph::strength(.y)) %>% 
+                                  dplyr::mutate(time = dplyr::row_number()) %>% 
+                                  tidyr::pivot_longer(cols = c(-strength, -time))
+                              }
+  ))
+
+# Extract nodes (i.e. times) which connect to the strongest (i.e. most connected) node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = max_connected_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+# Get number of 2nd maximally connected node, which doesn't connect to the 1st
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(secondary_attractor_day = purrr::map2(.x = graph_from_adjacency,
+                                                      .y = connecting_to_strongest,
+                                                      .f =  ~{
+                                                        data.frame(degree = igraph::degree(.x), 
+                                                                   time = 1:length(igraph::degree(.x))) %>% 
+                                                          dplyr::filter(!time %in% .y) %>% 
+                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::slice(1) %>% 
+                                                          dplyr::pull(time)
+                                                      }                                                    
+  ))
+
+# Extract nodes (i.e. times) which connect to the 2nd strongest node, which doesn't connect to the 1st
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_2nd_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = secondary_attractor_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+# Save as a variable in the dataset
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_2nd_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_2nd_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+# Get number of 3rd maximally connected node, which doesn't connect to the 1st or second
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(tertiary_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
+                                                      ..2 = connecting_to_strongest,
+                                                      ..3 = connecting_to_2nd_strongest),
+                                                      .f =  ~{
+                                                        data.frame(degree = igraph::degree(..1), 
+                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                          dplyr::filter(!time %in% ..2, 
+                                                                        !time %in% ..3) %>% 
+                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::slice(1) %>% 
+                                                          dplyr::pull(time)
+                                                      }                                                    
+  ))
+
+# Extract nodes (i.e. times) which connect to the 3rd strongest node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_3rd_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = tertiary_attractor_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+# Save as a variable
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_3rd_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_3rd_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+
+
+# Get number of 4th maximally connected node, which doesn't connect to the 1st or second
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(fourth_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
+                                                      ..2 = connecting_to_strongest,
+                                                      ..3 = connecting_to_2nd_strongest,
+                                                      ..4 = connecting_to_3rd_strongest),
+                                                      .f =  ~{
+                                                        data.frame(degree = igraph::degree(..1), 
+                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                          dplyr::filter(!time %in% ..2, 
+                                                                        !time %in% ..3, 
+                                                                        !time %in% ..4) %>% 
+                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::slice(1) %>% 
+                                                          dplyr::pull(time)
+                                                      }                                                    
+  ))
+
+# Extract nodes (i.e. times) which connect to the 3rd strongest node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_4th_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = fourth_attractor_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+# Save as a variable
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_4th_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_4th_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+################### Make plots
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = 
+                  purrr::map(.x = all_nodes_with_strengths,
+                             .f = ~{
+                               dplyr::mutate(.x,
+                                             attractors = dplyr::case_when(
+                                               strength == 0 ~ "Unique",
+                                               connecting_to_strongest == TRUE ~ "1st",
+                                               connecting_to_2nd_strongest == TRUE ~ "2nd",
+                                               connecting_to_3rd_strongest == TRUE ~ "3rd",
+                                               connecting_to_4th_strongest == TRUE ~ "4th",
+                                               TRUE ~ "Uncategorised"),
+                                             attractors = factor(attractors,
+                                                                 levels = c("1st",
+                                                                            "2nd",
+                                                                            "3rd",
+                                                                            "4th",
+                                                                            "Uncategorised",
+                                                                            "Unique")),
+                                             name = factor(name,
+                                                           levels = c("pleasure",
+                                                                      "interest",
+                                                                      "importance",
+                                                                      "situation_requires",
+                                                                      "anxiety_guilt_avoidance",
+                                                                      "another_wants"),
+                                                           labels = c("Pleasure",
+                                                                      "Interest",
+                                                                      "Importance",
+                                                                      "Situation requires",
+                                                                      "Anxiety guilt avoidance",
+                                                                      "Another wants")) %>% 
+                                               forcats::fct_drop()) %>% 
+                                 dplyr::group_by(attractors, name) %>% 
+                                 dplyr::mutate(n = n()) %>% 
+                                 dplyr::ungroup() %>%
+                                 dplyr::mutate(maxtime = max(time),
+                                               percentage_of_total =
+                                                 (n / maxtime) %>% scales::percent(accuracy = 0.1),
+                                               proportion_of_total = n/maxtime,
+                                               attractors_n = 
+                                                 factor(paste0(attractors,
+                                                               " (n = ", n, "; ", 
+                                                               percentage_of_total, ")")))
+                             }
+                  ))
+
+
+```
+
+
+### Spiral graph with colored nodes 
+
+```{r}
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+  dplyr::mutate(node_colors = purrr::map(.x = all_nodes_with_strengths,
+                                         .f = ~{tidyr::pivot_wider(.x, names_from = name) %>%
+                                             dplyr::pull(attractors)}))
+
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets_nodes_plots)) {
+levels(emadata_nested_wrangled_both_recnets_nodes_plots$node_colors[[i]]) <- 
+  c(viridisLite::plasma(4, 
+                      end = 0.8, 
+                      direction = -1), "gray48", "white")
+  }
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(spiralgraph_epochs = purrr::pmap(list(..1 = graph_from_adjacency,
+                                          ..2 = node_colors,
+                                          ..3 = User),
+                                     .f =  ~casnet::make_spiral_graph(g = ..1, 
+                                                                      arcs = 4, 
+                                                                      # a = .1, 
+                                                                      # b = 2, 
+                                                                      markTimeBy = TRUE,
+                                                                      markEpochsBy = ..2,
+                                                                      epochColours = ..2,
+                                                                      showEpochLegend = FALSE,
+                                                                      scaleEdgeSize = 1/10,
+                                                                      scaleVertexSize = c(1, 5),
+                                                                      showSizeLegend = FALSE,
+                                                                      sizeLabel = "Node strength",
+                                                                      type = "Euler",
+                                                                      # alphaE = 0.1
+                                                                      # title = ..3
+                                     )))
+
+# emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +
+#   theme(plot.margin=grid::unit(c(0,0,0,0), "mm"))
+
+ggsave(filename = "./figures/recnetwork.png",
+       width = 7, 
+       height = 7)
+
+# emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
+```
+
+### Attractor plot
+
+```{r attractor-plots}
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+  dplyr::mutate(observations = purrr::map_dbl(.x = data_firstlast_divided_by_max,
+                                              .f = ~nrow(.)))
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+  dplyr::mutate(observations_daily = purrr::map_dbl(.x = data_daily,
+                                              .f = ~nrow(.)))
+
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(attractor_plots = purrr::pmap(list(..1 = all_nodes_with_strengths,
+                                                   ..2 = observations,
+                                                   ..3 = observations_daily,
+                                                   ..4 = User),
+                                             .f = ~{
+                                               dplyr::mutate(..1,
+                                                             strength_rescaled = scales::rescale(strength, to = c(0.1, 2))) %>% 
+                                                 ggplot(data = .,
+                                                        aes(x = forcats::fct_rev(name), 
+                                                            y = value, 
+                                                            size = strength_rescaled,
+                                                            alpha = ifelse(strength_rescaled == 0.1, 1, strength_rescaled),
+                                                            color = attractors_n)) +
+                                                   scale_size_identity() +
+                                                 geom_line(aes(group = time)) +
+                                                 geom_point() +
+                                                 scale_color_manual(values = c(viridisLite::plasma(4, 
+                                                                                                   end = 0.8, 
+                                                                                                   direction = -1), 
+                                                                               "gray48", "gray87")) +
+                                                 scale_y_continuous(labels = scales::label_percent(accuracy = 1)) +
+                                                 theme_bw() +
+                                                 theme(legend.position = "none") +
+                                                 labs(y = "Percentage of maximum reported value of variable, across full time series",
+                                                      x = NULL,
+                                                      title = paste0(..4, " - based on ", ..2, " data points (", ..3, " days)")) +
+                                                 facet_wrap(~attractors_n) +
+                                                 coord_flip(ylim = c(0, 1))
+                                             }
+  ))
+
+emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots[[1]]
+# emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
+
+```
+
+
+# {-}
+
+Research questions to be studied with multidimensional recurrence networks:
+
+*	How are the variables in the multivariate system connected to each other; what is the structure (i.e. the centrality indices) of the recurrence network, and do behaviour change outcomes depend on it?
+* Do new attractors in the multidimensional recurrence network emerge, after an intervention has been implemented?
+
+# Session information
+
+Description of the R environment can be found below.
+
+```{r session-info, results = 'markup'}
+devtools::session_info()
+
+pander::pander(sessionInfo())
+```

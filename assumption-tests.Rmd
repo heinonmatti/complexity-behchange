@@ -1,0 +1,970 @@
+---
+title: "Assumption tests"
+---
+
+Source code for this document is found [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/data/assumption-tests.Rmd).
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE,
+                      message = FALSE,
+                      error = FALSE,
+                      cache = TRUE, 
+                      collapse = TRUE,
+                      eval = TRUE,
+                      dpi = 300)
+
+```
+
+
+```{r datasetup}
+###################### Set up data
+
+# devtools::install_github("fredhasselman/casnet")
+
+# edidata %>% 
+#   dplyr::select(-date) %>% 
+#   names() %>%
+#   purrr::map(~ggplot(edidata, aes_string(x = .)) + geom_histogram(binwidth = 500))
+# 
+# edidata %>% 
+#   dplyr::select(-date) %>% 
+#   names() %>%
+#   purrr::map(~ggplot(edidata, aes_string(x = .)) + 
+#         geom_density() +
+#         theme_bw())
+# 
+# edidata %>% 
+#   dplyr::select(-date) %>% 
+#   purrr::map(~summary(.))
+
+# edidata <- readr::read_tsv("../motivation-dynamics/data/data.tsv") %>%
+#   tidyr::spread(Field, Value) %>% 
+#   dplyr::select(autonomy, competence, relatedness,
+#                 pleasure, interest, importance,
+#                 situation_requires = required, 
+#                 anxiety_guilt_avoidance = anxiety_guilt, 
+#                 another_wants = for_others,
+#                 Date,
+#                 User) %>%
+#   type.convert()  %>% 
+#   dplyr::mutate(Date = as.POSIXct(Date)) %>% 
+#   dplyr::filter(stringr::str_detect(User, "Moti")) %>% 
+#   na.omit()
+
+# readr::write_tsv(edidata, path = "./data/data_20p_9var_plus_time.tsv")
+mydata <- readr::read_tsv("./data/data_20p_9var_plus_time.tsv")
+  
+emadata_nested <- mydata %>% dplyr::group_by(User) %>% 
+  tidyr::nest() 
+
+# Show sample size for each participant:
+# emadata_nested %>% 
+#   mutate(n = map_dbl(data, nrow))
+
+emadata_nested_wrangled <- emadata_nested %>% 
+  dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(.x, 
+                                                       date = as.Date(Date),
+                                                       timediff = c(NA, diff(Date))))) %>% 
+  # Filter out answers less than 15 minutes from the last one, then remove the difference variable
+  dplyr::mutate(data = purrr::map(data, ~dplyr::filter(.x, timediff > 15))) %>% 
+  dplyr::mutate(data = purrr::map(data, ~dplyr::select(.x, -timediff))) %>% 
+  # Reverse-code the controlled motivation variables:
+  # dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(.x,
+  #                                                      situation_requires = 50 - situation_requires,
+  #                                                      anxiety_guilt_avoidance = 50 - anxiety_guilt_avoidance,
+  #                                                      another_wants = 50 - another_wants))) %>%
+  # Save the time variables:
+  dplyr::mutate(daytime = purrr::map(data, ~dplyr::select(.x, Date, date))) %>%     
+  # # Create "task-normed" variables, where the previous instance of the task is substracted from the current one:
+  # dplyr::mutate(taskNormed = purrr::map(data, ~dplyr::group_by(., task))) %>% 
+  # dplyr::mutate(taskNormed = purrr::map(taskNormed, ~dplyr::mutate_if(.x, is.numeric, ~(.-lag(.))))) %>%
+  # dplyr::mutate(taskNormed = purrr::map(taskNormed, ~na.omit(.x))) %>%
+  # # Moving average (not taking into account the current time point):
+  # dplyr::mutate(changeProfile = purrr::map(taskNormed, ~dplyr::mutate_if(.x, 
+  #                                                                           is.numeric, 
+  #                                                                           ~(zoo::rollapply(.x, 
+  #                                                                                       width = 5, 
+  #                                                                                       by.column = TRUE,
+  #                                                                                       FUN = mean, 
+  #                                                                                       na.rm = TRUE, 
+  #                                                                                       fill = NA,
+  #                                                                                       partial = TRUE,
+  #                                                                                       align = "right"))))) %>% 
+  # # Take daily averages to ensure ~equally spaced observations: 
+  dplyr::mutate(data_daily = purrr::map(data, 
+                                        ~dplyr::group_by(., date))) %>%
+  dplyr::mutate(data_daily = purrr::map(data_daily, 
+                                        ~dplyr::summarise_if(.x, is.numeric, mean, na.rm = TRUE))) %>%
+  # Choose daily extreme values
+  dplyr::mutate(data_extremes = purrr::map(.x = data, 
+                                           .f = ~dplyr::group_by(.x, date) %>% 
+                                             dplyr::mutate_at(vars(autonomy, competence, relatedness,
+                                                                   pleasure, interest, importance,
+                                                                   situation_requires, anxiety_guilt_avoidance, another_wants), 
+                                                              funs(mean_of_day = mean)) %>% 
+                                             dplyr::ungroup() %>% 
+                                             dplyr::mutate(autonomy_deviance = 
+                                                                autonomy - autonomy_mean_of_day,
+                                                           competence_deviance = 
+                                                             competence - competence_mean_of_day,
+                                                           relatedness_deviance = 
+                                                             relatedness - relatedness_mean_of_day,
+                                                           pleasure_deviance = 
+                                                             pleasure - pleasure_mean_of_day, 
+                                                           interest_deviance = 
+                                                             interest - interest_mean_of_day, 
+                                                           importance_deviance = 
+                                                             importance - importance_mean_of_day,
+                                                           situation_requires_deviance = 
+                                                             situation_requires - situation_requires_mean_of_day, 
+                                                           anxiety_guilt_avoidance_deviance = 
+                                                             anxiety_guilt_avoidance - autonomy_mean_of_day, 
+                                                           another_wants_deviance = 
+                                                             another_wants - another_wants_mean_of_day,
+                                                           extremity = (autonomy_deviance + 
+                                                             competence_deviance + 
+                                                             relatedness_deviance +
+                                                             pleasure_deviance +
+                                                             interest_deviance +
+                                                             importance_deviance +
+                                                             situation_requires_deviance + 
+                                                             another_wants_deviance)) %>% 
+                                             dplyr::group_by(date) %>% 
+                                             dplyr::filter(extremity == min(extremity)) %>%   
+                                             # If there are ties, preserve the last one
+                                             dplyr::filter(row_number() == n()) %>% 
+                                             dplyr::ungroup())) %>% 
+    # dplyr::mutate(data_daily_changeProfile = purrr::map(data, 
+  #                                                     ~dplyr::group_by(., date))) %>%
+  # dplyr::mutate(data_daily_changeProfile = purrr::map(data_daily_changeProfile, 
+  #                                                     ~dplyr::summarise_if(.x, is.numeric, mean, na.rm = TRUE))) %>%
+  # Remove day and task variables
+  dplyr::mutate(data_extremes_analysis = purrr::map(data_extremes, ~dplyr::select(.x, autonomy:another_wants))) %>% 
+  dplyr::mutate(data_with_dates = data,
+    data = purrr::map(data, ~dplyr::select(.x, -Date, -date))) %>% 
+  dplyr::mutate(data_daily_with_dates = data_daily,
+                data_daily = purrr::map(data_daily, ~dplyr::select(.x, -date))) %>% 
+  # Normalise all variables
+  dplyr::mutate(data_standardised = purrr::map(data, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~(.x - median(.x, na.rm = TRUE)) / mad(.x)))) %>% 
+  dplyr::mutate(data_daily_standardised = purrr::map(data_daily, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~(.x - median(.x, na.rm = TRUE)) / mad(.x)))) %>% 
+  dplyr::mutate(data_divided_by_max = purrr::map(data, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~(.x / max(.x, na.rm = TRUE))))) %>% 
+  dplyr::mutate(data_daily_divided_by_max = purrr::map(data_daily, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~(.x / max(.x, na.rm = TRUE))))) %>% 
+  dplyr::mutate(data_extremes_analysis_divided_by_max = purrr::map(data_extremes_analysis, 
+                                                                   ~dplyr::mutate_if(.x, 
+                                                                                     is.numeric,
+                                                                                     ~(.x / max(.x, na.rm = TRUE))))) %>% 
+  # Retain first and last observation of the day:
+  dplyr::mutate(data_firstlast_divided_by_max = purrr::map(.x = data_with_dates, 
+                                           .f = ~dplyr::group_by(.x, date) %>% 
+                                             dplyr::arrange(Date) %>%
+                                             dplyr::filter(row_number() == 1 | row_number() == n()) %>% 
+                                             dplyr::ungroup() %>% 
+                                             dplyr::mutate_if(., is.numeric,
+                                                              ~(. / max(., na.rm = TRUE))))) %>% 
+  # Grand means for each variable
+  dplyr::mutate(grand_means = purrr::map(.x = data_divided_by_max, 
+                                         .f = ~dplyr::summarise_if(.x, is.numeric, median))) 
+
+
+```
+
+```{r result_base}
+###################### Generate result tables
+
+emadata_nested_wrangled_tests <- emadata_nested_wrangled %>%
+  dplyr::mutate(observations = purrr::map_dbl(.x = data,
+                                              .f = ~nrow(.)))
+test_results <- list()
+data_assumptions <- list()
+alphaLevel <- 0.05 / 4
+
+for(i in 1:nrow(emadata_nested_wrangled_tests)){
+
+data_assumptions[[i]] <- emadata_nested_wrangled_tests$data[[i]]
+
+H0_randomness_H1_nonrandomness <- data_assumptions[[i]] %>% # dplyr::select(-date) %>%
+  purrr::map_df(~randtests::bartels.rank.test(., alternative = "two.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3)) 
+H0_randomness_H1_nonrandomness$name <- "Bartel's rank test\nH0: randomness\nH1: nonrandomness"
+H0_randomness_H1_nonrandomness$User <- emadata_nested_wrangled[i, 1][[1]]
+
+H0_randomness_H1_trend <- data_assumptions[[i]] %>% # dplyr::select(-date) %>%
+  purrr::map_df(~randtests::bartels.rank.test(., alternative = "left.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3)) 
+H0_randomness_H1_trend$name <- "Bartel's rank test\nH0: randomness\nH1: trend"
+H0_randomness_H1_trend$User <- emadata_nested_wrangled[i, 1][[1]]
+  
+H0_randomness_H1_systematic_oscillation <- data_assumptions[[i]] %>% # dplyr::select(-date) %>%
+  purrr::map_df(~randtests::bartels.rank.test(., alternative = "right.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3)) 
+H0_randomness_H1_systematic_oscillation$name <- "Bartel's rank test\nH0: randomness\nH1: systematic oscillation"
+H0_randomness_H1_systematic_oscillation$User <- emadata_nested_wrangled[i, 1][[1]]
+
+H0_randomness_H1_upward_or_downward_trend <- data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~randtests::cox.stuart.test(na.exclude(.), alternative = "two.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_randomness_H1_upward_or_downward_trend$name <- "Cox-Stuart test\nH0: randomness\nH1: upward or downward trend"
+H0_randomness_H1_upward_or_downward_trend$User <- emadata_nested_wrangled[i, 1][[1]]
+
+H0_randomness_H1_upward_trend <- data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~randtests::cox.stuart.test(na.exclude(.), alternative = "right.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_randomness_H1_upward_trend$name <- "Cox-Stuart test\nH0: randomness\nH1: upward trend"
+H0_randomness_H1_upward_trend$User <- emadata_nested_wrangled[i, 1][[1]]
+
+H0_randomness_H1_downward_trend <- data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~randtests::cox.stuart.test(na.exclude(.), alternative = "left.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_randomness_H1_downward_trend$name <- "Cox-Stuart test\nH0: randomness\nH1: downward trend"
+H0_randomness_H1_downward_trend$User <- emadata_nested_wrangled[i, 1][[1]]
+
+H0_level_stationarity_H1_unit_root_no_level_stationarity <- data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~tseries::kpss.test(na.exclude(.), lshort = TRUE, null = "Level")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_level_stationarity_H1_unit_root_no_level_stationarity$name <- "KPSS test\nH0: stationary level\nH1: non-stationary level"
+H0_level_stationarity_H1_unit_root_no_level_stationarity$User <- emadata_nested_wrangled[i, 1][[1]]
+
+H0_trend_stationarity_H1_no_trend_stationarity <- data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~tseries::kpss.test(na.exclude(.), lshort = TRUE, null = "Trend")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_trend_stationarity_H1_no_trend_stationarity$name <- "KPSS test\nH0: stationary trend\nH1: non-stationary trend"
+H0_trend_stationarity_H1_no_trend_stationarity$User <- emadata_nested_wrangled[i, 1][[1]]
+
+H0_some_AR_process_H1_no_AR_process <- data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~TSA::Keenan.test(na.exclude(.))$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_some_AR_process_H1_no_AR_process$name <- "Keenan's test for nonlinearity\nH0: linear AR process\nH1: not a linear AR process"
+H0_some_AR_process_H1_no_AR_process$User <- emadata_nested_wrangled[i, 1][[1]]
+
+H0_some_AR_process_H1_no_ARCH_process <- data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~TSA::McLeod.Li.test(y = ., plot = FALSE, omit.initial = TRUE)$p.values %>% 
+                  max(.) %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_some_AR_process_H1_no_ARCH_process$name <- "McLeod-Li test\nH0: linear AR process\nH1: not an ARCH process"
+H0_some_AR_process_H1_no_ARCH_process$User <- emadata_nested_wrangled[i, 1][[1]]
+
+H0_some_AR_process_H1_no_ARiMA_process <- data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~TSA::McLeod.Li.test(object = forecast::auto.arima(.), 
+                                     plot = FALSE, 
+                                     omit.initial = TRUE)$p.values %>%
+                  max(.) %>%
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_some_AR_process_H1_no_ARiMA_process$name <- "McLeod-Li test\nH0: linear AR process\nH1: not an ARiMA process"
+H0_some_AR_process_H1_no_ARiMA_process$User <- emadata_nested_wrangled[i, 1][[1]]
+
+H0_AR_process_H1_no_AR_process <- data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~TSA::Tsay.test(na.exclude(.))$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_AR_process_H1_no_AR_process$name <- "Tsay's test for nonlinearity\nH0: linear AR process\nH1: not a linear AR process"
+H0_AR_process_H1_no_AR_process$User <- emadata_nested_wrangled[i, 1][[1]]
+
+test_results[[i]] <- rbind(H0_randomness_H1_nonrandomness,
+                      H0_randomness_H1_trend,
+                      H0_randomness_H1_systematic_oscillation,
+                      H0_randomness_H1_upward_or_downward_trend,
+                      H0_randomness_H1_upward_trend,
+                      H0_randomness_H1_downward_trend,
+                      H0_level_stationarity_H1_unit_root_no_level_stationarity,
+                      H0_trend_stationarity_H1_no_trend_stationarity,
+                      H0_some_AR_process_H1_no_AR_process,
+                      H0_some_AR_process_H1_no_ARCH_process,
+                      H0_some_AR_process_H1_no_ARiMA_process,
+                      H0_AR_process_H1_no_AR_process) %>% 
+  dplyr::select(User, name, everything())
+}
+
+test_nested <- test_results %>% purrr::map_df(., rbind) %>% 
+  dplyr::group_by(User) %>% 
+  tidyr::nest() 
+
+test_nested <- test_nested %>% 
+  dplyr::mutate(data = purrr::map(.x = data,
+                                  .f = ~dplyr::mutate_at(.x, vars(autonomy, competence, relatedness,
+                                                                  pleasure, interest, importance,
+                                                                  situation_requires, 
+                                                                  anxiety_guilt_avoidance, 
+                                                                  another_wants), 
+                                                              funs(as.numeric))),
+                data_binarised = purrr::map(.x = data,
+                                            .f = ~dplyr::transmute_if(.x, is.numeric,
+                                                                      ~dplyr::case_when(. < alphaLevel ~ 1,
+                                                                                        TRUE ~ 0)) %>% 
+                                              dplyr::mutate(test_number = row_number())),
+                data = purrr::map(.x = data, 
+                                  .f = ~dplyr::mutate(.x, test_number = row_number())))
+
+test_nested <- dplyr::full_join(test_nested,
+                 emadata_nested_wrangled_tests %>% dplyr::select(User, observations),
+                 by = "User")
+
+# test_nested_segments_aggregates$aggregated_proportions
+# test_nested_segments_aggregates$aggregated_series
+# test_nested_segments_aggregates$series_numbers
+# test_nested_segments_aggregates$data_binarised
+# test_nested$data
+# test_nested$data_binarised
+
+############### Rejections by variable 
+tests_number_of_series <- test_nested$data_binarised %>% 
+  purrr::map_df(., rbind) %>% 
+  tidyr::pivot_longer(cols = -test_number) %>% 
+  dplyr::group_by(test_number, name) %>% 
+  dplyr::summarise(value = sum(value)) %>% 
+  dplyr::ungroup() %>% 
+  tidyr::pivot_wider(names_from = name, values_from = value)
+
+tests_number_of_series$name <- test_nested$data[[1]]$name
+
+tests_number_of_series <- tests_number_of_series %>% dplyr::select(name,
+                                                                   everything(),
+                                                                   -test_number)
+
+############### Rejections by participant
+test_nested_by_participant <- test_nested %>% 
+  dplyr::mutate(rejected_vars_per_test = purrr::map(.x = data_binarised,
+                                                    .f = ~dplyr::select(.x, -test_number) %>% 
+                                                      rowSums))
+
+rejected_vars_per_test <- test_nested_by_participant$rejected_vars_per_test %>% 
+  dplyr::bind_cols()
+
+names(rejected_vars_per_test) <- paste0(test_nested_by_participant$User,
+                                        " (n=",
+                                        test_nested_by_participant$observations,
+                                        ")")
+
+rejected_vars_per_test$name <- test_nested$data[[1]]$name
+
+rejected_vars_per_test <- rejected_vars_per_test %>% 
+  dplyr::select(name, everything())
+
+
+# DT::datatable(test_results,
+#               options = list(pageLength = 11),
+#               caption = "P-values (or maximum p-values in case of McLeod-Li test) 
+#               for tests of assumptions of data-generating processes") %>%
+#     DT::formatRound(columns = colnames(test_results), digits=3)
+
+# test_results %>% summarise_if(is.numeric, ~((sum(.<0.05) / nrow(test_results)) %>% scales::percent())) %>% 
+#   knitr::kable(caption = paste0("Percentage of ", 
+#                                 nrow(test_results), 
+#                                 " assumption tests indicating deviance at the p < 0.05 level"))
+
+```
+
+```{r result_alphaLo}
+alphaLo_emadata_nested_wrangled <- emadata_nested_wrangled
+
+alphaLo_emadata_nested_wrangled_tests <- alphaLo_emadata_nested_wrangled %>%
+  dplyr::mutate(observations = purrr::map_dbl(.x = data,
+                                              .f = ~nrow(.)))
+alphaLo_test_results <- list()
+alphaLo_data_assumptions <- list()
+alphaLo <- 0.05 / 12
+
+for(i in 1:nrow(alphaLo_emadata_nested_wrangled_tests)){
+
+alphaLo_data_assumptions[[i]] <- alphaLo_emadata_nested_wrangled_tests$data[[i]]
+
+H0_randomness_H1_nonrandomness <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>%
+  purrr::map_df(~randtests::bartels.rank.test(., alternative = "two.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3)) 
+H0_randomness_H1_nonrandomness$name <- "Bartel's rank test\nH0: randomness\nH1: nonrandomness"
+H0_randomness_H1_nonrandomness$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+H0_randomness_H1_trend <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>%
+  purrr::map_df(~randtests::bartels.rank.test(., alternative = "left.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3)) 
+H0_randomness_H1_trend$name <- "Bartel's rank test\nH0: randomness\nH1: trend"
+H0_randomness_H1_trend$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+  
+H0_randomness_H1_systematic_oscillation <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>%
+  purrr::map_df(~randtests::bartels.rank.test(., alternative = "right.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3)) 
+H0_randomness_H1_systematic_oscillation$name <- "Bartel's rank test\nH0: randomness\nH1: systematic oscillation"
+H0_randomness_H1_systematic_oscillation$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+H0_randomness_H1_upward_or_downward_trend <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~randtests::cox.stuart.test(na.exclude(.), alternative = "two.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_randomness_H1_upward_or_downward_trend$name <- "Cox-Stuart test\nH0: randomness\nH1: upward or downward trend"
+H0_randomness_H1_upward_or_downward_trend$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+H0_randomness_H1_upward_trend <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~randtests::cox.stuart.test(na.exclude(.), alternative = "right.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_randomness_H1_upward_trend$name <- "Cox-Stuart test\nH0: randomness\nH1: upward trend"
+H0_randomness_H1_upward_trend$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+H0_randomness_H1_downward_trend <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~randtests::cox.stuart.test(na.exclude(.), alternative = "left.sided")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_randomness_H1_downward_trend$name <- "Cox-Stuart test\nH0: randomness\nH1: downward trend"
+H0_randomness_H1_downward_trend$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+H0_level_stationarity_H1_unit_root_no_level_stationarity <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~tseries::kpss.test(na.exclude(.), lshort = TRUE, null = "Level")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_level_stationarity_H1_unit_root_no_level_stationarity$name <- "KPSS test\nH0: stationary level\nH1: non-stationary level"
+H0_level_stationarity_H1_unit_root_no_level_stationarity$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+H0_trend_stationarity_H1_no_trend_stationarity <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~tseries::kpss.test(na.exclude(.), lshort = TRUE, null = "Trend")$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_trend_stationarity_H1_no_trend_stationarity$name <- "KPSS test\nH0: stationary trend\nH1: non-stationary trend"
+H0_trend_stationarity_H1_no_trend_stationarity$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+H0_some_AR_process_H1_no_AR_process <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~TSA::Keenan.test(na.exclude(.))$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_some_AR_process_H1_no_AR_process$name <- "Keenan's test for nonlinearity\nH0: linear AR process\nH1: not a linear AR process"
+H0_some_AR_process_H1_no_AR_process$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+H0_some_AR_process_H1_no_ARCH_process <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~TSA::McLeod.Li.test(y = ., plot = FALSE, omit.initial = TRUE)$p.values %>% 
+                  max(.) %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_some_AR_process_H1_no_ARCH_process$name <- "McLeod-Li test\nH0: linear AR process\nH1: not an ARCH process"
+H0_some_AR_process_H1_no_ARCH_process$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+H0_some_AR_process_H1_no_ARiMA_process <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~TSA::McLeod.Li.test(object = forecast::auto.arima(.), 
+                                     plot = FALSE, 
+                                     omit.initial = TRUE)$p.values %>%
+                  max(.) %>%
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_some_AR_process_H1_no_ARiMA_process$name <- "McLeod-Li test\nH0: linear AR process\nH1: not an ARiMA process"
+H0_some_AR_process_H1_no_ARiMA_process$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+H0_AR_process_H1_no_AR_process <- alphaLo_data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~TSA::Tsay.test(na.exclude(.))$p.value %>% 
+                  round(., digits = 3) %>% format(., nsmall = 3))
+H0_AR_process_H1_no_AR_process$name <- "Tsay's test for nonlinearity\nH0: linear AR process\nH1: not a linear AR process"
+H0_AR_process_H1_no_AR_process$User <- alphaLo_emadata_nested_wrangled[i, 1][[1]]
+
+alphaLo_test_results[[i]] <- rbind(H0_randomness_H1_nonrandomness,
+                      H0_randomness_H1_trend,
+                      H0_randomness_H1_systematic_oscillation,
+                      H0_randomness_H1_upward_or_downward_trend,
+                      H0_randomness_H1_upward_trend,
+                      H0_randomness_H1_downward_trend,
+                      H0_level_stationarity_H1_unit_root_no_level_stationarity,
+                      H0_trend_stationarity_H1_no_trend_stationarity,
+                      H0_some_AR_process_H1_no_AR_process,
+                      H0_some_AR_process_H1_no_ARCH_process,
+                      H0_some_AR_process_H1_no_ARiMA_process,
+                      H0_AR_process_H1_no_AR_process) %>% 
+  dplyr::select(User, name, everything())
+}
+
+alphaLo_test_nested <- alphaLo_test_results %>% purrr::map_df(., rbind) %>% 
+  dplyr::group_by(User) %>% 
+  tidyr::nest() 
+
+alphaLo_test_nested <- alphaLo_test_nested %>% 
+  dplyr::mutate(data = purrr::map(.x = data,
+                                  .f = ~dplyr::mutate_at(.x, vars(autonomy, competence, relatedness,
+                                                                  pleasure, interest, importance,
+                                                                  situation_requires, 
+                                                                  anxiety_guilt_avoidance, 
+                                                                  another_wants), 
+                                                              funs(as.numeric))),
+                data_binarised = purrr::map(.x = data,
+                                            .f = ~dplyr::transmute_if(.x, is.numeric,
+                                                                      ~dplyr::case_when(. < alphaLo ~ 1,
+                                                                                        TRUE ~ 0)) %>% 
+                                              dplyr::mutate(test_number = row_number())),
+                data = purrr::map(.x = data, 
+                                  .f = ~dplyr::mutate(.x, test_number = row_number())))
+
+alphaLo_test_nested <- dplyr::full_join(alphaLo_test_nested,
+                 alphaLo_emadata_nested_wrangled_tests %>% dplyr::select(User, observations),
+                 by = "User")
+
+# alphaLo_test_nested_segments_aggregates$aggregated_proportions
+# alphaLo_test_nested_segments_aggregates$aggregated_series
+# alphaLo_test_nested_segments_aggregates$series_numbers
+# alphaLo_test_nested_segments_aggregates$data_binarised
+# alphaLo_test_nested$data
+# alphaLo_test_nested$data_binarised
+
+############### Rejections by variable 
+alphaLo_tests_number_of_series <- alphaLo_test_nested$data_binarised %>% 
+  purrr::map_df(., rbind) %>% 
+  tidyr::pivot_longer(cols = -test_number) %>% 
+  dplyr::group_by(test_number, name) %>% 
+  dplyr::summarise(value = sum(value)) %>% 
+  dplyr::ungroup() %>% 
+  tidyr::pivot_wider(names_from = name, values_from = value)
+
+alphaLo_tests_number_of_series$name <- alphaLo_test_nested$data[[1]]$name
+
+alphaLo_tests_number_of_series <- alphaLo_tests_number_of_series %>% dplyr::select(name,
+                                                                   everything(),
+                                                                   -test_number)
+
+############### Rejections by participant
+alphaLo_test_nested_by_participant <- alphaLo_test_nested %>% 
+  dplyr::mutate(alphaLo_rejected_vars_per_test = purrr::map(.x = data_binarised,
+                                                    .f = ~dplyr::select(.x, -test_number) %>% 
+                                                      rowSums))
+
+alphaLo_rejected_vars_per_test <- alphaLo_test_nested_by_participant$alphaLo_rejected_vars_per_test %>% 
+  dplyr::bind_cols()
+
+names(alphaLo_rejected_vars_per_test) <- paste0(alphaLo_test_nested_by_participant$User,
+                                        " (n=",
+                                        alphaLo_test_nested_by_participant$observations,
+                                        ")")
+
+alphaLo_rejected_vars_per_test$name <- alphaLo_test_nested$data[[1]]$name
+
+alphaLo_rejected_vars_per_test <- alphaLo_rejected_vars_per_test %>% 
+  dplyr::select(name, everything())
+
+
+# DT::datatable(alphaLo_test_results,
+#               options = list(pageLength = 11),
+#               caption = "P-values (or maximum p-values in case of McLeod-Li test) 
+#               for tests of assumptions of data-generating processes") %>%
+#     DT::formatRound(columns = colnames(alphaLo_test_results), digits=3)
+
+# alphaLo_test_results %>% summarise_if(is.numeric, ~((sum(.<0.05) / nrow(alphaLo_test_results)) %>% scales::percent())) %>% 
+#   knitr::kable(caption = paste0("Percentage of ", 
+#                                 nrow(alphaLo_test_results), 
+#                                 " assumption tests indicating deviance at the p < 0.05 level"))
+
+```
+
+```{r eval = FALSE}
+#Keenan's test error message
+
+data_assumptions[[i]] %>% # dplyr::select(-date) %>% 
+  purrr::map_df(~TSA::Keenan.test(na.exclude(.))$p.value)
+
+TSA::Keenan.test(c(20, 25, 15, 45, 45, 46, 8, 46, 44, 40, 24, 6, 23, 33, 45, 28, 23, 37, 39, 35, 39, 38, 41, 38))
+
+nonlinearTseries::nonlinearityTest(c(20, 25, 15, 45, 45, 46, 8, 46, 44, 40, 24, 6, 23, 33, 45, 28, 23, 37, 39, 35, 39, 38, 41, 38))
+
+cat(data_assumptions[[3]]$competence, sep = ", ")
+```
+
+In the tables below, where exact p-values are not reported, we choose the threshold of p < `r alphaLevel` to reject the test. The rationale for this is that we consider what's presented as the "Overview table" of four tests to consist of a family of tests, hence 0.05 / 4 = 0.0125. We also present the tables using an alpha level of 0.05 / 12 = `r 0.05/12 %>% round(., 6)`. Ultimately, many different choices would be justified, and we encourage the reader to do their own analysis with the shared data. Obviously, not correcting for multiple testing and using 0.05 as the cutoff, would reject much more time series. **Note: the KPSS test is built in such a way that it does not produce p-values < 0.01, hence interpretation is not sensible for alpha levels below that.**
+
+The four tests presented in the Overview table, show what we consider the most important factors in this context: 
+
+1. The common way to deal with non-stationarities in data is to detrend the data, but if the trend is non-stationary, or if the mean level changes abruptly, detrending can confound the analysis.
+2. The use of linear modeling is problematic if the data is not generated by an autoregressive process.
+
+# Percentage of time series tests rejected in segments based on n {.tabset}
+
+Interpretation instructions: One time series is one variable in one person's data. The top-left percentage indicates the proportion of time series, which is rejected at p < alpha. In other words, it is the number of rejected time series in the segment signified in the column header, divided by total number of time series (i.e. number of individuals in that segment, multiplied by the number of variables per individual, i.e. 9).
+
+## Overview table (alpha = `r alphaLevel`)
+
+```{r overview_percentage_of_segments}
+
+test_nested <- test_nested %>% 
+  dplyr::mutate(obs_segment = dplyr::case_when(observations < 100 ~ 1,
+                                               observations < 1000 ~ 2,
+                                               TRUE ~ 3))
+
+test_nested_segments <- test_nested %>% dplyr::select(data_binarised, obs_segment) %>% 
+  dplyr::group_by(obs_segment) %>% 
+  tidyr::nest()
+
+test_nested_segments <- test_nested_segments %>%
+  dplyr::mutate(people = purrr::map_dbl(.x = data,
+                                              .f = ~nrow(.)))
+
+test_nested_segments_aggregates <- test_nested_segments %>% 
+  dplyr::mutate(data_binarised = purrr::map(.x = data,
+                                            .f = ~.x[["data_binarised"]] %>% 
+                                              purrr::map_df(., rbind)))
+
+test_nested_segments_aggregates <- test_nested_segments_aggregates %>% 
+  dplyr::mutate(series_numbers = purrr::map(.x = data_binarised,
+                                            .f = ~tidyr::pivot_longer(.x, cols = -test_number) %>% 
+                                              dplyr::group_by(test_number, name) %>% 
+                                              dplyr::summarise(value = sum(value)) %>% 
+                                              dplyr::ungroup() %>% 
+                                              tidyr::pivot_wider(names_from = name, values_from = value)
+  ))
+
+test_nested_segments_aggregates <- test_nested_segments_aggregates %>% 
+  dplyr::mutate(aggregated_series = purrr::map(.x = series_numbers,
+                                            .f = ~tidyr::pivot_longer(.x, cols = -test_number) %>% 
+                                              dplyr::group_by(test_number) %>% 
+                                              dplyr::summarise(value = sum(value)) %>% 
+                                              dplyr::ungroup() %>% 
+                                              tidyr::pivot_wider(names_from = test_number, values_from = value)
+  ))
+
+test_nested_segments_aggregates <- test_nested_segments_aggregates %>% 
+  dplyr::mutate(aggregated_proportions = purrr::pmap(list(..1 = aggregated_series,
+                                                          ..2 = people),
+                                                     .f = ~..1 %>% dplyr::mutate(., people_n = ..2)),
+                aggregated_proportions = purrr::map(.x = aggregated_proportions,
+                                                    .f = ~dplyr::mutate_at(.x, 
+                                                                           vars(-contains("people_n")), 
+                                                                           funs(./(people_n*9)))))
+
+segment1_max <- test_nested %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(observations < 100) %>% 
+  dplyr::arrange(desc(observations)) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::pull(observations)
+
+segment1_min <- test_nested %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(observations < 100) %>% 
+  dplyr::arrange(desc(observations)) %>% 
+  dplyr::filter(row_number() == n()) %>% 
+  dplyr::pull(observations)
+
+segment2_max <- test_nested %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(observations >= 100 & observations <= 1000) %>% 
+  dplyr::arrange(desc(observations)) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::pull(observations)
+
+segment2_min <- test_nested %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(observations >= 100 & observations <= 1000) %>% 
+  dplyr::arrange(desc(observations)) %>% 
+  dplyr::filter(row_number() == n()) %>% 
+  dplyr::pull(observations)
+
+segment3_minmax <- test_nested %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(observations > 1000) %>% 
+  dplyr::arrange(desc(observations)) %>% 
+  dplyr::filter(row_number() == n()) %>% 
+  dplyr::pull(observations)
+
+segment_proportions <- test_nested_segments_aggregates$aggregated_proportions %>% 
+  dplyr::bind_rows() %>% 
+  dplyr::mutate(group = c(paste0(segment1_min, "-", segment1_max, " observations (n = ", people_n[1], ")"),
+                          paste0(segment2_min, "-", segment2_max, " observations (n = ", people_n[2], ")"),
+                          paste0(segment3_minmax, " observations (n = ", people_n[3], ")"))) %>% 
+  tidyr::pivot_longer(cols = c(-"people_n", -"group")) %>% 
+  dplyr::select(-people_n) %>% 
+  tidyr::pivot_wider(names_from = group, values_from = value)
+
+segment_proportions$name <- test_nested$data[[1]]$name
+
+DT::datatable(segment_proportions %>%
+                dplyr::mutate_at(vars(-name), funs(scales::percent(., accuracy = 0.1))) %>% 
+                dplyr::slice(c(7, 8, 9, 12)),
+              options = list(pageLength = 12),
+              caption = paste0("Tests for stationarity and non-linearity. Columns indicate 
+                               segments in the full sample of n = 20, and rows indicate tests. 
+                               Each cell indicates the percentage of time series (out of n 
+                               times 9, as each participant collected data on 9 variables), 
+                               where H0 is rejected at p<", alphaLevel, ". AR = autoregressive."))
+
+```
+
+## Full table (alpha = `r alphaLevel`)
+
+```{r full_percentage_of_segments}
+
+DT::datatable(segment_proportions %>%
+                dplyr::mutate_at(vars(-name), funs(scales::percent(., accuracy = 0.1))),
+              options = list(pageLength = 12),
+              caption = paste0("Tests for stationarity and non-linearity. Columns indicate 
+                               segments in the full sample of n = 20, and rows indicate tests. 
+                               Each cell indicates the percentage of time series (out of n 
+                               times 9, as each participant collected data on 9 variables), 
+                               where H0 is rejected at p<", alphaLevel, ". AR = autoregressive."))
+
+```
+
+## Overview table (alpha = `r alphaLo %>% round(., 4)`)
+
+```{r alphaLo_overview_percentage_of_segments}
+
+alphaLo_test_nested <- alphaLo_test_nested %>% 
+  dplyr::mutate(obs_segment = dplyr::case_when(observations < 100 ~ 1,
+                                               observations < 1000 ~ 2,
+                                               TRUE ~ 3))
+
+alphaLo_test_nested_segments <- alphaLo_test_nested %>% 
+  dplyr::select(data_binarised, obs_segment) %>% 
+  dplyr::group_by(obs_segment) %>% 
+  tidyr::nest()
+
+alphaLo_test_nested_segments <- alphaLo_test_nested_segments %>%
+  dplyr::mutate(people = purrr::map_dbl(.x = data,
+                                              .f = ~nrow(.)))
+
+alphaLo_test_nested_segments_aggregates <- alphaLo_test_nested_segments %>% 
+  dplyr::mutate(data_binarised = purrr::map(.x = data,
+                                            .f = ~.x[["data_binarised"]] %>% 
+                                              purrr::map_df(., rbind)))
+
+alphaLo_test_nested_segments_aggregates <- alphaLo_test_nested_segments_aggregates %>% 
+  dplyr::mutate(series_numbers = purrr::map(.x = data_binarised,
+                                            .f = ~tidyr::pivot_longer(.x, cols = -test_number) %>% 
+                                              dplyr::group_by(test_number, name) %>% 
+                                              dplyr::summarise(value = sum(value)) %>% 
+                                              dplyr::ungroup() %>% 
+                                              tidyr::pivot_wider(names_from = name, 
+                                                                 values_from = value)
+  ))
+
+alphaLo_test_nested_segments_aggregates <- alphaLo_test_nested_segments_aggregates %>% 
+  dplyr::mutate(aggregated_series = purrr::map(.x = series_numbers,
+                                            .f = ~tidyr::pivot_longer(.x, cols = -test_number) %>% 
+                                              dplyr::group_by(test_number) %>% 
+                                              dplyr::summarise(value = sum(value)) %>% 
+                                              dplyr::ungroup() %>% 
+                                              tidyr::pivot_wider(names_from = test_number, 
+                                                                 values_from = value)
+  ))
+
+alphaLo_test_nested_segments_aggregates <- alphaLo_test_nested_segments_aggregates %>% 
+  dplyr::mutate(aggregated_proportions = 
+                  purrr::pmap(list(..1 = aggregated_series,
+                                   ..2 = people),
+                              .f = ~..1 %>% 
+                                dplyr::mutate(., people_n = ..2)),
+                aggregated_proportions = 
+                  purrr::map(.x = aggregated_proportions,
+                             .f = ~dplyr::mutate_at(.x, 
+                                                    vars(-contains("people_n")), 
+                                                    funs(./(people_n*9)))))
+
+segment1_max <- alphaLo_test_nested %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(observations < 100) %>% 
+  dplyr::arrange(desc(observations)) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::pull(observations)
+
+segment1_min <- alphaLo_test_nested %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(observations < 100) %>% 
+  dplyr::arrange(desc(observations)) %>% 
+  dplyr::filter(row_number() == n()) %>% 
+  dplyr::pull(observations)
+
+segment2_max <- alphaLo_test_nested %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(observations >= 100 & observations <= 1000) %>% 
+  dplyr::arrange(desc(observations)) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::pull(observations)
+
+segment2_min <- alphaLo_test_nested %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(observations >= 100 & observations <= 1000) %>% 
+  dplyr::arrange(desc(observations)) %>% 
+  dplyr::filter(row_number() == n()) %>% 
+  dplyr::pull(observations)
+
+segment3_minmax <- alphaLo_test_nested %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(observations > 1000) %>% 
+  dplyr::arrange(desc(observations)) %>% 
+  dplyr::filter(row_number() == n()) %>% 
+  dplyr::pull(observations)
+
+alphaLo_segment_proportions <- alphaLo_test_nested_segments_aggregates$aggregated_proportions %>% 
+  dplyr::bind_rows() %>% 
+  dplyr::mutate(group = c(paste0(segment1_min, "-", segment1_max, " observations (n = ", people_n[1], ")"),
+                          paste0(segment2_min, "-", segment2_max, " observations (n = ", people_n[2], ")"),
+                          paste0(segment3_minmax, " observations (n = ", people_n[3], ")"))) %>% 
+  tidyr::pivot_longer(cols = c(-"people_n", -"group")) %>% 
+  dplyr::select(-people_n) %>% 
+  tidyr::pivot_wider(names_from = group, values_from = value)
+
+alphaLo_segment_proportions$name <- alphaLo_test_nested$data[[1]]$name
+
+DT::datatable(alphaLo_segment_proportions %>%
+                dplyr::mutate_at(vars(-name), funs(scales::percent(., accuracy = 0.1))) %>% 
+                dplyr::slice(c(7, 8, 9, 12)),
+              options = list(pageLength = 12),
+              caption = paste0("Tests for stationarity and non-linearity. Columns indicate 
+                               segments in the full sample of n = 20, and rows indicate tests. 
+                               Each cell indicates the percentage of time series (out of n 
+                               times 9, as each participant collected data on 9 variables), 
+                               where H0 is rejected at p<", alphaLo %>% round(., 4),
+                               ". AR = autoregressive."))
+
+```
+
+## Full table (alpha = `r alphaLo %>% round(., 4)`)
+
+```{r alphaLo_full_percentage_of_segments}
+
+DT::datatable(alphaLo_segment_proportions %>%
+                dplyr::mutate_at(vars(-name), funs(scales::percent(., accuracy = 0.1))),
+              options = list(pageLength = 12),
+              caption = paste0("Tests for stationarity and non-linearity. Columns indicate 
+                               segments in the full sample of n = 20, and rows indicate tests. 
+                               Each cell indicates the percentage of time series (out of n 
+                               times 9, as each participant collected data on 9 variables), 
+                               where H0 is rejected at p<", alphaLo %>% round(., 4), 
+                               ". AR = autoregressive."))
+
+```
+
+# Rejections per variable {.tabset}
+
+Interpretation instructions: One time series is one variable in one person's data. The top-left number indicates the number of rejections of the test indicated by row name, in the variable indicated by column name. The total possible number of tests would be the number of collected time series of that variable, that is, the number of individuals in the dataset (20).
+
+## Overview table (alpha = `r alphaLevel`)
+
+Rejections out of a total of 20 participants. Rejection threshold at p<`r alphaLevel`.
+
+```{r overview_rejections_per_variable}
+
+DT::datatable(tests_number_of_series %>% 
+                dplyr::slice(c(7, 8, 9, 12)),
+              options = list(pageLength = 12),
+              caption = paste0("Number of time series (out of number of participants = 20) 
+                               where H0 is rejected at p<", 
+                               alphaLevel)) %>%
+    DT::formatRound(columns = colnames(test_results), digits=3)
+
+```
+
+## Full table (alpha = `r alphaLevel`)
+
+```{r full_rejections_per_variable}
+
+DT::datatable(tests_number_of_series,
+              options = list(pageLength = 12),
+              caption = paste0("Number of time series (out of number of participants = 20) 
+                               where H0 is rejected at p<", 
+                               alphaLevel)) %>%
+    DT::formatRound(columns = colnames(test_results), digits=3)
+
+```
+
+## Overview table (alpha = `r alphaLo %>% round(., 4)`)
+
+Rejections out of a total of 20 participants. Rejection threshold at p<`r alphaLo %>% round(., 4)`.
+
+```{r overview_alphaLo_rejections_per_variable}
+
+DT::datatable(alphaLo_tests_number_of_series %>% 
+                dplyr::slice(c(7, 8, 9, 12)),
+              options = list(pageLength = 12),
+              caption = paste0("Number of time series (out of number of participants = 20) 
+                               where H0 is rejected at p<", 
+                               alphaLo %>% round(., 4))) %>%
+    DT::formatRound(columns = colnames(test_results), digits=3)
+
+```
+
+## Full table (alpha = `r alphaLo %>% round(., 4)`)
+
+```{r full_alphaLo_rejections_per_variable}
+
+DT::datatable(alphaLo_tests_number_of_series,
+              options = list(pageLength = 12),
+              caption = paste0("Number of time series (out of number of participants = 20) 
+                               where H0 is rejected at p<", 
+                               alphaLo %>% round(., 4))) %>%
+    DT::formatRound(columns = colnames(test_results), digits=3)
+
+```
+
+# Rejections per person {.tabset}
+
+Interpretation instructions: One time series is one variable in one person's data. The top left number indicates how many time series for the person indicated by the column heading, were rejected by the test indicated by the row heading. The maximum possible number of rejections is the number of variables collected by the person, that is, nine.
+
+## Overview table (alpha = `r alphaLevel`)
+
+```{r}
+DT::datatable(rejected_vars_per_test %>% 
+                dplyr::slice(c(7, 8, 9, 12)),
+              options = list(pageLength = 12),
+              caption = paste0("Number of time series (out of 9, i.e. per person per test), 
+                               where H0 is rejected at p<", 
+                               alphaLevel))
+
+
+```
+
+## Full table (alpha = `r alphaLevel`)
+
+```{r}
+DT::datatable(rejected_vars_per_test,
+              options = list(pageLength = 12),
+              caption = paste0("Number of time series (out of 9, i.e. per person per test), 
+                               where H0 is rejected at p<", 
+                               alphaLevel))
+
+```
+
+## Overview table (alpha = `r alphaLo %>% round(., 4)`)
+
+```{r}
+DT::datatable(alphaLo_rejected_vars_per_test %>% 
+                dplyr::slice(c(7, 8, 9, 12)),
+              options = list(pageLength = 12),
+              caption = paste0("Number of time series (out of 9, i.e. per person per test), 
+                               where H0 is rejected at p<", 
+                               alphaLo %>% round(., 4)))
+
+
+```
+
+## Full table (alpha = `r alphaLo %>% round(., 4)`)
+
+```{r}
+DT::datatable(alphaLo_rejected_vars_per_test,
+              options = list(pageLength = 12),
+              caption = paste0("Number of time series (out of 9, i.e. per person per test), 
+                               where H0 is rejected at p<", 
+                               alphaLo %>% round(., 4)))
+
+```
+
+# Raw results for individual participants {.tabset}
+
+Interpretation instructions: Each table indicates results for one person. Numbers in cells show the p-values (or maximum p-values in case of McLeod-Li test) for tests of assumptions of data-generating processes.
+
+```{r individual_results, results = "asis", fig.show = "asis"}
+
+for(i in test_nested$User) {
+test_nested_oneperson <- test_nested %>%
+  dplyr::filter(User == i)
+
+test_results <- DT::datatable(test_nested_oneperson$data[[1]] %>% 
+                                dplyr::select(-`test_number`) %>% 
+                                mutate_if(is.numeric, ~sprintf(., fmt="%#.3f")), # preserve 3 decimals
+              options = list(pageLength = 12),
+              caption = "P-values (or maximum p-values in case of McLeod-Li test) 
+              for tests of assumptions of data-generating processes") %>%
+    DT::formatRound(columns = colnames(test_results), digits=3)
+
+cat('\n\n###', i, '\n\n  ')
+
+cat(knitr::knit_print(test_results))
+
+}
+```
+
+# Session information
+
+Description of the R environment can be found below.
+
+```{r session-info, results = 'markup'}
+devtools::session_info()
+
+pander::pander(sessionInfo())
+```

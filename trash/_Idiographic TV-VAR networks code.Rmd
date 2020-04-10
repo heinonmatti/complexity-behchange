@@ -1,0 +1,175 @@
+---
+title: "Idiographic TV-VAR networks"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(mgm)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 8 nodes: TV-mgm, Contemporaneous time-varying network with mgm
+
+```{r tvvar-prep, dpi = 300}
+
+library(tidyverse)
+library(mgm)
+
+sdtVarData <- readr::read_rds("../motivation-dynamics/shareable_data/EMA_data_Moti13.RDS")
+username <- "Moti13"
+
+sdtVarData <- sdtVarData %>% 
+  dplyr::mutate_at(vars(anxiety_guilt, autonomy, competence, 
+                        for_others, importance, interest, own_question, pleasure, 
+                        productivity_work, satisfaction_work, sleep_quality,
+                        relatedness, required, time_since_break), 
+                   funs(as.numeric)) %>% 
+  # dplyr::mutate(`interesting_pleasant` = (interest + pleasure) / 2) %>%
+  dplyr::select(# autonomy, competence, relatedness, 
+                interest, pleasure, Importance = importance,
+                `situation_requires` = required, `avoid_guilt_anxiety` = anxiety_guilt, 
+                `another_wants` = for_others, 
+                dateTime) %>% 
+  dplyr::arrange(dateTime) %>% 
+  dplyr::mutate(timediff = c(NA, diff(dateTime))) %>% 
+  dplyr::filter(timediff > 15) %>% 
+  dplyr::select(-timediff) %>% 
+  na.omit(.)
+
+df <- sdtVarData$dateTime
+time_01 <- df - df[1]
+time_01 <- as.numeric(time_01)
+time_01 <- time_01 / max(time_01) # normalise time, not necessary for mgm, though
+
+sdtVarData_values <- sdtVarData %>% 
+  dplyr::select(-dateTime) %>% 
+  dplyr::mutate_all(funs(as.numeric(.)))
+
+bwSeq <- seq(0.01, 1, length = 10) # ten equally spaced values in [0:01; 1]
+
+# Find optimal bandwidth
+bw_object <- mgm::bwSelect(data = sdtVarData_values,
+  type = rep("g", 6),
+  level = rep(1, 6),
+  bwSeq = bwSeq,
+  bwFolds = 2,
+  bwFoldsize = 20,
+  modeltype = "mvar",
+  lags = 1,
+  scale = TRUE,
+  timepoints = time_01)
+
+readr::write_rds(bw_object, path  = paste0("RDS_files/", username, "_6nodes_bw_object.RDS"))
+bw_object <- readr::read_rds(path  = paste0("RDS_files/", username, "_6nodes_bw_object.RDS"))
+
+bandwidth <- bwSeq[which.min(bw_object$meanError)]
+
+# data.frame(bwSeq, bw_object$meanError) %>% plot()
+
+# --------- Fit time-varying VAR -----------------------------------
+
+estpoints <- seq(from = 0, to = 1, length = 50)
+
+set.seed(1)
+tvvar_obj <- mgm::tvmvar(data = sdtVarData_values,
+  type = rep("g", 6),
+  level = rep(1, 6),
+  lambdaSel = "CV",
+  timepoints = time_01,
+  estpoints = estpoints,
+  bandwidth = bandwidth,
+  lags = 1,
+  saveData = TRUE,
+  scale = TRUE)
+
+readr::write_rds(tvvar_obj, path  = paste0("RDS_files/", username, "_6nodes_tvvar_obj.RDS"))
+tvvar_obj <- readr::read_rds(path  = paste0("RDS_files/", username, "_6nodes_tvvar_obj.RDS"))
+
+resample_obj <- mgm::resample(object = tvvar_obj,
+  data = sdtVarData_values,
+  nB = 50,
+  blocks = 10,
+  seeds = 1:50,
+  quantiles = c(.05, .95))
+
+readr::write_rds(resample_obj, path  = paste0("RDS_files/", username, "_6nodes_resample_obj.RDS"))
+resample_obj <- readr::read_rds(path  = paste0("RDS_files/", username, "_6nodes_resample_obj.RDS"))
+
+```
+
+## Make plot
+
+```{r TV-VAR-six-nodes, dpi = 300}
+username <- "Moti13"
+tvvar_obj <- readr::read_rds(path  = paste0("RDS_files/", username, "_6nodes_tvvar_obj.RDS"))
+
+# Maximum edge weight to scale edges to:
+
+maxedge <- max(c(tvvar_obj$wadj[, , 1, 5], tvvar_obj$wadj[, , 1, 25], tvvar_obj$wadj[, , 1, 45]))
+
+layout(matrix(
+  c(1, 2, 3), 
+  nrow = 1, ncol = 3, byrow = FALSE))
+
+# 10% of study completed
+tp <- 5
+qgraph::qgraph(t(tvvar_obj$wadj[, , 1, tp]), 
+         layout = "circle",
+         edge.color = t(tvvar_obj$edgecolor[, , 1, tp]),
+         curveAll = FALSE, parallelEdge = TRUE, parallelAngle = 0.1,
+         # vTrans = 210,
+         vsize = 20, 
+         # esize = 7,
+         asize = 12,
+         mar = c(4.5, 5, 4.5, 5),
+         minimum = 0, 
+         maximum = maxedge,
+         labels = c(# "Autonomy", "Competence", "Relatedness",
+                    "Pleasure", "Interest", "Importance",
+                    "Situation\nrequires", "Avoid guilt/\nanxiety", "Another\nwants"),
+         label.scale = FALSE,
+         color = viridis::viridis(6, begin = 0.5, direction = -1),
+         # pie = pred_obj$tverrors[[tp]][, 3],
+         directed = TRUE) 
+
+tp <- 25
+qgraph::qgraph(t(tvvar_obj$wadj[, , 1, tp]), 
+         layout = "circle",
+         edge.color = t(tvvar_obj$edgecolor[, , 1, tp]),
+         curveAll = FALSE,
+         # vTrans = 210,
+         vsize = 20, 
+         # esize = 7,
+         asize = 12,
+         mar = c(4.5, 5, 4.5, 5),
+         minimum = 0, 
+         maximum = maxedge,
+         labels = c(# "Autonomy", "Competence", "Relatedness",
+                    "Pleasure", "Interest", "Importance",
+                    "Situation\nrequires", "Avoid guilt/\nanxiety", "Another\nwants"),
+         label.scale = FALSE,
+         color = viridis::viridis(6, begin = 0.5, direction = -1),
+         # pie = pred_obj$tverrors[[tp]][, 3],
+         directed = TRUE) 
+
+tp <- 45
+qgraph::qgraph(t(tvvar_obj$wadj[, , 1, tp]), 
+               layout = "circle",
+               edge.color = t(tvvar_obj$edgecolor[, , 1, tp]),
+               curveAll = FALSE,
+               # vTrans = 210,
+               vsize = 20, 
+               # esize = 7,
+               asize = 12,
+               mar = c(4.5, 5, 4.5, 5),
+               minimum = 0, 
+               maximum = maxedge,
+               labels = c(# "Autonomy", "Competence", "Relatedness",
+                          "Pleasure", "Interest", "Importance",
+                          "Situation\nrequires", "Avoid guilt/\nanxiety", "Another\nwants"),
+               label.scale = FALSE,
+         color = viridis::viridis(6, begin = 0.5, direction = -1),
+               # pie = pred_obj$tverrors[[tp]][, 3],
+               directed = TRUE) 
+
+```
