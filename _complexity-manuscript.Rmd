@@ -180,7 +180,7 @@ For the processes underlying PA outlined above to be considered stationary, the 
 
 Figure \@ref(fig:tv-var) illustrates non-stationarity in the case of work motivation, a key feature of occupational health psychology. Data is from one participant in an observational study of motivation self-management (Heino et al., in prep; see supplement, section xxx). We can observe that the relationships vary drastically, as the study progresses.
 
-```{r tv-var-prep, include = FALSE}
+```{r tv-var-prep, include = FALSE, eval = FALSE}
 
 library(tidyverse)
 library(mgm)
@@ -361,7 +361,7 @@ qgraph::qgraph(t(tvvar_obj$wadj[, , 1, tp]),
 
 ```
 
-Idiographic science, which tries to unveil person-level processes, does not aim to inductively go from data to universal or statistical laws which hold in hypothetical infinitely large populations  [@gaylesUtilityPersonspecificAnalyses2013]. Instead, it applies general principles, such as universal properties of complex systems, to study how specific individuals behave in their particular contexts. Answering more than half a century of calls to expand focus beyond outcomes to processes, new technology in data collection and analysis has now made the idiographic approach possible [@hamakerModelingBASDysregulation2016]. The basic solution is to not average individuals and then model the behaviour of the averages, but to first model individuals, then aggregate those models to search for commonalities (Wright & Woods, 2020). Recent work has made use of methods such as ecological momentary assessment (e.g. Burke et al. -@burkeEcologicalMomentaryAssessment2017) to gather intensive longitudinal data on behaviour and determinants from one or more individuals which can then be represented as time-series. In the case of smoking, analyses of such idiographic data have yielded individualized models which can predict behaviour with stunning accuracy (for some individuals at least; Fisher and Soyster, -@fisherGeneratingAccuratePersonalized2019; Soyster and Fisher, -@soysterInvolvingStakeholdersDesign2019).
+Idiographic science, which tries to unveil person-level processes, does not aim to inductively go from data to universal or statistical laws which hold in hypothetical infinitely large populations  [@gaylesUtilityPersonspecificAnalyses2013]. Instead, it applies general principles, such as universal properties of complex systems, to study how specific individuals behave in their particular contexts. Answering more than half a century of calls to expand focus beyond outcomes to processes, new technology in data collection and analysis has now made the idiographic approach possible [@hamakerModelingBASDysregulation2016]. The basic solution is to not average individuals and then model the behaviour of the averages, but to first model individuals, then aggregate those models to search for commonalities [@wrightPersonalizedModelsPsychopathology2020a]. Recent work has made use of methods such as ecological momentary assessment (e.g. Burke et al. -@burkeEcologicalMomentaryAssessment2017) to gather intensive longitudinal data on behaviour and determinants from one or more individuals which can then be represented as time-series. In the case of smoking, analyses of such idiographic data have yielded individualized models which can predict behaviour with stunning accuracy (for some individuals at least; Fisher and Soyster, -@fisherGeneratingAccuratePersonalized2019; Soyster and Fisher, -@soysterInvolvingStakeholdersDesign2019).
 
 Coming back to the notion of mechanisms; if the mechanisms happen within an individual, we need to study them at the appropriate scale, that is, within-individual. However, when we study individual time series data, it becomes quickly obvious that the methods used in the conventional approach for studying group averages (e.g. pre-post measurements with a long time between them) leave us wanting. Figure \@ref(fig:sampling-rate-plot) illustrates that if insufficient within-individual time points are sampled, a deceptively linear picture of the process emerges (see also @schiepekRealtimeMonitoringPsychotherapeutic2016, p. 3). The same logic applies if we are studying groups but cannot rely on the means being informative due to a lack of power (as demonstrated in @carelloWhyNonlinearMethods2005). 
 
@@ -511,41 +511,93 @@ There are many ways to study nonlinear change processes in complex systems. Beha
 
 To explore the dynamics of a phenomenon while making no assumptions about distributional shapes of observations or their errors, linearity, or time-lags involved, researchers can perform Recurrence Quantification Analysis, which provides a visual intuition about the organisation of a system (recall from Table 1 that in complex systems, the organisation of components can be more important than the components themselves). Recurrence Quantification Analysis originates from physics [@marwanRecurrencePlotsAnalysis2007], but has been applied to a wide variety of fields in psychology [@brickRecurrenceQuantificationAnalysis2018; @navarroChaosHumanBehavior2010; @rosenKnowItWhen2013]. 
 
-The first step of the analysis involves creating recurrence plots. In recurrence plots, the re-occurrence of values is visualised by plotting a time series against another time series (to explore cross-recurrence) or itself (to explore auto-recurrence). Figure \@ref(fig:rqa-pedagogical) depicts a cross-recurrence plot of two hypothetical time series with discrete states coded as 1 to 6: Yellow (1, 5, 4, 3, 2, 6) and Blue (5, 4, 3, 4, 3, 2). Black cells indicate places where the same value occurs in both series. These data show a switch in the system state: the blue series precedes the yellow one until time 3-4, after which the yellow series precedes the blue one. While this is merely a pedagogical example (a time series of only six observations would rarely be sufficient to reliably identify patterns), it illustrates the utility of the method in identifying patterns in time series data.
+```{r rqa-pedagogical-distance, fig.width = 8.27/2.5, fig.height = 8.27/2.5, fig.cap = "A distance matrix of a hypothetical time series of length 6. Red cells indicate highly similar values, white cells intermediate ones, and blue cells highly dissimilar values"}
 
-```{r rqa-pedagogical, fig.width = 8.27/2.5, fig.height = 8.27/2.5, fig.cap = "A recurrence plot of two hypothetical time series (blue and yellow) of length 6. We can observe, for example, that the blue series happens before the yellow one until a switch at time points 3-4, after which the yellow series leads."}
-
-# knitr::include_graphics(path = "./figures/rqa_pedagogical.png")
-
-grid::grid.raster(png::readPNG("./figures/rqa_pedagogical.png"))
+grid::grid.raster(png::readPNG("./figures/rqa_pedagogical_distance.png"))
 
 ```
 
-Figure \@ref(fig:rqa-multiplot) shows several auto-recurrence plots that depict longer time series of continuous data. Plots in the upper row colour cells based on the Euclidean distance between points of the underlying time series, with red colours indicating more similar values, blue colours less similar values, and white implying intermediate distance. For plots in the bottom row, a radius has been set to dichotomise each cell into recurrent (black), or not (white), with the goal of creating a sparse matrix from which recurrences can be quantified (similar to that in Figure \@ref(fig:rqa-pedagogical)). This quantification is done by extracting complexity measures the patterns in the recurrence plot; the detailed process is beyond the scope of this paper, but fully described in Marwan, Romano, Thiel, & Kurths (-@marwanRecurrencePlotsAnalysis2007, pp. 251 and 263-283). In the supplementary website (section xxx), we present a subset of metrics, which may be of particular interest to behaviour change researchers.
+Figure \@ref(fig:rqa-biplot) shows auto-recurrence plots that depict longer time series of continuous data. Plots in the upper row colour cells based on the Euclidean distance between points of the underlying time series, with red colours indicating more similar values, blue colours less similar values, and white implying intermediate distance. For plots in the bottom row, a radius has been set to dichotomise each cell into recurrent (black), or not (white), with the goal of creating a sparse matrix from which recurrences can be quantified. This quantification is done by extracting complexity measures the patterns in the recurrence plot; the detailed process is beyond the scope of this paper, but fully described in Marwan, Romano, Thiel, & Kurths (-@marwanRecurrencePlotsAnalysis2007, pp. 251 and 263-283). In the supplementary website (section xxx), we present a subset of metrics, which may be of particular interest to behaviour change researchers.
 
 Because values always recur with themselves, we observe full recurrence in the diagonal line. The first column is a plot made out of a series of random numbers. The middle column depicts the result, where a single participant’s responses on several motivation-related variables are subjected to multi-dimensional Recurrence Quantification Analysis [@wallotAnalyzingMultivariateDynamics2018; @wallotMultidimensionalRecurrenceQuantification2016; @wallotMultidimensionalCrossRecurrenceQuantification2019]. The rightmost column represents surrogate data, where the participant’s responses are shuffled to dismantle the temporal structure; this shuffling can be done repeatedly to produce confidence intervals for recurrence-based complexity measures.
 
 In behaviour change research thus far, intensive longitudinal data have usually consisted of several variables, but not many (e.g. <40) observations per variable. This is why we have omitted the description of a technique known as phase space reconstruction, which is commonly applied in Recurrence Quantification Analysis, as it allows one to infer (topologically equivalent) dynamics of the multivariate system, from tracking one variable only (by what’s known as Takens’ theorem; Takens, 1981). The technique is explained in recurrence quantification primers [@cocoCrossrecurrenceQuantificationAnalysis2014; @wallotAnalyzingMultivariateDynamics2018; @webberjrRecurrenceQuantificationAnalysis2005].  
 
-```{r rqa-multiplot, fig.width = 8.27, fig.height = 11.69/2, fig.cap = "Recurrence plots. Columns, from left to right: Recurrence plots of uniformly distributed noise (A-B), a 6-dimensional motivation system of a single participant (C-D), and the same system with shuffled values (E-F). Panels A, C and E show unthresholded plots, where each cell (or pixel) represents a measurement occasion, with red colours indicating the value is close to the corresponding time point on the other axis, while blue colours indicate the contrary. Panels B, D and F show matrices where these unthresholded plots have been binarised---leaving only 5% of the closest points---leading to thresholded plots from which quantitative indicators can be calculated. Black points indicate the same or a similar value (in case of B) or configuration \"profile\" (in case of D and F) occurring. Drawn with R package casnet, code available at the supplementary website (section xxx)."}
+```{r rqa-setup, include = FALSE, eval = FALSE}
 
 # knitr::include_graphics(path = "./figures/rqa_multiplot.png")
 
-grid::grid.raster(png::readPNG("./figures/rqa_multiplot.png"))
+emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled %>% 
+  dplyr::mutate(unthresholded = purrr::map(.x = data_firstlast_divided_by_max, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE)))
+
+
+emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled_unthresholded %>% 
+  dplyr::mutate(unthresholded_plot = purrr::map(.x = unthresholded, 
+                                                .f = ~casnet::rp_plot(.x, 
+                                                                      title = "A)",
+                                                                      xlabel = "6-dimensional motivation system",
+                                                                      ylabel = "6-dimensional motivation system",
+                                                                      plotRadiusRRbar = FALSE, 
+                                                                      plotDimensions = TRUE)))
+
+emadata_nested_wrangled_both <- emadata_nested_wrangled_unthresholded %>% 
+  dplyr::mutate(thresholded = purrr::map(.x = data_firstlast_divided_by_max, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE,
+                                                         emRad = NA,
+                                                         doPlot = TRUE,
+                                                         xlabel = " ",
+                                                         ylabel = " ")))
+
+
+
+# At 15 Dec 2019, crqa_rp is deprecated but called by rp_plot when plotMeasures = TRUE. This hack helps:
+crqa_rp <- casnet::rp_measures
+
+emadata_nested_wrangled_both <- emadata_nested_wrangled_both %>% 
+  dplyr::mutate(thresholded_plot = purrr::map(.x = thresholded, 
+                                              .f = ~casnet::rp_plot(.x,
+                                                                    title = "B)",
+                                                                    xlabel = "6-dimensional motivation system",
+                                                                    ylabel = "6-dimensional motivation system",
+                                                                    plotRadiusRRbar = FALSE, 
+                                                                    plotDimensions = TRUE,
+                                                                    plotMeasures = FALSE)))
+
+emadata_nested_wrangled_both_withMeasures <- emadata_nested_wrangled_both %>% 
+  dplyr::mutate(measures = purrr::map(.x = thresholded, 
+                                              .f = ~casnet::rp_measures(.x,
+                                                                        emRad = NA)))
+
+# rqa_plot <- gridExtra::grid.arrange(
+#                         emadata_nested_wrangled_both_withMeasures$unthresholded_plot[[1]],
+#                         emadata_nested_wrangled_both_withMeasures$thresholded_plot[[1]],
+#                         layout_matrix = matrix(c(1, 2),
+#                                                nrow = 1, byrow = FALSE))
+
+# cowplot::save_plot("./figures/rqa_biplot.png", rqa_plot, dpi = 300)
 
 ```
 
-It can be visually distinguished, that the middle column (panels C-D) of Figure \@ref(fig:rqa-multiplot) has more structure than either the series of random numbers, or the series with shuffled numbers; the recurrent states mostly happen in the second half of the study period. 
+```{r rqa-biplot, fig.cap = "A 6-dimensional motivation system of a single participant. Panel A depicts an unthresholded distance matrix, where each cell (or pixel) represents a measurement occasion, with red colours indicating the value is close to the corresponding time point on the other axis, while blue colours indicate the contrary. Panel B is a recurrence plot, where this unthresholded plot has been binarised---leaving only 5% of the closest points---leading to thresholded plots from which quantitative indicators can be calculated. Black points indicate the same or a similar configuration \"profile\" occurring. Drawn with R package casnet, code available at the supplementary website (section xxx)."}
 
-Recurrence plots are, in essence, visualisations of (Euclidean) distance matrices, and as such can also be represented as networks [@hasselmanStudyingComplexAdaptive2020; @zouComplexNetworkApproaches2019]. This allows for displaying relationships between observations in the time series in an intuitive way, which in the case of multidimensional Recurrence Quantification Analysis can be thought of as displaying a type of multivariate "correlation", indicating which occasions repeat a particular pattern. These patterns or configurations can be thought of as attractors, towards which the system is drawn, or profiles. Figure \@ref(fig:recnet) demonstrates a multidimensional recurrence network. We can see that most of the recurrences take place in the second half of the data, as already shown in panels C and D of \@ref(fig:rqa-multiplot). In addition, all the patterns (or, equivalently: attractors, profiles, configurations) which occur only once, take place in the first half of data collection. This suggests the  
+grid::grid.raster(png::readPNG("./figures/rqa_biplot.png"))
 
-```{r recnet, fig.width = 8.27/2, fig.height = 8.27/2, fig.cap = "Recurrence network. Numbers indicate measurement occasions, and colors represent different motivation profiles, consisting of six variables, configurations of which can be conceived of as attractors. Lines indicate the same attractor reoccurring at a later time point. Yellow nodes indicate the strongest attractor, red nodes the second strongest, followed by purple and blue. Grey nodes depict uncategorised configurations which occur at least twice, and white ones the configurations, which only occur once. Nodes that are larger, are connected to more other nodes, especially those farther in time. Drawn with R package casnet, code available at the supplementary website (section xxx)."}
+```
+
+It can be visually distinguished from \@ref(fig:rqa-biplot), that the recurrent states mostly happen in the second half of the study period. These plots are, in essence, visualisations of (Euclidean) distance matrices, and as such can also be represented as networks [@hasselmanStudyingComplexAdaptive2020; @zouComplexNetworkApproaches2019], with time points as nodes. This allows for displaying relationships between observations in the time series in an intuitive way, which in the case of multidimensional Recurrence Quantification Analysis can be thought of as displaying a type of multivariate "correlation", indicating which occasions repeat a particular pattern. These patterns or configurations can be thought of as attractors, towards which the system is drawn, or profiles. Figure \@ref(fig:recnet) demonstrates a multidimensional recurrence network. 
+
+```{r recnet, fig.width = 8.27/2, fig.height = 8.27/2, fig.cap = "Weighted recurrence network. Numbers indicate measurement occasions, and colors represent different motivation profiles, consisting of six variables, configurations of which can be conceived of as attractors. Lines indicate the same attractor reoccurring at a later time point. Yellow nodes indicate the strongest attractor, red nodes the second strongest, followed by purple and blue. Grey nodes depict uncategorised configurations which occur at least twice, and white ones the configurations, which only occur once. Nodes that are larger, are connected to more other nodes. Drawn with R package casnet, code available at the supplementary website (section xxx)."}
 
 # knitr::include_graphics(path = "./figures/rqa_multiplot.png")
 
 grid::grid.raster(png::readPNG("./figures/recnetwork.png"))
 
 ```
+
+We can see that most of the recurrences take place in the second half of the data, as already shown in \@ref(fig:rqa-biplot). In addition, all the patterns (or, equivalently: attractors, profiles, configurations) which occur only once, take place in the first half of data collection. This suggests the ... .. . .. . .
 
 # Discussion 
 

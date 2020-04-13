@@ -20,7 +20,7 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ```
 
-In this document, we provide supplementary information about recurrence measures and examples of them, as well as provide code for the figures in the manuscript.
+In this document, we provide supplementary information about recurrence quantification analysis, with examples of recurrence measures that can be extracted from recurrence plots. We also provide code for the figures in the manuscript.
 
 # Recurrence measures {.tabset}
 	
@@ -46,9 +46,11 @@ knitr::include_graphics(path = "./figures/RQA_measures/determinismhi.PNG")
 
 ```
 
-## Trapping time	
+## Trapping time and Laminarity	
 
-What it depicts: The average length of vertical line structures; quantifies the time series’ tendency to get “stuck” on particular values or states. Trapping time could indicate a lack of healthy variability [@navarroHealthyVariabilityOrganizational2015], which in turn could be indicative of a system performing suboptimally or exhibiting maladaptive behaviour.
+What it depicts: Laminarity is the proportion or recurrent points, which form vertical lines. Trapping time, on the other hand, depicts the average length of vertical line structures; it quantifies the time series’ tendency to get “stuck” on particular values or states. Trapping time could indicate a lack of healthy variability\*, which in turn could be indicative of a system performing suboptimally or exhibiting maladaptive behaviour.
+
+\* Navarro, J., & Rueff-Lopes, R. (2015). Healthy variability in organizational behavior: Empirical evidence and new steps for future research. Nonlinear Dynamics, Psychology, and Life Sciences, 19(4), 529–552.
 
 ```{r trapping-time}
 
@@ -122,7 +124,6 @@ emadata_nested_wrangled <- emadata_nested %>%
   dplyr::mutate(taskNormed = purrr::map(taskNormed, ~dplyr::mutate_if(.x, is.numeric, ~(.-lag(.))))) %>%
   dplyr::mutate(taskNormed = purrr::map(taskNormed, ~na.omit(.x))) %>%
   dplyr::mutate(taskNormed = purrr::map(taskNormed, ~dplyr::ungroup(.x))) %>%
-  #### Moving average (not taking into account the current time point)
   # # Take daily averages to ensure ~equally spaced observations: 
   dplyr::mutate(data_daily = purrr::map(data, 
                                         ~dplyr::group_by(., date))) %>%
@@ -151,6 +152,8 @@ emadata_nested_wrangled <- emadata_nested %>%
                                                            ~dplyr::select(.x, -Date, -date, -task)))
 
 ```
+
+<!-- NOTE TO READER: In what follows, chunks alternate between include = FALSE and eval = FALSE. The first performs the operation, and the second is there to show the code; this, because otherwise a lot of clutter is reported even though message = FALSE and warning = FALSE. -->
 
 ```{r rqa-plots, include = FALSE}
 emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled %>% 
@@ -254,30 +257,6 @@ complexity_measures <- dplyr::bind_rows(emadata_nested_wrangled_both_withMeasure
 # User ID is not the same as row number, so take the id from the earlier object: 
 complexity_measures$userID <- emadata_nested_wrangled_both_withMeasures$User
 
-```
-
-
-```{r cumsum-visu, eval = FALSE, include = FALSE}
-tibble(normal = emadata_nested_wrangled$data_daily[[1]]$interest,
-       cumsum = c(rep(NA, 5), emadata_nested_wrangled$data_daily_cumsum[[1]]$interest)) %>% 
-  ggplot() +
-  geom_line(aes(x = 1:49, y = normal), linetype = "dashed") +
-  geom_line(aes(x = 1:49, y = cumsum, color = "red"))  +
-  ggtitle("interest")
-
-tibble(normal = emadata_nested_wrangled$data_daily[[1]]$importance,
-       cumsum = c(rep(NA, 5), emadata_nested_wrangled$data_daily_cumsum[[1]]$importance)) %>% 
-  ggplot() +
-  geom_line(aes(x = 1:49, y = normal), linetype = "dashed") +
-  geom_line(aes(x = 1:49, y = cumsum, color = "red"))  +
-  ggtitle("importance")
-
-tibble(normal = emadata_nested_wrangled$data_daily[[1]]$situation_requires,
-       cumsum = c(rep(NA, 5), emadata_nested_wrangled$data_daily_cumsum[[1]]$situation_requires)) %>% 
-  ggplot() +
-  geom_line(aes(x = 1:49, y = normal), linetype = "dashed") +
-  geom_line(aes(x = 1:49, y = cumsum, color = "red"))  +
-  ggtitle("situation_requires")
 ```
 
 ```{r rqa-plots-shuffled, include = FALSE}
@@ -429,6 +408,8 @@ uniform_noise_thresholded <- casnet::rp_plot(RM_thresholded,
                                              plotDimensions = TRUE,
                                              plotMeasures = FALSE)
 
+emadata_nested_wrangled_both_withMeasures_uniform <- casnet::rp_measures(RM_thresholded,
+                                                                        emRad = NA)
 ```
 
 ```{r rqa-plots-uniform2, eval = FALSE}
@@ -464,6 +445,8 @@ uniform_noise_thresholded <- casnet::rp_plot(RM_thresholded,
 
 ```
 
+In the figure below: Columns, from left to right depict plots of uniformly distributed noise (A-B), a 6-dimensional motivation system of a single participant (C-D), and the same system with shuffled values (E-F). Panels A, C and E show unthresholded distance matrices, where each cell (or pixel) represents a measurement occasion, with red colours indicating the value is close to the corresponding time point on the other axis, while blue colours indicate the contrary. Panels B, D and F show recurrence plots, where these unthresholded plots have been binarised---leaving only 5% of the closest points---leading to thresholded plots from which quantitative indicators can be calculated. Black points indicate the same or a similar value (in case of B) or a similar configuration "profile" (in case of D and F) occurring.
+
 ```{r rqa-plots-create}
 
 rqa_plot <- gridExtra::grid.arrange(uniform_noise_unthresholded,
@@ -478,7 +461,33 @@ rqa_plot <- gridExtra::grid.arrange(uniform_noise_unthresholded,
 
 rqa_plot
 
-ggsave("./figures/rqa_multiplot.png", rqa_plot, width = 11.69, height = 8.27, dpi = 300)
+# ggsave("./figures/rqa_multiplot.png", rqa_plot, width = 11.69, height = 8.27, dpi = 300)
+
+```
+
+```{r rqa-measures}
+
+measures_multiplot <- 
+  dplyr::bind_rows(emadata_nested_wrangled_both_withMeasures_uniform,
+                   emadata_nested_wrangled_both_withMeasures$measures[[1]],
+                   emadata_nested_wrangled_both_withMeasures_shuffled$measures_shuffled[[1]]) %>% 
+  dplyr::mutate(Condition = c("Uniform noise",
+                              "6-dimensional motivation system",
+                              "Shuffled system")) %>% 
+  dplyr::select(Condition,
+                Determinism = DET,
+                Laminarity = LAM_vl, # vl and hl are the same
+                "Trapping Time" = TT_vl, 
+                Entropy = ENT_vl)
+
+measures_multiplot %>% dplyr::mutate_if(is.numeric, round, digits = 3) %>% 
+  knitr::kable(.,
+               caption = 
+                 "Complexity measures derived from the three recurrence plots.
+                  Main difference is in Laminarity; the observed real data has
+                  much more points forming vertical lines than either of the 
+                  comparisons. Notably, Trapping Time indicates the length of 
+                  these line segments does not differ between conditions.")
 
 ```
 
@@ -899,6 +908,25 @@ Research questions to be studied with multidimensional recurrence networks:
 
 *	How are the variables in the multivariate system connected to each other; what is the structure (i.e. the centrality indices) of the recurrence network, and do behaviour change outcomes depend on it?
 * Do new attractors in the multidimensional recurrence network emerge, after an intervention has been implemented?
+
+# Cross-Recurrence Quantification Analysis
+
+Cross-Recurrence Quantification Analysis, or CRQA, is a method of studying the coupling of two time series. As with other types of RQA, the first step of the analysis involves creating recurrence plots. In recurrence plots, the re-occurrence of values is visualised by plotting a time series against another time series (to explore cross-recurrence) or itself (to explore auto-recurrence). Figure below depicts a cross-recurrence plot of two hypothetical time series with discrete states coded as 1 to 6: Yellow (1, 5, 4, 3, 2, 6) and Blue (5, 4, 3, 4, 3, 2). Black cells indicate places where the same value occurs in both series. 
+
+```{r rqa-pedagogical, fig.width = 8.27/2.5/3, fig.height = 8.27/2.5/3}
+
+# knitr::include_graphics(path = "./figures/rqa_pedagogical.png")
+
+grid::grid.raster(png::readPNG("./figures/rqa_pedagogical.png"))
+
+```
+
+These data show a switch in the system state: the blue series precedes the yellow one until time 3-4, after which the yellow series precedes the blue one. While this is merely a pedagogical example (a time series of only six observations would rarely be sufficient to reliably identify patterns), it illustrates the utility of the method in identifying patterns in time series data. For a more in-depth treatment, see:
+
+* Wallot, S., & Leonardi, G. (2018). Analyzing Multivariate Dynamics Using Cross-Recurrence Quantification Analysis (CRQA), Diagonal-Cross-Recurrence Profiles (DCRP), and Multidimensional Recurrence Quantification Analysis (MdRQA) -- A Tutorial in R. Frontiers in Psychology, 9. https://doi.org/10.3389/fpsyg.2018.02232
+
+* Coco, M. I., & Dale, R. (2014). Cross-recurrence quantification analysis of categorical and continuous time series: an R package. Frontiers in Psychology, 5. https://doi.org/10.3389/fpsyg.2014.00510
+
 
 # Session information
 
