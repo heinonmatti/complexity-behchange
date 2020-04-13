@@ -23,6 +23,6 @@ navbar:
   - text: Assumption tests
     href: assumption-tests.html
   - text: Recurrence Quantification Analysis 
-    href: recurrence-plots.html
+    href: Recurrence-plots.html
   - text: Dataset 
     href: dataset-info.html
