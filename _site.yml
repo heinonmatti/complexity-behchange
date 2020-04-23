@@ -22,7 +22,7 @@ navbar:
     href: psyarxiv-in-progress
   - text: Assumption tests
     href: assumption-tests.html
-  - text: Recurrence Quantification Analysis 
+  - text: Recurrence-based Analyses 
     href: Recurrence-plots.html
   - text: Dataset 
     href: dataset-info.html
