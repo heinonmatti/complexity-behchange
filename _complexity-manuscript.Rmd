@@ -23,7 +23,7 @@ affiliation:
   - id            : "1"
     institution   : "Faculty of Social Sciences, University of Helsinki, PO Box 54, 00014 University of Helsinki, Finland"
   - id            : "2"
-    institution   : "National University of Ireland, Galway"
+    institution   : "School of Psychology, National University of Ireland, Galway, Ireland"
   - id            : "3"
     institution   : "Behavioural Science Institute, Radboud University Nijmegen, The Netherlands"
 note              : "This is a preprint submitted for publication"
