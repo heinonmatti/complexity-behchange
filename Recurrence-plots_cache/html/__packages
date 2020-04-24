@@ -8,3 +8,8 @@ purrr
 dplyr
 stringr
 forcats
+mgm
+knitr
+bookdown
+patchwork
+shiny

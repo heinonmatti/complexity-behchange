@@ -617,7 +617,7 @@ grid::grid.raster(png::readPNG("./figures/recnetwork.png"))
 
 We can see that most of the recurrences take place in the second half of the data, as already shown in \@ref(fig:rqa-biplot); in addition, all the patterns (or, equivalently: attractors, profiles, configurations) which occur only once, take place in the first half of data collection. Having only measured the first 50% of observations would have missed much of the action. 
 
-Figure \@ref:(fig:attractors) shows the participant's four major repeating profiles, which correspond to the coloured nodes in Figure \@ref(fig:recnet). We can observe that about a fifth of the participant's responses fall into a relatively balanced profile, while `r ((7+8)/87 * 100) %>% round(., digits = 0)`% (second and fourth profile combined) indicate what self-determination theory would consider an "optimal" motivation profile -- high in autonomous forms of motivation and low in extrinsic ones.
+Figure \@ref(fig:attractors) shows the participant's four major repeating profiles, which correspond to the coloured nodes in Figure \@ref(fig:recnet). We can observe that about a fifth of the participant's responses fall into a relatively balanced profile, while `r ((7+8)/87 * 100) %>% round(., digits = 0)`% (second and fourth profile combined) indicate what self-determination theory would consider an "optimal" motivation profile -- high in autonomous forms of motivation and low in extrinsic ones.
 
 ```{r attractors, fig.width = 11.69/2, fig.cap = "Main attractors corresponding to the colors indicated in the previous plot. See text and supplementary website (section xxx) for a thorough exposition."}
 

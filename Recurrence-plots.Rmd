@@ -110,9 +110,11 @@ emadata_nested_wrangled <- emadata_nested %>%
 
 In this document, we provide supplementary information about recurrence-based analyses. We also provide code for the figures in the manuscript.
 
-# Recurrence network demo {.tabset}
+---
 
-Our participant was beeped 5 times a day for all the questions, during an 8-hour period they determined as their workday. In order to meet the requirement of approximately equidistant measures as well as possible, in the analysis presented in the manuscript, we chose to only use the first and last observation of the day (when more than 2 time points were available for a given day). 
+# Recurrence network demonstration {.tabset}
+
+The participant was beeped 5 times a day for all the questions, during an 8-hour period they determined as their workday -- see [here](https://heinonmatti.github.io/complexity-behchange/dataset-info.html) for details. In order to meet the requirement of approximately equidistant measures as well as possible, in the analysis presented in the manuscript, we chose to only use the first and last observation of the day (when more than 2 time points were available for a given day). 
 
 Below, we present other choices that could have been made as sensitivity analyses. Results in three tabs come from sampling one time point randomly from all available measurement occasions each day, with the aim of fulfilling the equidistance requirement as well as possible. We also present results for using all the data, ignoring the equidistance requirement completely. Lastly, we present results for "task-norming" the data -- that is, substracting from the current six values of the variables, those from the previous time the task was conducted (and ignoring the equidistance requirement). It can be seen, that most of the profiles can be found from analysis, although their order may differ. We opted not to take the average of daily measures, as the ecological momentary assessment questions were tied to the particular tasks and moments at hand, and an average would not have necessarily represented any of the occasions it consisted of.  
 
@@ -2638,6 +2640,10 @@ emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots[[1]]
 
 ```
 
+# {-}
+
+$~$
+
 # Which tasks do attractors consist of?
 
 Each time the participant responded to the questionnaire, they also indicated, which task they were performing at the moment. These responses were coarse-grained to ensure anonymity. In collaboration with the participant, highly specific tasks that were considered similar enough, were combined under a more general descriptive label. One task, "Moti13_1", could not be fit in any category but was highly specific, so it was anonymised.
@@ -2708,6 +2714,8 @@ taskdata_tasks_named$data[i] %>% knitr::kable() %>% show()
 
 As can be observed, tasks do not neatly fall into a particular attractor, that is, within tasks there are several possible motivational profiles. 
 
+$~$
+
 ## Most frequent tasks and their attractors
 
 Plot below shows how the most common tasks for this participant fall within the attractors.  
@@ -2744,6 +2752,8 @@ taskdata_full %>%
 ```
 
 We can see, that no task consistently falls in one attractor. On the other hand, e.g. _Email_ is absent from 1st, 2nd and 4th attractor, and _Providing training_ does not appear in the 1st or 3rd. In the case of the latter, it might be due to the low number of observations, i.e. had more data been collected, Providing training could have exhibited new motivation profiles.
+
+$~$
 
 ## All tasks with their temporal positions {.tabset}
 
@@ -2842,74 +2852,7 @@ Research questions to be studied with multidimensional recurrence networks:
 *	How are the variables in the multivariate system connected to each other; what is the structure (i.e. the centrality indices) of the recurrence network, and do behaviour change outcomes depend on it?
 * Do new attractors in the multidimensional recurrence network emerge, after an intervention has been implemented?
 
-# Recurrence measures {.tabset}
-	
-## Trend	
-
-What it depicts: The stationarity of the system, i.e. whether the recurrent patterns emerge homogenously across the plot (indicating system stationarity), or if they fade to the lower right or and upper left corners (indicating the system changes in time, is non-stationarity). For example, a time series of any gradually but surely increasing or decreasing numbers would show a high trend value, whereas a series in which values fluctuate around more or less the same values, would exhibit a low trend value.
-
-```{r trend}
-
-knitr::include_graphics(path = "./figures/RQA_measures/trendlo.PNG")
-knitr::include_graphics(path = "./figures/RQA_measures/trendhi.PNG")
-
-```
-
-## Determinism	
-
-What it depicts: The proportion of all recurrent points which land on diagonal lines, meaning that there is a pattern to re-occurrence. For example, motivation for physical activity might be high (or low) on the same weekdays for several weeks in a row, indicating high determinism. Sleep-wake cycles would also show high determinism, whereas random numbers would show no discernable patterns and the lowest possible determinism values. 
-
-```{r determinism}
-
-knitr::include_graphics(path = "./figures/RQA_measures/determinismlo.PNG")
-knitr::include_graphics(path = "./figures/RQA_measures/determinismhi.PNG")
-
-```
-
-## Trapping time and Laminarity	
-
-What it depicts: Laminarity is the proportion or recurrent points, which form vertical lines. Trapping time, on the other hand, depicts the average length of vertical line structures; it quantifies the time series’ tendency to get “stuck” on particular values or states. Trapping time could indicate a lack of healthy variability\*, which in turn could be indicative of a system performing suboptimally or exhibiting maladaptive behaviour.
-
-\* Navarro, J., & Rueff-Lopes, R. (2015). Healthy variability in organizational behavior: Empirical evidence and new steps for future research. Nonlinear Dynamics, Psychology, and Life Sciences, 19(4), 529–552.
-
-```{r trapping-time}
-
-knitr::include_graphics(path = "./figures/RQA_measures/trappingtimelo.PNG")
-knitr::include_graphics(path = "./figures/RQA_measures/trappingtimehi.PNG")
-
-```
-
-## Entropy	
-
-What it depicts: The complexity or unpredictability of pattern lengths (i.e. variability in the length of the lines that are parallel to the diagonal); the heart rate  of a person playing in a soccer match would show high entropy, whereas their heart rate in a training session of regular timed sprints would show low entropy. 
-
-```{r entropy}
-
-knitr::include_graphics(path = "./figures/RQA_measures/entropylo.PNG")
-knitr::include_graphics(path = "./figures/RQA_measures/entropyhi.PNG")
-
-```
-
-## Average diagonal line length	
-
-What it depicts: The average length of the diagonal line structures, that is, the average time the system repeats a behavioural sequence it has exhibited previously. This can be thought of e.g. as a person’s (or their motivational system’s) consistency in repeating habitual behaviour, such as walking many steps during weekdays and little during weekends; a weekend with many steps (or a weekday with few steps) would break this pattern and reduce the average diagonal line length. Hence: While entropy can be thought of as a type of variance of the diagonal lines lengths, average diagonal line length would represent their mean length. Average diagonal line length can also be interpreted as the mean prediction time.
-
-```{r averagelinelength}
-
-knitr::include_graphics(path = "./figures/RQA_measures/averagelinelengthlo.PNG")
-knitr::include_graphics(path = "./figures/RQA_measures/averagelinelengthhi.PNG")
-
-```
-
-# {-}
-
-Possible substantive research questions include:
-
-*	Is trapping time related to inflexible behaviour (e.g., inability to adapt to environmental demands), and are interventions that lessen it analogous to “loosening up” a person’s reaction repertoire? 
-*	Does an intervention destabilise the dynamics of a maladaptive target behaviour, leading to increased entropy in recurrence structures?
-*	At which periods in a time series is the target behaviour stationary, and do initiations of trends collide with interventions, indicating intervention's impact?
-* How is determinism connected to facets of habit theory?
-* Does average diagonal line length go down (conferring decreased predictability with past data) when an intervention is introduced, indicating a shift in the system's dynamics?
+---
 
 # Recurrence plots 
 
@@ -2929,7 +2872,7 @@ emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled_unthresholded %
                                                                       title = "A)",
                                                                       xlabel = "6-dimensional motivation system",
                                                                       ylabel = "6-dimensional motivation system",
-                                                                      plotRadiusRRbar = TRUE, 
+                                                                      plotRadiusRRbar = FALSE, 
                                                                       plotDimensions = TRUE)))
 
 emadata_nested_wrangled_both <- emadata_nested_wrangled_unthresholded %>% 
@@ -2984,7 +2927,7 @@ emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled_unthresholded %
                                                                       title = "A)",
                                                                       xlabel = "6-dimensional motivation system",
                                                                       ylabel = "6-dimensional motivation system",
-                                                                      plotRadiusRRbar = TRUE, 
+                                                                      plotRadiusRRbar = FALSE, 
                                                                       plotDimensions = TRUE)))
 
 emadata_nested_wrangled_both <- emadata_nested_wrangled_unthresholded %>% 
@@ -3369,6 +3312,83 @@ measures_multiplot %>% dplyr::mutate_if(is.numeric, round, digits = 3) %>%
 
 ```
 
+These measures, along with others, are described below.
+
+---
+
+# Recurrence measures {.tabset}
+	
+## Trend	
+
+What it depicts: The stationarity of the system, i.e. whether the recurrent patterns emerge homogenously across the plot (indicating system stationarity), or if they fade to the lower right or and upper left corners (indicating the system changes in time, is non-stationarity). For example, a time series of any gradually but surely increasing or decreasing numbers would show a high trend value, whereas a series in which values fluctuate around more or less the same values, would exhibit a low trend value.
+
+```{r trend}
+
+knitr::include_graphics(path = "./figures/RQA_measures/trendlo.PNG")
+knitr::include_graphics(path = "./figures/RQA_measures/trendhi.PNG")
+
+```
+
+## Determinism	
+
+What it depicts: The proportion of all recurrent points which land on diagonal lines, meaning that there is a pattern to re-occurrence. For example, motivation for physical activity might be high (or low) on the same weekdays for several weeks in a row, indicating high determinism. Sleep-wake cycles would also show high determinism, whereas random numbers would show no discernable patterns and the lowest possible determinism values. 
+
+```{r determinism}
+
+knitr::include_graphics(path = "./figures/RQA_measures/determinismlo.PNG")
+knitr::include_graphics(path = "./figures/RQA_measures/determinismhi.PNG")
+
+```
+
+## Trapping time and Laminarity	
+
+What it depicts: Laminarity is the proportion or recurrent points, which form vertical lines. Trapping time, on the other hand, depicts the average length of vertical line structures; it quantifies the time series’ tendency to get “stuck” on particular values or states. Trapping time could indicate a lack of healthy variability\*, which in turn could be indicative of a system performing suboptimally or exhibiting maladaptive behaviour.
+
+\* Navarro, J., & Rueff-Lopes, R. (2015). Healthy variability in organizational behavior: Empirical evidence and new steps for future research. Nonlinear Dynamics, Psychology, and Life Sciences, 19(4), 529–552.
+
+```{r trapping-time}
+
+knitr::include_graphics(path = "./figures/RQA_measures/trappingtimelo.PNG")
+knitr::include_graphics(path = "./figures/RQA_measures/trappingtimehi.PNG")
+
+```
+
+## Entropy	
+
+What it depicts: The complexity or unpredictability of pattern lengths (i.e. variability in the length of the lines that are parallel to the diagonal); the heart rate  of a person playing in a soccer match would show high entropy, whereas their heart rate in a training session of regular timed sprints would show low entropy. 
+
+```{r entropy}
+
+knitr::include_graphics(path = "./figures/RQA_measures/entropylo.PNG")
+knitr::include_graphics(path = "./figures/RQA_measures/entropyhi.PNG")
+
+```
+
+## Average diagonal line length	
+
+What it depicts: The average length of the diagonal line structures, that is, the average time the system repeats a behavioural sequence it has exhibited previously. This can be thought of e.g. as a person’s (or their motivational system’s) consistency in repeating habitual behaviour, such as walking many steps during weekdays and little during weekends; a weekend with many steps (or a weekday with few steps) would break this pattern and reduce the average diagonal line length. Hence: While entropy can be thought of as a type of variance of the diagonal lines lengths, average diagonal line length would represent their mean length. Average diagonal line length can also be interpreted as the mean prediction time.
+
+```{r averagelinelength}
+
+knitr::include_graphics(path = "./figures/RQA_measures/averagelinelengthlo.PNG")
+knitr::include_graphics(path = "./figures/RQA_measures/averagelinelengthhi.PNG")
+
+```
+
+# {-}
+
+Possible substantive research questions include:
+
+*	Is trapping time related to inflexible behaviour (e.g., inability to adapt to environmental demands), and are interventions that lessen it analogous to “loosening up” a person’s reaction repertoire? 
+*	Does an intervention destabilise the dynamics of a maladaptive target behaviour, leading to increased entropy in recurrence structures?
+*	At which periods in a time series is the target behaviour stationary, and do initiations of trends collide with interventions, indicating intervention's impact?
+* How is determinism connected to facets of habit theory?
+* Does average diagonal line length go down (conferring decreased predictability with past data) when an intervention is introduced, indicating a shift in the system's dynamics?
+
+---
+
+$~$
+
 # Cross-Recurrence Quantification Analysis
 
 Cross-Recurrence Quantification Analysis, or CRQA, is a method of studying the coupling of two time series. As with other types of RQA, the first step of the analysis involves creating recurrence plots. In recurrence plots, the re-occurrence of values is visualised by plotting a time series against another time series (to explore cross-recurrence) or itself (to explore auto-recurrence). Figure below depicts a cross-recurrence plot of two hypothetical time series with discrete states coded as 1 to 6: Yellow (1, 5, 4, 3, 2, 6) and Blue (5, 4, 3, 4, 3, 2). Black cells indicate places where the same value occurs in both series. 
@@ -3387,6 +3407,9 @@ These data show a switch in the system state: the blue series precedes the yello
 
 * Coco, M. I., & Dale, R. (2014). Cross-recurrence quantification analysis of categorical and continuous time series: an R package. Frontiers in Psychology, 5. https://doi.org/10.3389/fpsyg.2014.00510
 
+---
+
+$~$
 
 # Session information
 
