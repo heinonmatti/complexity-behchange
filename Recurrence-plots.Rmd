@@ -110,6 +110,8 @@ emadata_nested_wrangled <- emadata_nested %>%
 
 In this document, we provide supplementary information about recurrence-based analyses. We also provide code for the figures in the manuscript.
 
+Note: We use the terms motivational attractor, profile and configuration interchangeably in this context.
+
 ---
 
 # Recurrence network demonstration {.tabset}
@@ -2646,7 +2648,9 @@ $~$
 
 # Which tasks do attractors consist of?
 
-Each time the participant responded to the questionnaire, they also indicated, which task they were performing at the moment. These responses were coarse-grained to ensure anonymity. In collaboration with the participant, highly specific tasks that were considered similar enough, were combined under a more general descriptive label. One task, "Moti13_1", could not be fit in any category but was highly specific, so it was anonymised.
+As the ecological momentary assessment questions are [formulated](https://git.io/JfLmS) according to self-determination theory in such a way, that they inquire one's motivation to do a particular task, it would be intuitive to think each task falls into a particular profile. 
+
+We can examine this, as each time the participant responded to the questionnaire, they also indicated, which task they were performing at the moment. These responses were coarse-grained to ensure anonymity. In collaboration with the participant, highly specific tasks that were considered similar enough, were combined under a more general descriptive label. One task, "Moti13_1", could not be fit in any category but was highly specific, so it was anonymised.
 
 Lists below indicate, which tasks each attractor consists of.
 
@@ -2712,7 +2716,9 @@ taskdata_tasks_named$data[i] %>% knitr::kable() %>% show()
 # taskdata_tasks_named <-  purrr::set_names(taskdata_tasks$data, nm = taskdata_tasks$attractors)
 ```
 
-As can be observed, tasks do not neatly fall into a particular attractor, that is, within tasks there are several possible motivational profiles. 
+In line with Navarro et al. (2013), this is mostly not true, and the profiles are quite heterogeneous in terms of tasks -- that is, within tasks there are several possible motivational profiles, and motivation profiles consist of several different tasks (see next section).
+
+Navarro, J., Curioso, F., Gomes, D., Arrieta, C., & Cortes, M. (2013). Fluctuations in work motivation: tasks do not matter! Nonlinear Dynamics, Psychology, and Life Sciences, 17(1), 3–22.
 
 $~$
 

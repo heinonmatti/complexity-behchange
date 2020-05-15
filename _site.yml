@@ -19,7 +19,7 @@ navbar:
   - text: About
     href: index.html
   - text: Manuscript
-    href: psyarxiv-in-progress
+    href: https://psyarxiv.com/fxgw4
   - text: Assumption tests
     href: assumption-tests.html
   - text: Recurrence-based Analyses 
