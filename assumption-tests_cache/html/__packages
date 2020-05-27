@@ -1,5 +1,4 @@
 base
-knitr
 tidyverse
 ggplot2
 tibble
@@ -9,5 +8,3 @@ purrr
 dplyr
 stringr
 forcats
-bookdown
-patchwork

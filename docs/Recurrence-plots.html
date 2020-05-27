@@ -479,90 +479,92 @@ div.tocify {
 
 <!-- <div style="line-height: 1.7em;"> -->
 <p>Source code for this document is found <a href="https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/Recurrence-plots.Rmd">here</a>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>emadata &lt;-<span class="st"> </span>readr<span class="op">::</span><span class="kw">read_rds</span>(<span class="st">&quot;./data/EMA_data_Moti13.RDS&quot;</span>)</span>
-<span id="cb1-2"><a href="#cb1-2"></a></span>
-<span id="cb1-3"><a href="#cb1-3"></a>emadata_nested &lt;-<span class="st"> </span>emadata <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(User) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="st">                  </span>dplyr<span class="op">::</span><span class="kw">select</span>(<span class="co">#autonomy, competence, relatedness,</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a>                                pleasure, interest, importance,</span>
-<span id="cb1-6"><a href="#cb1-6"></a>                                <span class="dt">situation_requires =</span> required, </span>
-<span id="cb1-7"><a href="#cb1-7"></a>                                <span class="dt">anxiety_guilt_avoidance =</span> anxiety_guilt, </span>
-<span id="cb1-8"><a href="#cb1-8"></a>                                <span class="dt">another_wants =</span> for_others,</span>
-<span id="cb1-9"><a href="#cb1-9"></a>                                <span class="dt">Date =</span> dateTime,</span>
-<span id="cb1-10"><a href="#cb1-10"></a>                                User,</span>
-<span id="cb1-11"><a href="#cb1-11"></a>                                task) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-12"><a href="#cb1-12"></a><span class="st">                  </span><span class="kw">na.omit</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co">### </span><span class="al">NOTE</span><span class="co">! NAs removed!</span></span>
-<span id="cb1-13"><a href="#cb1-13"></a><span class="st">  </span>tidyr<span class="op">::</span><span class="kw">nest</span>() </span>
-<span id="cb1-14"><a href="#cb1-14"></a></span>
-<span id="cb1-15"><a href="#cb1-15"></a><span class="co"># Show sample size for each participant:</span></span>
-<span id="cb1-16"><a href="#cb1-16"></a><span class="co"># emadata_nested %&gt;% </span></span>
-<span id="cb1-17"><a href="#cb1-17"></a><span class="co">#   mutate(n = map_dbl(data, nrow))</span></span>
-<span id="cb1-18"><a href="#cb1-18"></a></span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="kw">set.seed</span>(<span class="dv">1000</span>)</span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co"># emadata &lt;- readr::read_rds(&quot;./data/EMA_data_Moti_P10.csv&quot;)</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="co"># readr::write_csv(emadata, &quot;./data/EMA_data_Moti_P10.csv&quot;)</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a>emadata &lt;-<span class="st"> </span>readr<span class="op">::</span><span class="kw">read_csv</span>(<span class="st">&quot;./data/EMA_data_Moti_P10.csv&quot;</span>)</span>
+<span id="cb1-4"><a href="#cb1-4"></a></span>
+<span id="cb1-5"><a href="#cb1-5"></a>emadata_nested &lt;-<span class="st"> </span>emadata <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(User) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="st">                  </span>dplyr<span class="op">::</span><span class="kw">select</span>(<span class="co">#autonomy, competence, relatedness,</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a>                                pleasure, interest, importance,</span>
+<span id="cb1-8"><a href="#cb1-8"></a>                                <span class="dt">situation_requires =</span> required, </span>
+<span id="cb1-9"><a href="#cb1-9"></a>                                <span class="dt">anxiety_guilt_avoidance =</span> anxiety_guilt, </span>
+<span id="cb1-10"><a href="#cb1-10"></a>                                <span class="dt">another_wants =</span> for_others,</span>
+<span id="cb1-11"><a href="#cb1-11"></a>                                <span class="dt">Date =</span> dateTime,</span>
+<span id="cb1-12"><a href="#cb1-12"></a>                                User,</span>
+<span id="cb1-13"><a href="#cb1-13"></a>                                task) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-14"><a href="#cb1-14"></a><span class="st">                  </span><span class="kw">na.omit</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co">### </span><span class="al">NOTE</span><span class="co">! NAs removed!</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a><span class="st">  </span>tidyr<span class="op">::</span><span class="kw">nest</span>() </span>
+<span id="cb1-16"><a href="#cb1-16"></a></span>
+<span id="cb1-17"><a href="#cb1-17"></a><span class="co"># Show sample size for each participant:</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a><span class="co"># emadata_nested %&gt;% </span></span>
+<span id="cb1-19"><a href="#cb1-19"></a><span class="co">#   mutate(n = map_dbl(data, nrow))</span></span>
 <span id="cb1-20"><a href="#cb1-20"></a></span>
-<span id="cb1-21"><a href="#cb1-21"></a>emadata_nested_wrangled &lt;-<span class="st"> </span>emadata_nested <span class="op">%&gt;%</span></span>
-<span id="cb1-22"><a href="#cb1-22"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate</span>(.x, </span>
-<span id="cb1-23"><a href="#cb1-23"></a>                                                       <span class="dt">date =</span> <span class="kw">as.Date</span>(Date),</span>
-<span id="cb1-24"><a href="#cb1-24"></a>                                                       <span class="dt">timediff =</span> <span class="kw">c</span>(<span class="ot">NA</span>, <span class="kw">diff</span>(Date))))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-25"><a href="#cb1-25"></a><span class="st">  </span><span class="co"># Filter out answers less than 15 minutes from the last one, then remove the difference variable</span></span>
-<span id="cb1-26"><a href="#cb1-26"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">filter</span>(.x, timediff <span class="op">&gt;</span><span class="st"> </span><span class="dv">15</span>))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-27"><a href="#cb1-27"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">select</span>(.x, <span class="op">-</span>timediff))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-28"><a href="#cb1-28"></a><span class="st">  </span><span class="co"># Create three datasets, where one daily observation is randomly selected from those available:</span></span>
-<span id="cb1-29"><a href="#cb1-29"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample1 =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> data, </span>
-<span id="cb1-30"><a href="#cb1-30"></a>                                     <span class="dt">.f =</span> <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(.x, date) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-31"><a href="#cb1-31"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">sample_n</span>(., <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">replace =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-32"><a href="#cb1-32"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>())) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-33"><a href="#cb1-33"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample2 =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> data, </span>
-<span id="cb1-34"><a href="#cb1-34"></a>                                     <span class="dt">.f =</span> <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(.x, date) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-35"><a href="#cb1-35"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">sample_n</span>(., <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">replace =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-36"><a href="#cb1-36"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>())) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-37"><a href="#cb1-37"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample3 =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> data, </span>
-<span id="cb1-38"><a href="#cb1-38"></a>                                     <span class="dt">.f =</span> <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(.x, date) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-39"><a href="#cb1-39"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">sample_n</span>(., <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">replace =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-40"><a href="#cb1-40"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>())) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-41"><a href="#cb1-41"></a><span class="st">  </span><span class="co"># Create &quot;task-normed&quot; variables, where the previous instance of the task is substracted from the current one:</span></span>
-<span id="cb1-42"><a href="#cb1-42"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(., task))) <span class="op">%&gt;%</span></span>
-<span id="cb1-43"><a href="#cb1-43"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric, <span class="op">~</span>(.<span class="op">-</span><span class="kw">lag</span>(.))))) <span class="op">%&gt;%</span></span>
-<span id="cb1-44"><a href="#cb1-44"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span><span class="kw">na.omit</span>(.x))) <span class="op">%&gt;%</span></span>
-<span id="cb1-45"><a href="#cb1-45"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">ungroup</span>(.x))) <span class="op">%&gt;%</span></span>
-<span id="cb1-46"><a href="#cb1-46"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, </span>
-<span id="cb1-47"><a href="#cb1-47"></a>                                                                      is.numeric, </span>
-<span id="cb1-48"><a href="#cb1-48"></a>                                                                      <span class="op">~</span>scales<span class="op">::</span><span class="kw">rescale</span>(.x, </span>
-<span id="cb1-49"><a href="#cb1-49"></a>                                                                                       <span class="dt">to =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">49</span>))))) <span class="op">%&gt;%</span></span>
-<span id="cb1-50"><a href="#cb1-50"></a><span class="st">  </span><span class="co"># # Take daily averages to ensure ~equally spaced observations: </span></span>
-<span id="cb1-51"><a href="#cb1-51"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_daily =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, </span>
-<span id="cb1-52"><a href="#cb1-52"></a>                                        <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(., date))) <span class="op">%&gt;%</span></span>
-<span id="cb1-53"><a href="#cb1-53"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_daily =</span> purrr<span class="op">::</span><span class="kw">map</span>(data_daily, </span>
-<span id="cb1-54"><a href="#cb1-54"></a>                                        <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">summarise_if</span>(.x, is.numeric, mean, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))) <span class="op">%&gt;%</span></span>
-<span id="cb1-55"><a href="#cb1-55"></a><span class="st">  </span><span class="co"># Remove day and task variables</span></span>
-<span id="cb1-56"><a href="#cb1-56"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_with_tasks_and_dates =</span> data,</span>
-<span id="cb1-57"><a href="#cb1-57"></a>                <span class="dt">data =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">select</span>(.x, <span class="op">-</span>Date, <span class="op">-</span>date, <span class="op">-</span>task))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-58"><a href="#cb1-58"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">select</span>(.x, <span class="op">-</span>Date, <span class="op">-</span>date, <span class="op">-</span>task))) <span class="op">%&gt;%</span></span>
-<span id="cb1-59"><a href="#cb1-59"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_daily_with_tasks_and_dates =</span> data_daily,</span>
-<span id="cb1-60"><a href="#cb1-60"></a>                <span class="dt">data_daily =</span> purrr<span class="op">::</span><span class="kw">map</span>(data_daily, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">select</span>(.x, <span class="op">-</span>date))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-61"><a href="#cb1-61"></a><span class="st">  </span><span class="co"># Normalise all numeric variables</span></span>
-<span id="cb1-62"><a href="#cb1-62"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
-<span id="cb1-63"><a href="#cb1-63"></a>                                                           <span class="op">~</span>((.x <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(.x)))))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-64"><a href="#cb1-64"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample1_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(sample1, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
-<span id="cb1-65"><a href="#cb1-65"></a>                                                           <span class="op">~</span>((.x <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(.x)))))) <span class="op">%&gt;%</span></span>
-<span id="cb1-66"><a href="#cb1-66"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample2_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(sample2, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
+<span id="cb1-21"><a href="#cb1-21"></a><span class="kw">set.seed</span>(<span class="dv">1000</span>)</span>
+<span id="cb1-22"><a href="#cb1-22"></a></span>
+<span id="cb1-23"><a href="#cb1-23"></a>emadata_nested_wrangled &lt;-<span class="st"> </span>emadata_nested <span class="op">%&gt;%</span></span>
+<span id="cb1-24"><a href="#cb1-24"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate</span>(.x, </span>
+<span id="cb1-25"><a href="#cb1-25"></a>                                                       <span class="dt">date =</span> <span class="kw">as.Date</span>(Date),</span>
+<span id="cb1-26"><a href="#cb1-26"></a>                                                       <span class="dt">timediff =</span> <span class="kw">c</span>(<span class="ot">NA</span>, <span class="kw">diff</span>(Date))))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-27"><a href="#cb1-27"></a><span class="st">  </span><span class="co"># Filter out answers less than 15 minutes from the last one, then remove the difference variable</span></span>
+<span id="cb1-28"><a href="#cb1-28"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">filter</span>(.x, timediff <span class="op">&gt;</span><span class="st"> </span><span class="dv">15</span>))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-29"><a href="#cb1-29"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">select</span>(.x, <span class="op">-</span>timediff))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-30"><a href="#cb1-30"></a><span class="st">  </span><span class="co"># Create three datasets, where one daily observation is randomly selected from those available:</span></span>
+<span id="cb1-31"><a href="#cb1-31"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample1 =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> data, </span>
+<span id="cb1-32"><a href="#cb1-32"></a>                                     <span class="dt">.f =</span> <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(.x, date) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-33"><a href="#cb1-33"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">sample_n</span>(., <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">replace =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-34"><a href="#cb1-34"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>())) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-35"><a href="#cb1-35"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample2 =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> data, </span>
+<span id="cb1-36"><a href="#cb1-36"></a>                                     <span class="dt">.f =</span> <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(.x, date) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-37"><a href="#cb1-37"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">sample_n</span>(., <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">replace =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-38"><a href="#cb1-38"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>())) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-39"><a href="#cb1-39"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample3 =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> data, </span>
+<span id="cb1-40"><a href="#cb1-40"></a>                                     <span class="dt">.f =</span> <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(.x, date) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-41"><a href="#cb1-41"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">sample_n</span>(., <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">replace =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-42"><a href="#cb1-42"></a><span class="st">                                       </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>())) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-43"><a href="#cb1-43"></a><span class="st">  </span><span class="co"># Create &quot;task-normed&quot; variables, where the previous instance of the task is substracted from the current one:</span></span>
+<span id="cb1-44"><a href="#cb1-44"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(., task))) <span class="op">%&gt;%</span></span>
+<span id="cb1-45"><a href="#cb1-45"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric, <span class="op">~</span>(.<span class="op">-</span><span class="kw">lag</span>(.))))) <span class="op">%&gt;%</span></span>
+<span id="cb1-46"><a href="#cb1-46"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span><span class="kw">na.omit</span>(.x))) <span class="op">%&gt;%</span></span>
+<span id="cb1-47"><a href="#cb1-47"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">ungroup</span>(.x))) <span class="op">%&gt;%</span></span>
+<span id="cb1-48"><a href="#cb1-48"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, </span>
+<span id="cb1-49"><a href="#cb1-49"></a>                                                                      is.numeric, </span>
+<span id="cb1-50"><a href="#cb1-50"></a>                                                                      <span class="op">~</span>scales<span class="op">::</span><span class="kw">rescale</span>(.x, </span>
+<span id="cb1-51"><a href="#cb1-51"></a>                                                                                       <span class="dt">to =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">49</span>))))) <span class="op">%&gt;%</span></span>
+<span id="cb1-52"><a href="#cb1-52"></a><span class="st">  </span><span class="co"># # Take daily averages to ensure ~equally spaced observations: </span></span>
+<span id="cb1-53"><a href="#cb1-53"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_daily =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, </span>
+<span id="cb1-54"><a href="#cb1-54"></a>                                        <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(., date))) <span class="op">%&gt;%</span></span>
+<span id="cb1-55"><a href="#cb1-55"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_daily =</span> purrr<span class="op">::</span><span class="kw">map</span>(data_daily, </span>
+<span id="cb1-56"><a href="#cb1-56"></a>                                        <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">summarise_if</span>(.x, is.numeric, mean, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))) <span class="op">%&gt;%</span></span>
+<span id="cb1-57"><a href="#cb1-57"></a><span class="st">  </span><span class="co"># Remove day and task variables</span></span>
+<span id="cb1-58"><a href="#cb1-58"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_with_tasks_and_dates =</span> data,</span>
+<span id="cb1-59"><a href="#cb1-59"></a>                <span class="dt">data =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">select</span>(.x, <span class="op">-</span>Date, <span class="op">-</span>date, <span class="op">-</span>task))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-60"><a href="#cb1-60"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">select</span>(.x, <span class="op">-</span>Date, <span class="op">-</span>date, <span class="op">-</span>task))) <span class="op">%&gt;%</span></span>
+<span id="cb1-61"><a href="#cb1-61"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_daily_with_tasks_and_dates =</span> data_daily,</span>
+<span id="cb1-62"><a href="#cb1-62"></a>                <span class="dt">data_daily =</span> purrr<span class="op">::</span><span class="kw">map</span>(data_daily, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">select</span>(.x, <span class="op">-</span>date))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-63"><a href="#cb1-63"></a><span class="st">  </span><span class="co"># Normalise all numeric variables</span></span>
+<span id="cb1-64"><a href="#cb1-64"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(data, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
+<span id="cb1-65"><a href="#cb1-65"></a>                                                           <span class="op">~</span>((.x <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(.x)))))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-66"><a href="#cb1-66"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample1_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(sample1, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
 <span id="cb1-67"><a href="#cb1-67"></a>                                                           <span class="op">~</span>((.x <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(.x)))))) <span class="op">%&gt;%</span></span>
-<span id="cb1-68"><a href="#cb1-68"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample3_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(sample3, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
+<span id="cb1-68"><a href="#cb1-68"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample2_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(sample2, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
 <span id="cb1-69"><a href="#cb1-69"></a>                                                           <span class="op">~</span>((.x <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(.x)))))) <span class="op">%&gt;%</span></span>
-<span id="cb1-70"><a href="#cb1-70"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_daily_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(data_daily, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
-<span id="cb1-71"><a href="#cb1-71"></a>                                                           <span class="op">~</span>((.x <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(.x)))))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-72"><a href="#cb1-72"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
+<span id="cb1-70"><a href="#cb1-70"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">sample3_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(sample3, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
+<span id="cb1-71"><a href="#cb1-71"></a>                                                           <span class="op">~</span>((.x <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(.x)))))) <span class="op">%&gt;%</span></span>
+<span id="cb1-72"><a href="#cb1-72"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_daily_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(data_daily, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
 <span id="cb1-73"><a href="#cb1-73"></a>                                                           <span class="op">~</span>((.x <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(.x)))))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-74"><a href="#cb1-74"></a><span class="st">  </span><span class="co"># Retain first and last observation of the day:</span></span>
-<span id="cb1-75"><a href="#cb1-75"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_firstlast_divided_by_max =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> data_with_tasks_and_dates, </span>
-<span id="cb1-76"><a href="#cb1-76"></a>                                           <span class="dt">.f =</span> <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(.x, date) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-77"><a href="#cb1-77"></a><span class="st">                                             </span>dplyr<span class="op">::</span><span class="kw">arrange</span>(Date) <span class="op">%&gt;%</span></span>
-<span id="cb1-78"><a href="#cb1-78"></a><span class="st">                                             </span>dplyr<span class="op">::</span><span class="kw">filter</span>(<span class="kw">row_number</span>() <span class="op">==</span><span class="st"> </span><span class="dv">1</span> <span class="op">|</span><span class="st"> </span><span class="kw">row_number</span>() <span class="op">==</span><span class="st"> </span><span class="kw">n</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-79"><a href="#cb1-79"></a><span class="st">                                             </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-80"><a href="#cb1-80"></a><span class="st">                                             </span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(., is.numeric,</span>
-<span id="cb1-81"><a href="#cb1-81"></a>                                                              <span class="op">~</span>(. <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(., <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)))),</span>
-<span id="cb1-82"><a href="#cb1-82"></a>                <span class="dt">data_firstlast_divided_by_max_with_tasks_and_dates =</span> data_firstlast_divided_by_max,</span>
-<span id="cb1-83"><a href="#cb1-83"></a>                <span class="dt">data_firstlast_divided_by_max =</span> purrr<span class="op">::</span><span class="kw">map</span>(data_firstlast_divided_by_max, </span>
-<span id="cb1-84"><a href="#cb1-84"></a>                                                           <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">select</span>(.x, <span class="op">-</span>Date, <span class="op">-</span>date, <span class="op">-</span>task)))</span></code></pre></div>
+<span id="cb1-74"><a href="#cb1-74"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">taskNormed_standardised =</span> purrr<span class="op">::</span><span class="kw">map</span>(taskNormed, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(.x, is.numeric,</span>
+<span id="cb1-75"><a href="#cb1-75"></a>                                                           <span class="op">~</span>((.x <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(.x)))))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-76"><a href="#cb1-76"></a><span class="st">  </span><span class="co"># Retain first and last observation of the day:</span></span>
+<span id="cb1-77"><a href="#cb1-77"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data_firstlast_divided_by_max =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> data_with_tasks_and_dates, </span>
+<span id="cb1-78"><a href="#cb1-78"></a>                                           <span class="dt">.f =</span> <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">group_by</span>(.x, date) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-79"><a href="#cb1-79"></a><span class="st">                                             </span>dplyr<span class="op">::</span><span class="kw">arrange</span>(Date) <span class="op">%&gt;%</span></span>
+<span id="cb1-80"><a href="#cb1-80"></a><span class="st">                                             </span>dplyr<span class="op">::</span><span class="kw">filter</span>(<span class="kw">row_number</span>() <span class="op">==</span><span class="st"> </span><span class="dv">1</span> <span class="op">|</span><span class="st"> </span><span class="kw">row_number</span>() <span class="op">==</span><span class="st"> </span><span class="kw">n</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-81"><a href="#cb1-81"></a><span class="st">                                             </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-82"><a href="#cb1-82"></a><span class="st">                                             </span>dplyr<span class="op">::</span><span class="kw">mutate_if</span>(., is.numeric,</span>
+<span id="cb1-83"><a href="#cb1-83"></a>                                                              <span class="op">~</span>(. <span class="op">/</span><span class="st"> </span><span class="kw">max</span>(., <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)))),</span>
+<span id="cb1-84"><a href="#cb1-84"></a>                <span class="dt">data_firstlast_divided_by_max_with_tasks_and_dates =</span> data_firstlast_divided_by_max,</span>
+<span id="cb1-85"><a href="#cb1-85"></a>                <span class="dt">data_firstlast_divided_by_max =</span> purrr<span class="op">::</span><span class="kw">map</span>(data_firstlast_divided_by_max, </span>
+<span id="cb1-86"><a href="#cb1-86"></a>                                                           <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">select</span>(.x, <span class="op">-</span>Date, <span class="op">-</span>date, <span class="op">-</span>task)))</span></code></pre></div>
 <p>In this document, we provide supplementary information about recurrence-based analyses. We also provide code for the figures in the manuscript.</p>
 <p>Note: We use the terms motivational attractor, profile and configuration interchangeably in this context.</p>
 <hr />
@@ -624,7 +626,7 @@ div.tocify {
 <span id="cb2-49"><a href="#cb2-49"></a>                                                       <span class="dt">plotDimensions =</span> <span class="ot">TRUE</span>,</span>
 <span id="cb2-50"><a href="#cb2-50"></a>                                                       <span class="dt">xlab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>,</span>
 <span id="cb2-51"><a href="#cb2-51"></a>                                                       <span class="dt">ylab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>)))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/firstlast-weighted-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/firstlast-weighted-1.png" width="672" /></p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a></span>
 <span id="cb3-2"><a href="#cb3-2"></a><span class="co"># Make node size equal to strength. Strength is the sum of a node&#39;s edge weights.</span></span>
 <span id="cb3-3"><a href="#cb3-3"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(emadata_nested_wrangled_both_recnets)) {</span>
@@ -912,7 +914,7 @@ div.tocify {
 <span id="cb5-30"><a href="#cb5-30"></a>                                                                      <span class="co"># alphaE = 0.1</span></span>
 <span id="cb5-31"><a href="#cb5-31"></a>                                                                      <span class="co"># title = ..3</span></span>
 <span id="cb5-32"><a href="#cb5-32"></a>                                     )))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/firstlast-spiralgraph-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/firstlast-spiralgraph-1.png" width="672" /></p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a></span>
 <span id="cb6-2"><a href="#cb6-2"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +</span></span>
 <span id="cb6-3"><a href="#cb6-3"></a><span class="co">#   theme(plot.margin=grid::unit(c(0,0,0,0), &quot;mm&quot;))</span></span>
@@ -975,7 +977,7 @@ div.tocify {
 <span id="cb7-48"><a href="#cb7-48"></a>      ))</span>
 <span id="cb7-49"><a href="#cb7-49"></a></span>
 <span id="cb7-50"><a href="#cb7-50"></a>emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>attractor_plots[[<span class="dv">1</span>]]</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/attractor-plots-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/attractor-plots-1.png" width="672" /></p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span>
 <span id="cb8-2"><a href="#cb8-2"></a></span>
 <span id="cb8-3"><a href="#cb8-3"></a><span class="co"># Save this to be used for the task analysis later; otherwise overwritten by sensitivity analyses:</span></span>
@@ -1045,7 +1047,7 @@ div.tocify {
 <span id="cb9-49"><a href="#cb9-49"></a>                                                       <span class="dt">plotDimensions =</span> <span class="ot">TRUE</span>,</span>
 <span id="cb9-50"><a href="#cb9-50"></a>                                                       <span class="dt">xlab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>,</span>
 <span id="cb9-51"><a href="#cb9-51"></a>                                                       <span class="dt">ylab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>)))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-1-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a></span>
 <span id="cb10-2"><a href="#cb10-2"></a><span class="co"># Make node size equal to strength. Strength is the sum of a node&#39;s edge weights.</span></span>
 <span id="cb10-3"><a href="#cb10-3"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(emadata_nested_wrangled_both_recnets)) {</span>
@@ -1299,8 +1301,7 @@ div.tocify {
 <span id="cb11-239"><a href="#cb11-239"></a>                                                               percentage_of_total, <span class="st">&quot;)&quot;</span>)))</span>
 <span id="cb11-240"><a href="#cb11-240"></a>                             }</span>
 <span id="cb11-241"><a href="#cb11-241"></a>                  ))</span></code></pre></div>
-<div id="spiral-graph-with-colored-nodes-1" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Spiral graph with colored nodes</h3>
+<p><strong>Spiral graph with colored nodes</strong></p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></span>
 <span id="cb12-2"><a href="#cb12-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">node_colors =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> all_nodes_with_strengths,</span>
 <span id="cb12-3"><a href="#cb12-3"></a>                                         <span class="dt">.f =</span> <span class="op">~</span>{tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(.x, <span class="dt">names_from =</span> name) <span class="op">%&gt;%</span></span>
@@ -1333,7 +1334,7 @@ div.tocify {
 <span id="cb12-30"><a href="#cb12-30"></a>                                                                      <span class="co"># alphaE = 0.1</span></span>
 <span id="cb12-31"><a href="#cb12-31"></a>                                                                      <span class="co"># title = ..3</span></span>
 <span id="cb12-32"><a href="#cb12-32"></a>                                     )))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-3-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a></span>
 <span id="cb13-2"><a href="#cb13-2"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +</span></span>
 <span id="cb13-3"><a href="#cb13-3"></a><span class="co">#   theme(plot.margin=grid::unit(c(0,0,0,0), &quot;mm&quot;))</span></span>
@@ -1343,9 +1344,7 @@ div.tocify {
 <span id="cb13-7"><a href="#cb13-7"></a><span class="co">#        height = 7)</span></span>
 <span id="cb13-8"><a href="#cb13-8"></a></span>
 <span id="cb13-9"><a href="#cb13-9"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span></code></pre></div>
-</div>
-<div id="attractor-plot-1" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Attractor plot</h3>
+<p><strong>Attractor plot</strong></p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></span>
 <span id="cb14-2"><a href="#cb14-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">observations =</span> purrr<span class="op">::</span><span class="kw">map_dbl</span>(<span class="dt">.x =</span> sample1_standardised,</span>
 <span id="cb14-3"><a href="#cb14-3"></a>                                              <span class="dt">.f =</span> <span class="op">~</span><span class="kw">nrow</span>(.)))</span>
@@ -1396,9 +1395,8 @@ div.tocify {
 <span id="cb14-48"><a href="#cb14-48"></a>      ))</span>
 <span id="cb14-49"><a href="#cb14-49"></a></span>
 <span id="cb14-50"><a href="#cb14-50"></a>emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>attractor_plots[[<span class="dv">1</span>]]</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/attractor-plots_sample1-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/attractor-plots_sample1-1.png" width="672" /></p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span></code></pre></div>
-</div>
 </div>
 <div id="single-randomly-sampled-daily-observation-1" class="section level2 unlisted unnumbered">
 <h2 class="unlisted unnumbered">2. Single randomly sampled daily observation</h2>
@@ -1454,7 +1452,7 @@ div.tocify {
 <span id="cb16-49"><a href="#cb16-49"></a>                                                       <span class="dt">plotDimensions =</span> <span class="ot">TRUE</span>,</span>
 <span id="cb16-50"><a href="#cb16-50"></a>                                                       <span class="dt">xlab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>,</span>
 <span id="cb16-51"><a href="#cb16-51"></a>                                                       <span class="dt">ylab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>)))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-4-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a></span>
 <span id="cb17-2"><a href="#cb17-2"></a><span class="co"># Make node size equal to strength. Strength is the sum of a node&#39;s edge weights.</span></span>
 <span id="cb17-3"><a href="#cb17-3"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(emadata_nested_wrangled_both_recnets)) {</span>
@@ -1708,8 +1706,7 @@ div.tocify {
 <span id="cb18-239"><a href="#cb18-239"></a>                                                               percentage_of_total, <span class="st">&quot;)&quot;</span>)))</span>
 <span id="cb18-240"><a href="#cb18-240"></a>                             }</span>
 <span id="cb18-241"><a href="#cb18-241"></a>                  ))</span></code></pre></div>
-<div id="spiral-graph-with-colored-nodes-2" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Spiral graph with colored nodes</h3>
+<p><strong>Spiral graph with colored nodes</strong></p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></span>
 <span id="cb19-2"><a href="#cb19-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">node_colors =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> all_nodes_with_strengths,</span>
 <span id="cb19-3"><a href="#cb19-3"></a>                                         <span class="dt">.f =</span> <span class="op">~</span>{tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(.x, <span class="dt">names_from =</span> name) <span class="op">%&gt;%</span></span>
@@ -1742,7 +1739,7 @@ div.tocify {
 <span id="cb19-30"><a href="#cb19-30"></a>                                                                      <span class="co"># alphaE = 0.1</span></span>
 <span id="cb19-31"><a href="#cb19-31"></a>                                                                      <span class="co"># title = ..3</span></span>
 <span id="cb19-32"><a href="#cb19-32"></a>                                     )))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-6-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a></span>
 <span id="cb20-2"><a href="#cb20-2"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +</span></span>
 <span id="cb20-3"><a href="#cb20-3"></a><span class="co">#   theme(plot.margin=grid::unit(c(0,0,0,0), &quot;mm&quot;))</span></span>
@@ -1752,9 +1749,7 @@ div.tocify {
 <span id="cb20-7"><a href="#cb20-7"></a><span class="co">#        height = 7)</span></span>
 <span id="cb20-8"><a href="#cb20-8"></a></span>
 <span id="cb20-9"><a href="#cb20-9"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span></code></pre></div>
-</div>
-<div id="attractor-plot-2" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Attractor plot</h3>
+<p><strong>Attractor plot</strong></p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></span>
 <span id="cb21-2"><a href="#cb21-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">observations =</span> purrr<span class="op">::</span><span class="kw">map_dbl</span>(<span class="dt">.x =</span> sample2_standardised,</span>
 <span id="cb21-3"><a href="#cb21-3"></a>                                              <span class="dt">.f =</span> <span class="op">~</span><span class="kw">nrow</span>(.)))</span>
@@ -1805,9 +1800,8 @@ div.tocify {
 <span id="cb21-48"><a href="#cb21-48"></a>      ))</span>
 <span id="cb21-49"><a href="#cb21-49"></a></span>
 <span id="cb21-50"><a href="#cb21-50"></a>emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>attractor_plots[[<span class="dv">1</span>]]</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/attractor-plots_sample2-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/attractor-plots_sample2-1.png" width="672" /></p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span></code></pre></div>
-</div>
 </div>
 <div id="single-randomly-sampled-daily-observation-2" class="section level2 unlisted unnumbered">
 <h2 class="unlisted unnumbered">3. Single randomly sampled daily observation</h2>
@@ -1863,7 +1857,7 @@ div.tocify {
 <span id="cb23-49"><a href="#cb23-49"></a>                                                       <span class="dt">plotDimensions =</span> <span class="ot">TRUE</span>,</span>
 <span id="cb23-50"><a href="#cb23-50"></a>                                                       <span class="dt">xlab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>,</span>
 <span id="cb23-51"><a href="#cb23-51"></a>                                                       <span class="dt">ylab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>)))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-7-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a></span>
 <span id="cb24-2"><a href="#cb24-2"></a><span class="co"># Make node size equal to strength. Strength is the sum of a node&#39;s edge weights.</span></span>
 <span id="cb24-3"><a href="#cb24-3"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(emadata_nested_wrangled_both_recnets)) {</span>
@@ -2117,8 +2111,7 @@ div.tocify {
 <span id="cb25-239"><a href="#cb25-239"></a>                                                               percentage_of_total, <span class="st">&quot;)&quot;</span>)))</span>
 <span id="cb25-240"><a href="#cb25-240"></a>                             }</span>
 <span id="cb25-241"><a href="#cb25-241"></a>                  ))</span></code></pre></div>
-<div id="spiral-graph-with-colored-nodes-3" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Spiral graph with colored nodes</h3>
+<p><strong>Spiral graph with colored nodes</strong></p>
 <div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a>emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></span>
 <span id="cb26-2"><a href="#cb26-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">node_colors =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> all_nodes_with_strengths,</span>
 <span id="cb26-3"><a href="#cb26-3"></a>                                         <span class="dt">.f =</span> <span class="op">~</span>{tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(.x, <span class="dt">names_from =</span> name) <span class="op">%&gt;%</span></span>
@@ -2151,7 +2144,7 @@ div.tocify {
 <span id="cb26-30"><a href="#cb26-30"></a>                                                                      <span class="co"># alphaE = 0.1</span></span>
 <span id="cb26-31"><a href="#cb26-31"></a>                                                                      <span class="co"># title = ..3</span></span>
 <span id="cb26-32"><a href="#cb26-32"></a>                                     )))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-9-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a></span>
 <span id="cb27-2"><a href="#cb27-2"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +</span></span>
 <span id="cb27-3"><a href="#cb27-3"></a><span class="co">#   theme(plot.margin=grid::unit(c(0,0,0,0), &quot;mm&quot;))</span></span>
@@ -2161,9 +2154,7 @@ div.tocify {
 <span id="cb27-7"><a href="#cb27-7"></a><span class="co">#        height = 7)</span></span>
 <span id="cb27-8"><a href="#cb27-8"></a></span>
 <span id="cb27-9"><a href="#cb27-9"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span></code></pre></div>
-</div>
-<div id="attractor-plot-3" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Attractor plot</h3>
+<p><strong>Attractor plot</strong></p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a>emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></span>
 <span id="cb28-2"><a href="#cb28-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">observations =</span> purrr<span class="op">::</span><span class="kw">map_dbl</span>(<span class="dt">.x =</span> sample3_standardised,</span>
 <span id="cb28-3"><a href="#cb28-3"></a>                                              <span class="dt">.f =</span> <span class="op">~</span><span class="kw">nrow</span>(.)))</span>
@@ -2214,9 +2205,8 @@ div.tocify {
 <span id="cb28-48"><a href="#cb28-48"></a>      ))</span>
 <span id="cb28-49"><a href="#cb28-49"></a></span>
 <span id="cb28-50"><a href="#cb28-50"></a>emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>attractor_plots[[<span class="dv">1</span>]]</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/attractor-plots_sample3-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/attractor-plots_sample3-1.png" width="672" /></p>
 <div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span></code></pre></div>
-</div>
 </div>
 <div id="all-data" class="section level2 unlisted unnumbered">
 <h2 class="unlisted unnumbered">All data</h2>
@@ -2272,7 +2262,7 @@ div.tocify {
 <span id="cb30-49"><a href="#cb30-49"></a>                                                       <span class="dt">plotDimensions =</span> <span class="ot">TRUE</span>,</span>
 <span id="cb30-50"><a href="#cb30-50"></a>                                                       <span class="dt">xlab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>,</span>
 <span id="cb30-51"><a href="#cb30-51"></a>                                                       <span class="dt">ylab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>)))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-10-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1"></a></span>
 <span id="cb31-2"><a href="#cb31-2"></a><span class="co"># Make node size equal to strength. Strength is the sum of a node&#39;s edge weights.</span></span>
 <span id="cb31-3"><a href="#cb31-3"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(emadata_nested_wrangled_both_recnets)) {</span>
@@ -2526,8 +2516,7 @@ div.tocify {
 <span id="cb32-239"><a href="#cb32-239"></a>                                                               percentage_of_total, <span class="st">&quot;)&quot;</span>)))</span>
 <span id="cb32-240"><a href="#cb32-240"></a>                             }</span>
 <span id="cb32-241"><a href="#cb32-241"></a>                  ))</span></code></pre></div>
-<div id="spiral-graph-with-colored-nodes-4" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Spiral graph with colored nodes</h3>
+<p><strong>Spiral graph with colored nodes</strong></p>
 <div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1"></a>emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></span>
 <span id="cb33-2"><a href="#cb33-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">node_colors =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> all_nodes_with_strengths,</span>
 <span id="cb33-3"><a href="#cb33-3"></a>                                         <span class="dt">.f =</span> <span class="op">~</span>{tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(.x, <span class="dt">names_from =</span> name) <span class="op">%&gt;%</span></span>
@@ -2560,7 +2549,7 @@ div.tocify {
 <span id="cb33-30"><a href="#cb33-30"></a>                                                                      <span class="co"># alphaE = 0.1</span></span>
 <span id="cb33-31"><a href="#cb33-31"></a>                                                                      <span class="co"># title = ..3</span></span>
 <span id="cb33-32"><a href="#cb33-32"></a>                                     )))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-12-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1"></a></span>
 <span id="cb34-2"><a href="#cb34-2"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +</span></span>
 <span id="cb34-3"><a href="#cb34-3"></a><span class="co">#   theme(plot.margin=grid::unit(c(0,0,0,0), &quot;mm&quot;))</span></span>
@@ -2570,9 +2559,7 @@ div.tocify {
 <span id="cb34-7"><a href="#cb34-7"></a><span class="co">#        height = 7)</span></span>
 <span id="cb34-8"><a href="#cb34-8"></a></span>
 <span id="cb34-9"><a href="#cb34-9"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span></code></pre></div>
-</div>
-<div id="attractor-plot-4" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Attractor plot</h3>
+<p><strong>Attractor plot</strong></p>
 <div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1"></a>emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></span>
 <span id="cb35-2"><a href="#cb35-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">observations =</span> purrr<span class="op">::</span><span class="kw">map_dbl</span>(<span class="dt">.x =</span> data_standardised,</span>
 <span id="cb35-3"><a href="#cb35-3"></a>                                              <span class="dt">.f =</span> <span class="op">~</span><span class="kw">nrow</span>(.)))</span>
@@ -2623,9 +2610,8 @@ div.tocify {
 <span id="cb35-48"><a href="#cb35-48"></a>      ))</span>
 <span id="cb35-49"><a href="#cb35-49"></a></span>
 <span id="cb35-50"><a href="#cb35-50"></a>emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>attractor_plots[[<span class="dv">1</span>]]</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/attractor-plots_alldata-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/attractor-plots_alldata-1.png" width="672" /></p>
 <div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span></code></pre></div>
-</div>
 </div>
 <div id="task-normed-data" class="section level2 unlisted unnumbered">
 <h2 class="unlisted unnumbered">Task-normed data</h2>
@@ -2681,7 +2667,7 @@ div.tocify {
 <span id="cb37-49"><a href="#cb37-49"></a>                                                       <span class="dt">plotDimensions =</span> <span class="ot">TRUE</span>,</span>
 <span id="cb37-50"><a href="#cb37-50"></a>                                                       <span class="dt">xlab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>,</span>
 <span id="cb37-51"><a href="#cb37-51"></a>                                                       <span class="dt">ylab =</span> <span class="st">&quot;6-dimensional motivation system&quot;</span>)))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-13-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 <div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1"></a></span>
 <span id="cb38-2"><a href="#cb38-2"></a><span class="co"># Make node size equal to strength. Strength is the sum of a node&#39;s edge weights.</span></span>
 <span id="cb38-3"><a href="#cb38-3"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(emadata_nested_wrangled_both_recnets)) {</span>
@@ -2935,8 +2921,7 @@ div.tocify {
 <span id="cb39-239"><a href="#cb39-239"></a>                                                               percentage_of_total, <span class="st">&quot;)&quot;</span>)))</span>
 <span id="cb39-240"><a href="#cb39-240"></a>                             }</span>
 <span id="cb39-241"><a href="#cb39-241"></a>                  ))</span></code></pre></div>
-<div id="spiral-graph-with-colored-nodes-5" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Spiral graph with colored nodes</h3>
+<p><strong>Spiral graph with colored nodes</strong></p>
 <div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1"></a>emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></span>
 <span id="cb40-2"><a href="#cb40-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">node_colors =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> all_nodes_with_strengths,</span>
 <span id="cb40-3"><a href="#cb40-3"></a>                                         <span class="dt">.f =</span> <span class="op">~</span>{tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(.x, <span class="dt">names_from =</span> name) <span class="op">%&gt;%</span></span>
@@ -2969,7 +2954,7 @@ div.tocify {
 <span id="cb40-30"><a href="#cb40-30"></a>                                                                      <span class="co"># alphaE = 0.1</span></span>
 <span id="cb40-31"><a href="#cb40-31"></a>                                                                      <span class="co"># title = ..3</span></span>
 <span id="cb40-32"><a href="#cb40-32"></a>                                     )))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-15-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
 <div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1"></a></span>
 <span id="cb41-2"><a href="#cb41-2"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +</span></span>
 <span id="cb41-3"><a href="#cb41-3"></a><span class="co">#   theme(plot.margin=grid::unit(c(0,0,0,0), &quot;mm&quot;))</span></span>
@@ -2979,9 +2964,7 @@ div.tocify {
 <span id="cb41-7"><a href="#cb41-7"></a><span class="co">#        height = 7)</span></span>
 <span id="cb41-8"><a href="#cb41-8"></a></span>
 <span id="cb41-9"><a href="#cb41-9"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span></code></pre></div>
-</div>
-<div id="attractor-plot-5" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Attractor plot</h3>
+<p><strong>Attractor plot</strong></p>
 <div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1"></a>emadata_nested_wrangled_both_recnets_nodes_plots &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span></span>
 <span id="cb42-2"><a href="#cb42-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">observations =</span> purrr<span class="op">::</span><span class="kw">map_dbl</span>(<span class="dt">.x =</span> taskNormed_standardised,</span>
 <span id="cb42-3"><a href="#cb42-3"></a>                                              <span class="dt">.f =</span> <span class="op">~</span><span class="kw">nrow</span>(.)))</span>
@@ -3032,9 +3015,8 @@ div.tocify {
 <span id="cb42-48"><a href="#cb42-48"></a>      ))</span>
 <span id="cb42-49"><a href="#cb42-49"></a></span>
 <span id="cb42-50"><a href="#cb42-50"></a>emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>attractor_plots[[<span class="dv">1</span>]]</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/attractor-plots_taskNormed-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/attractor-plots_taskNormed-1.png" width="672" /></p>
 <div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1"></a><span class="co"># emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]</span></span></code></pre></div>
-</div>
 </div>
 </div>
 <div id="section" class="section level1 unnumbered">
@@ -3044,7 +3026,7 @@ div.tocify {
 <div id="which-tasks-do-attractors-consist-of" class="section level1">
 <h1>Which tasks do attractors consist of?</h1>
 <p>As the ecological momentary assessment questions are <a href="https://git.io/JfLmS">formulated</a> according to self-determination theory in such a way, that they inquire one’s motivation to do a particular task, it would be intuitive to think each task falls into a particular profile.</p>
-<p>We can examine this, as each time the participant responded to the questionnaire, they also indicated, which task they were performing at the moment. These responses were coarse-grained to ensure anonymity. In collaboration with the participant, highly specific tasks that were considered similar enough, were combined under a more general descriptive label. One task, “Moti13_1”, could not be fit in any category but was highly specific, so it was anonymised.</p>
+<p>We can examine this, as each time the participant responded to the questionnaire, they also indicated, which task they were performing at the moment. These responses were coarse-grained to ensure anonymity. In collaboration with the participant, highly specific tasks that were considered similar enough, were combined under a more general descriptive label. One task, “Moti_P10_1”, could not be fit in any category but was highly specific, so it was anonymised.</p>
 <p>Lists below indicate, which tasks each attractor consists of.</p>
 <div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a>taskdata &lt;-<span class="st"> </span>firstlast_emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>all_nodes_with_strengths[[<span class="dv">1</span>]] <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb44-2"><a href="#cb44-2"></a><span class="st">  </span>tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> name, <span class="dt">values_from =</span> value)</span>
@@ -3338,7 +3320,7 @@ div.tocify {
 <td align="left">Writing book (5.9 %)</td>
 </tr>
 <tr class="even">
-<td align="left">Moti13_1 (5.9 %)</td>
+<td align="left">Moti_P10_1 (5.9 %)</td>
 </tr>
 </tbody>
 </table>
@@ -3381,7 +3363,7 @@ div.tocify {
 <span id="cb46-25"><a href="#cb46-25"></a><span class="st">  </span><span class="kw">theme</span>(<span class="dt">panel.grid.major.y =</span> <span class="kw">element_blank</span>()) <span class="op">+</span></span>
 <span id="cb46-26"><a href="#cb46-26"></a><span class="st">  </span><span class="kw">coord_cartesian</span>(<span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">6</span>)) <span class="op">+</span></span>
 <span id="cb46-27"><a href="#cb46-27"></a><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Most frequent tasks for this participant&quot;</span>)</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/taskplot-firstlast-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/taskplot-firstlast-1.png" width="672" /></p>
 <p>We can see, that no task consistently falls in one attractor. On the other hand, e.g. <em>Email</em> is absent from 1st, 2nd and 4th attractor, and <em>Providing training</em> does not appear in the 1st or 3rd. In the case of the latter, it might be due to the low number of observations, i.e. had more data been collected, Providing training could have exhibited new motivation profiles.</p>
 <p><span class="math inline">\(~\)</span></p>
 </div>
@@ -3427,7 +3409,7 @@ div.tocify {
 <span id="cb47-35"><a href="#cb47-35"></a>        <span class="dt">legend.position =</span> <span class="st">&quot;none&quot;</span>) <span class="op">+</span></span>
 <span id="cb47-36"><a href="#cb47-36"></a><span class="st">  </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_labels =</span> <span class="st">&quot;%d/%m&quot;</span>, <span class="dt">date_breaks =</span> <span class="st">&quot;2 days&quot;</span>, <span class="dt">limits =</span> <span class="kw">range</span>(taskdata_full<span class="op">$</span>Date)) <span class="op">+</span></span>
 <span id="cb47-37"><a href="#cb47-37"></a><span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="ot">NULL</span>, <span class="dt">y =</span> <span class="ot">NULL</span>, <span class="dt">title =</span> <span class="st">&quot;Sampled tasks&quot;</span>)</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-16-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 </div>
 <div id="all-tasks" class="section level3">
 <h3>All tasks</h3>
@@ -3469,7 +3451,7 @@ div.tocify {
 <span id="cb48-36"><a href="#cb48-36"></a>        <span class="dt">legend.position =</span> <span class="st">&quot;none&quot;</span>) <span class="op">+</span></span>
 <span id="cb48-37"><a href="#cb48-37"></a><span class="st">  </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_labels =</span> <span class="st">&quot;%d/%m&quot;</span>, <span class="dt">date_breaks =</span> <span class="st">&quot;2 days&quot;</span>, <span class="dt">limits =</span> <span class="kw">range</span>(taskdata_all<span class="op">$</span>Date)) <span class="op">+</span></span>
 <span id="cb48-38"><a href="#cb48-38"></a><span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="ot">NULL</span>, <span class="dt">y =</span> <span class="ot">NULL</span>, <span class="dt">title =</span> <span class="st">&quot;All tasks&quot;</span>)</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-17-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
 </div>
 </div>
 </div>
@@ -3687,7 +3669,7 @@ div.tocify {
 <span id="cb53-8"><a href="#cb53-8"></a>                        <span class="dt">layout_matrix =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>,</span>
 <span id="cb53-9"><a href="#cb53-9"></a>                                                 <span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">6</span>), </span>
 <span id="cb53-10"><a href="#cb53-10"></a>                                               <span class="dt">nrow =</span> <span class="dv">2</span>, <span class="dt">byrow =</span> <span class="ot">FALSE</span>))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/rqa-plots-create-1.png" width="2100" /></p>
+<p><img src="Recurrence-plots_files/figure-html/rqa-plots-create-1.png" width="672" /></p>
 <div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1"></a></span>
 <span id="cb54-2"><a href="#cb54-2"></a>rqa_plot</span>
 <span id="cb54-3"><a href="#cb54-3"></a><span class="co">## TableGrob (2 x 3) &quot;arrange&quot;: 6 grobs</span></span>
@@ -3770,18 +3752,18 @@ div.tocify {
 <p>What it depicts: The stationarity of the system, i.e. whether the recurrent patterns emerge homogenously across the plot (indicating system stationarity), or if they fade to the lower right or and upper left corners (indicating the system changes in time, is non-stationarity). For example, a time series of any gradually but surely increasing or decreasing numbers would show a high trend value, whereas a series in which values fluctuate around more or less the same values, would exhibit a low trend value.</p>
 <div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1"></a></span>
 <span id="cb56-2"><a href="#cb56-2"></a>knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/trendlo.PNG&quot;</span>)</span></code></pre></div>
-<p><img src="figures/RQA_measures/trendlo.PNG" width="205" /></p>
+<p><img src="figures/RQA_measures/trendlo.PNG" width="640" /></p>
 <div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1"></a>knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/trendhi.PNG&quot;</span>)</span></code></pre></div>
-<p><img src="figures/RQA_measures/trendhi.PNG" width="205" /></p>
+<p><img src="figures/RQA_measures/trendhi.PNG" width="640" /></p>
 </div>
 <div id="determinism" class="section level2">
 <h2>Determinism</h2>
 <p>What it depicts: The proportion of all recurrent points which land on diagonal lines, meaning that there is a pattern to re-occurrence. For example, motivation for physical activity might be high (or low) on the same weekdays for several weeks in a row, indicating high determinism. Sleep-wake cycles would also show high determinism, whereas random numbers would show no discernable patterns and the lowest possible determinism values.</p>
 <div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1"></a></span>
 <span id="cb58-2"><a href="#cb58-2"></a>knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/determinismlo.PNG&quot;</span>)</span></code></pre></div>
-<p><img src="figures/RQA_measures/determinismlo.PNG" width="205" /></p>
+<p><img src="figures/RQA_measures/determinismlo.PNG" width="640" /></p>
 <div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1"></a>knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/determinismhi.PNG&quot;</span>)</span></code></pre></div>
-<p><img src="figures/RQA_measures/determinismhi.PNG" width="205" /></p>
+<p><img src="figures/RQA_measures/determinismhi.PNG" width="640" /></p>
 </div>
 <div id="trapping-time-and-laminarity" class="section level2">
 <h2>Trapping time and Laminarity</h2>
@@ -3789,27 +3771,27 @@ div.tocify {
 <p>* Navarro, J., &amp; Rueff-Lopes, R. (2015). Healthy variability in organizational behavior: Empirical evidence and new steps for future research. Nonlinear Dynamics, Psychology, and Life Sciences, 19(4), 529–552.</p>
 <div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1"></a></span>
 <span id="cb60-2"><a href="#cb60-2"></a>knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/trappingtimelo.PNG&quot;</span>)</span></code></pre></div>
-<p><img src="figures/RQA_measures/trappingtimelo.PNG" width="205" /></p>
+<p><img src="figures/RQA_measures/trappingtimelo.PNG" width="640" /></p>
 <div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1"></a>knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/trappingtimehi.PNG&quot;</span>)</span></code></pre></div>
-<p><img src="figures/RQA_measures/trappingtimehi.PNG" width="205" /></p>
+<p><img src="figures/RQA_measures/trappingtimehi.PNG" width="640" /></p>
 </div>
 <div id="entropy" class="section level2">
 <h2>Entropy</h2>
 <p>What it depicts: The complexity or unpredictability of pattern lengths (i.e. variability in the length of the lines that are parallel to the diagonal); the heart rate of a person playing in a soccer match would show high entropy, whereas their heart rate in a training session of regular timed sprints would show low entropy.</p>
 <div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1"></a></span>
 <span id="cb62-2"><a href="#cb62-2"></a>knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/entropylo.PNG&quot;</span>)</span></code></pre></div>
-<p><img src="figures/RQA_measures/entropylo.PNG" width="205" /></p>
+<p><img src="figures/RQA_measures/entropylo.PNG" width="640" /></p>
 <div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1"></a>knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/entropyhi.PNG&quot;</span>)</span></code></pre></div>
-<p><img src="figures/RQA_measures/entropyhi.PNG" width="205" /></p>
+<p><img src="figures/RQA_measures/entropyhi.PNG" width="640" /></p>
 </div>
 <div id="average-diagonal-line-length" class="section level2">
 <h2>Average diagonal line length</h2>
 <p>What it depicts: The average length of the diagonal line structures, that is, the average time the system repeats a behavioural sequence it has exhibited previously. This can be thought of e.g. as a person’s (or their motivational system’s) consistency in repeating habitual behaviour, such as walking many steps during weekdays and little during weekends; a weekend with many steps (or a weekday with few steps) would break this pattern and reduce the average diagonal line length. Hence: While entropy can be thought of as a type of variance of the diagonal lines lengths, average diagonal line length would represent their mean length. Average diagonal line length can also be interpreted as the mean prediction time.</p>
 <div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1"></a></span>
 <span id="cb64-2"><a href="#cb64-2"></a>knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/averagelinelengthlo.PNG&quot;</span>)</span></code></pre></div>
-<p><img src="figures/RQA_measures/averagelinelengthlo.PNG" width="205" /></p>
+<p><img src="figures/RQA_measures/averagelinelengthlo.PNG" width="640" /></p>
 <div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1"></a>knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="dt">path =</span> <span class="st">&quot;./figures/RQA_measures/averagelinelengthhi.PNG&quot;</span>)</span></code></pre></div>
-<p><img src="figures/RQA_measures/averagelinelengthhi.PNG" width="205" /></p>
+<p><img src="figures/RQA_measures/averagelinelengthhi.PNG" width="640" /></p>
 </div>
 </div>
 <div id="section-2" class="section level1 unnumbered">
@@ -3832,7 +3814,7 @@ div.tocify {
 <span id="cb66-2"><a href="#cb66-2"></a><span class="co"># knitr::include_graphics(path = &quot;./figures/rqa_pedagogical.png&quot;)</span></span>
 <span id="cb66-3"><a href="#cb66-3"></a></span>
 <span id="cb66-4"><a href="#cb66-4"></a>grid<span class="op">::</span><span class="kw">grid.raster</span>(png<span class="op">::</span><span class="kw">readPNG</span>(<span class="st">&quot;./figures/rqa_pedagogical.png&quot;</span>))</span></code></pre></div>
-<p><img src="Recurrence-plots_files/figure-html/rqa-pedagogical-1.png" width="330.8" /></p>
+<p><img src="Recurrence-plots_files/figure-html/rqa-pedagogical-1.png" width="105.856" /></p>
 <p>These data show a switch in the system state: the blue series precedes the yellow one until time 3-4, after which the yellow series precedes the blue one. While this is merely a pedagogical example (a time series of only six observations would rarely be sufficient to reliably identify patterns), it illustrates the utility of the method in identifying patterns in time series data. For a more in-depth treatment, see:</p>
 <ul>
 <li><p>Wallot, S., &amp; Leonardi, G. (2018). Analyzing Multivariate Dynamics Using Cross-Recurrence Quantification Analysis (CRQA), Diagonal-Cross-Recurrence Profiles (DCRP), and Multidimensional Recurrence Quantification Analysis (MdRQA) – A Tutorial in R. Frontiers in Psychology, 9. <a href="https://doi.org/10.3389/fpsyg.2018.02232" class="uri">https://doi.org/10.3389/fpsyg.2018.02232</a></p></li>
@@ -3855,165 +3837,165 @@ div.tocify {
 <span id="cb67-9"><a href="#cb67-9"></a><span class="co">##  collate  Finnish_Finland.1252        </span></span>
 <span id="cb67-10"><a href="#cb67-10"></a><span class="co">##  ctype    Finnish_Finland.1252        </span></span>
 <span id="cb67-11"><a href="#cb67-11"></a><span class="co">##  tz       Europe/Helsinki             </span></span>
-<span id="cb67-12"><a href="#cb67-12"></a><span class="co">##  date     2020-05-23                  </span></span>
+<span id="cb67-12"><a href="#cb67-12"></a><span class="co">##  date     2020-05-27                  </span></span>
 <span id="cb67-13"><a href="#cb67-13"></a><span class="co">## </span></span>
 <span id="cb67-14"><a href="#cb67-14"></a><span class="co">## - Packages --------------------------</span></span>
-<span id="cb67-15"><a href="#cb67-15"></a><span class="co">##  package      * version    date      </span></span>
-<span id="cb67-16"><a href="#cb67-16"></a><span class="co">##  abind          1.4-5      2016-07-21</span></span>
-<span id="cb67-17"><a href="#cb67-17"></a><span class="co">##  acepack        1.4.1      2016-10-29</span></span>
-<span id="cb67-18"><a href="#cb67-18"></a><span class="co">##  assertthat     0.2.1      2019-03-21</span></span>
-<span id="cb67-19"><a href="#cb67-19"></a><span class="co">##  backports      1.1.7      2020-05-13</span></span>
-<span id="cb67-20"><a href="#cb67-20"></a><span class="co">##  base64enc      0.1-3      2015-07-28</span></span>
-<span id="cb67-21"><a href="#cb67-21"></a><span class="co">##  BDgraph        2.62       2019-12-05</span></span>
-<span id="cb67-22"><a href="#cb67-22"></a><span class="co">##  BiocManager    1.30.10    2019-11-16</span></span>
-<span id="cb67-23"><a href="#cb67-23"></a><span class="co">##  bookdown     * 0.19       2020-05-15</span></span>
-<span id="cb67-24"><a href="#cb67-24"></a><span class="co">##  broom          0.5.6      2020-04-20</span></span>
-<span id="cb67-25"><a href="#cb67-25"></a><span class="co">##  callr          3.4.3      2020-03-28</span></span>
-<span id="cb67-26"><a href="#cb67-26"></a><span class="co">##  casnet         0.1.5      2020-05-23</span></span>
-<span id="cb67-27"><a href="#cb67-27"></a><span class="co">##  cellranger     1.1.0      2016-07-27</span></span>
-<span id="cb67-28"><a href="#cb67-28"></a><span class="co">##  checkmate      2.0.0      2020-02-06</span></span>
-<span id="cb67-29"><a href="#cb67-29"></a><span class="co">##  cli            2.0.2      2020-02-28</span></span>
-<span id="cb67-30"><a href="#cb67-30"></a><span class="co">##  cluster        2.1.0      2019-06-19</span></span>
-<span id="cb67-31"><a href="#cb67-31"></a><span class="co">##  codetools      0.2-16     2018-12-24</span></span>
-<span id="cb67-32"><a href="#cb67-32"></a><span class="co">##  colorspace     1.4-1      2019-03-18</span></span>
-<span id="cb67-33"><a href="#cb67-33"></a><span class="co">##  corpcor        1.6.9      2017-04-01</span></span>
-<span id="cb67-34"><a href="#cb67-34"></a><span class="co">##  cowplot        1.0.0      2019-07-11</span></span>
-<span id="cb67-35"><a href="#cb67-35"></a><span class="co">##  crayon         1.3.4      2017-09-16</span></span>
-<span id="cb67-36"><a href="#cb67-36"></a><span class="co">##  crosstalk      1.1.0.1    2020-03-13</span></span>
-<span id="cb67-37"><a href="#cb67-37"></a><span class="co">##  curl           4.3        2019-12-02</span></span>
-<span id="cb67-38"><a href="#cb67-38"></a><span class="co">##  d3Network      0.5.2.1    2015-01-31</span></span>
-<span id="cb67-39"><a href="#cb67-39"></a><span class="co">##  data.table     1.12.8     2019-12-09</span></span>
-<span id="cb67-40"><a href="#cb67-40"></a><span class="co">##  DBI            1.1.0      2019-12-15</span></span>
-<span id="cb67-41"><a href="#cb67-41"></a><span class="co">##  dbplyr         1.4.3      2020-04-19</span></span>
-<span id="cb67-42"><a href="#cb67-42"></a><span class="co">##  desc           1.2.0      2018-05-01</span></span>
-<span id="cb67-43"><a href="#cb67-43"></a><span class="co">##  devtools       2.3.0      2020-04-10</span></span>
-<span id="cb67-44"><a href="#cb67-44"></a><span class="co">##  digest         0.6.25     2020-02-23</span></span>
-<span id="cb67-45"><a href="#cb67-45"></a><span class="co">##  dplyr        * 0.8.5      2020-03-07</span></span>
-<span id="cb67-46"><a href="#cb67-46"></a><span class="co">##  DT             0.13       2020-03-23</span></span>
-<span id="cb67-47"><a href="#cb67-47"></a><span class="co">##  ellipsis       0.3.1      2020-05-15</span></span>
-<span id="cb67-48"><a href="#cb67-48"></a><span class="co">##  evaluate       0.14       2019-05-28</span></span>
-<span id="cb67-49"><a href="#cb67-49"></a><span class="co">##  fansi          0.4.1      2020-01-08</span></span>
-<span id="cb67-50"><a href="#cb67-50"></a><span class="co">##  farver         2.0.3      2020-01-16</span></span>
-<span id="cb67-51"><a href="#cb67-51"></a><span class="co">##  fdrtool        1.2.15     2015-07-08</span></span>
-<span id="cb67-52"><a href="#cb67-52"></a><span class="co">##  forcats      * 0.5.0      2020-03-01</span></span>
-<span id="cb67-53"><a href="#cb67-53"></a><span class="co">##  forecast       8.12       2020-03-31</span></span>
-<span id="cb67-54"><a href="#cb67-54"></a><span class="co">##  foreign        0.8-76     2020-03-03</span></span>
-<span id="cb67-55"><a href="#cb67-55"></a><span class="co">##  Formula        1.2-3      2018-05-03</span></span>
-<span id="cb67-56"><a href="#cb67-56"></a><span class="co">##  fracdiff       1.5-1      2020-01-24</span></span>
-<span id="cb67-57"><a href="#cb67-57"></a><span class="co">##  fs             1.4.1      2020-04-04</span></span>
-<span id="cb67-58"><a href="#cb67-58"></a><span class="co">##  generics       0.0.2      2018-11-29</span></span>
-<span id="cb67-59"><a href="#cb67-59"></a><span class="co">##  gganimate      1.0.5      2020-02-09</span></span>
-<span id="cb67-60"><a href="#cb67-60"></a><span class="co">##  ggimage        0.2.8      2020-04-02</span></span>
-<span id="cb67-61"><a href="#cb67-61"></a><span class="co">##  ggplot2      * 3.3.0      2020-03-05</span></span>
-<span id="cb67-62"><a href="#cb67-62"></a><span class="co">##  ggplotify      0.0.5      2020-03-12</span></span>
-<span id="cb67-63"><a href="#cb67-63"></a><span class="co">##  glasso         1.11       2019-10-01</span></span>
-<span id="cb67-64"><a href="#cb67-64"></a><span class="co">##  glue           1.4.1      2020-05-13</span></span>
-<span id="cb67-65"><a href="#cb67-65"></a><span class="co">##  gridExtra      2.3        2017-09-09</span></span>
-<span id="cb67-66"><a href="#cb67-66"></a><span class="co">##  gridGraphics   0.5-0      2020-02-25</span></span>
-<span id="cb67-67"><a href="#cb67-67"></a><span class="co">##  gtable         0.3.0      2019-03-25</span></span>
-<span id="cb67-68"><a href="#cb67-68"></a><span class="co">##  gtools         3.8.2      2020-03-31</span></span>
-<span id="cb67-69"><a href="#cb67-69"></a><span class="co">##  haven          2.2.0      2019-11-08</span></span>
-<span id="cb67-70"><a href="#cb67-70"></a><span class="co">##  highr          0.8        2019-03-20</span></span>
-<span id="cb67-71"><a href="#cb67-71"></a><span class="co">##  Hmisc          4.4-0      2020-03-23</span></span>
-<span id="cb67-72"><a href="#cb67-72"></a><span class="co">##  hms            0.5.3      2020-01-08</span></span>
-<span id="cb67-73"><a href="#cb67-73"></a><span class="co">##  htmlTable      1.13.3     2019-12-04</span></span>
-<span id="cb67-74"><a href="#cb67-74"></a><span class="co">##  htmltools      0.4.0      2019-10-04</span></span>
-<span id="cb67-75"><a href="#cb67-75"></a><span class="co">##  htmlwidgets    1.5.1      2019-10-08</span></span>
-<span id="cb67-76"><a href="#cb67-76"></a><span class="co">##  httr           1.4.1      2019-08-05</span></span>
-<span id="cb67-77"><a href="#cb67-77"></a><span class="co">##  huge           1.3.4.1    2020-04-01</span></span>
-<span id="cb67-78"><a href="#cb67-78"></a><span class="co">##  igraph         1.2.5      2020-03-19</span></span>
-<span id="cb67-79"><a href="#cb67-79"></a><span class="co">##  invctr         0.1.0      2019-03-07</span></span>
-<span id="cb67-80"><a href="#cb67-80"></a><span class="co">##  jpeg           0.1-8.1    2019-10-24</span></span>
-<span id="cb67-81"><a href="#cb67-81"></a><span class="co">##  jsonlite       1.6.1      2020-02-02</span></span>
-<span id="cb67-82"><a href="#cb67-82"></a><span class="co">##  knitr        * 1.28       2020-02-06</span></span>
-<span id="cb67-83"><a href="#cb67-83"></a><span class="co">##  labeling       0.3        2014-08-23</span></span>
-<span id="cb67-84"><a href="#cb67-84"></a><span class="co">##  lattice        0.20-41    2020-04-02</span></span>
-<span id="cb67-85"><a href="#cb67-85"></a><span class="co">##  latticeExtra   0.6-29     2019-12-19</span></span>
-<span id="cb67-86"><a href="#cb67-86"></a><span class="co">##  lavaan         0.6-6      2020-05-13</span></span>
-<span id="cb67-87"><a href="#cb67-87"></a><span class="co">##  leaps          3.1        2020-01-16</span></span>
-<span id="cb67-88"><a href="#cb67-88"></a><span class="co">##  lifecycle      0.2.0      2020-03-06</span></span>
-<span id="cb67-89"><a href="#cb67-89"></a><span class="co">##  lmtest         0.9-37     2019-04-30</span></span>
-<span id="cb67-90"><a href="#cb67-90"></a><span class="co">##  locfit         1.5-9.4    2020-03-25</span></span>
-<span id="cb67-91"><a href="#cb67-91"></a><span class="co">##  lubridate      1.7.8      2020-04-06</span></span>
-<span id="cb67-92"><a href="#cb67-92"></a><span class="co">##  magick         2.3        2020-01-24</span></span>
-<span id="cb67-93"><a href="#cb67-93"></a><span class="co">##  magrittr       1.5        2014-11-22</span></span>
-<span id="cb67-94"><a href="#cb67-94"></a><span class="co">##  MASS           7.3-51.6   2020-04-26</span></span>
-<span id="cb67-95"><a href="#cb67-95"></a><span class="co">##  Matrix         1.2-18     2019-11-27</span></span>
-<span id="cb67-96"><a href="#cb67-96"></a><span class="co">##  memoise        1.1.0      2017-04-21</span></span>
-<span id="cb67-97"><a href="#cb67-97"></a><span class="co">##  mgcv           1.8-31     2019-11-09</span></span>
-<span id="cb67-98"><a href="#cb67-98"></a><span class="co">##  mnormt         1.5-7      2020-04-30</span></span>
-<span id="cb67-99"><a href="#cb67-99"></a><span class="co">##  modelr         0.1.8      2020-05-19</span></span>
-<span id="cb67-100"><a href="#cb67-100"></a><span class="co">##  munsell        0.5.0      2018-06-12</span></span>
-<span id="cb67-101"><a href="#cb67-101"></a><span class="co">##  nlme           3.1-147    2020-04-13</span></span>
-<span id="cb67-102"><a href="#cb67-102"></a><span class="co">##  nnet           7.3-14     2020-04-26</span></span>
-<span id="cb67-103"><a href="#cb67-103"></a><span class="co">##  pander         0.6.3      2018-11-06</span></span>
-<span id="cb67-104"><a href="#cb67-104"></a><span class="co">##  papaja         0.1.0.9942 2020-03-23</span></span>
-<span id="cb67-105"><a href="#cb67-105"></a><span class="co">##  patchwork    * 1.0.0      2019-12-01</span></span>
-<span id="cb67-106"><a href="#cb67-106"></a><span class="co">##  pbapply        1.4-2      2019-08-31</span></span>
-<span id="cb67-107"><a href="#cb67-107"></a><span class="co">##  pbivnorm       0.6.0      2015-01-23</span></span>
-<span id="cb67-108"><a href="#cb67-108"></a><span class="co">##  pillar         1.4.4      2020-05-05</span></span>
-<span id="cb67-109"><a href="#cb67-109"></a><span class="co">##  pkgbuild       1.0.8      2020-05-07</span></span>
-<span id="cb67-110"><a href="#cb67-110"></a><span class="co">##  pkgconfig      2.0.3      2019-09-22</span></span>
-<span id="cb67-111"><a href="#cb67-111"></a><span class="co">##  pkgload        1.0.2      2018-10-29</span></span>
-<span id="cb67-112"><a href="#cb67-112"></a><span class="co">##  plyr           1.8.6      2020-03-03</span></span>
-<span id="cb67-113"><a href="#cb67-113"></a><span class="co">##  png            0.1-7      2013-12-03</span></span>
-<span id="cb67-114"><a href="#cb67-114"></a><span class="co">##  prettyunits    1.1.1      2020-01-24</span></span>
-<span id="cb67-115"><a href="#cb67-115"></a><span class="co">##  processx       3.4.2      2020-02-09</span></span>
-<span id="cb67-116"><a href="#cb67-116"></a><span class="co">##  progress       1.2.2      2019-05-16</span></span>
-<span id="cb67-117"><a href="#cb67-117"></a><span class="co">##  proxy          0.4-24     2020-04-25</span></span>
-<span id="cb67-118"><a href="#cb67-118"></a><span class="co">##  ps             1.3.3      2020-05-08</span></span>
-<span id="cb67-119"><a href="#cb67-119"></a><span class="co">##  psych          1.9.12.31  2020-01-08</span></span>
-<span id="cb67-120"><a href="#cb67-120"></a><span class="co">##  purrr        * 0.3.4      2020-04-17</span></span>
-<span id="cb67-121"><a href="#cb67-121"></a><span class="co">##  qgraph         1.6.5      2020-02-21</span></span>
-<span id="cb67-122"><a href="#cb67-122"></a><span class="co">##  quadprog       1.5-8      2019-11-20</span></span>
-<span id="cb67-123"><a href="#cb67-123"></a><span class="co">##  quantmod       0.4.17     2020-03-31</span></span>
-<span id="cb67-124"><a href="#cb67-124"></a><span class="co">##  R6             2.4.1      2019-11-12</span></span>
-<span id="cb67-125"><a href="#cb67-125"></a><span class="co">##  randtests      1.0        2014-11-17</span></span>
-<span id="cb67-126"><a href="#cb67-126"></a><span class="co">##  RColorBrewer   1.1-2      2014-12-07</span></span>
-<span id="cb67-127"><a href="#cb67-127"></a><span class="co">##  Rcpp           1.0.4.6    2020-04-09</span></span>
-<span id="cb67-128"><a href="#cb67-128"></a><span class="co">##  readr        * 1.3.1      2018-12-21</span></span>
-<span id="cb67-129"><a href="#cb67-129"></a><span class="co">##  readxl         1.3.1      2019-03-13</span></span>
-<span id="cb67-130"><a href="#cb67-130"></a><span class="co">##  remotes        2.1.1      2020-02-15</span></span>
-<span id="cb67-131"><a href="#cb67-131"></a><span class="co">##  reprex         0.3.0      2019-05-16</span></span>
-<span id="cb67-132"><a href="#cb67-132"></a><span class="co">##  reshape2       1.4.4      2020-04-09</span></span>
-<span id="cb67-133"><a href="#cb67-133"></a><span class="co">##  rjson          0.2.20     2018-06-08</span></span>
-<span id="cb67-134"><a href="#cb67-134"></a><span class="co">##  rlang          0.4.6      2020-05-02</span></span>
-<span id="cb67-135"><a href="#cb67-135"></a><span class="co">##  rmarkdown      2.1        2020-01-20</span></span>
-<span id="cb67-136"><a href="#cb67-136"></a><span class="co">##  rmdfiltr       0.1.2      2019-12-11</span></span>
-<span id="cb67-137"><a href="#cb67-137"></a><span class="co">##  rpart          4.1-15     2019-04-12</span></span>
-<span id="cb67-138"><a href="#cb67-138"></a><span class="co">##  rprojroot      1.3-2      2018-01-03</span></span>
-<span id="cb67-139"><a href="#cb67-139"></a><span class="co">##  rstudioapi     0.11       2020-02-07</span></span>
-<span id="cb67-140"><a href="#cb67-140"></a><span class="co">##  rvcheck        0.1.8      2020-03-01</span></span>
-<span id="cb67-141"><a href="#cb67-141"></a><span class="co">##  rvest          0.3.5      2019-11-08</span></span>
-<span id="cb67-142"><a href="#cb67-142"></a><span class="co">##  scales         1.1.1      2020-05-11</span></span>
-<span id="cb67-143"><a href="#cb67-143"></a><span class="co">##  sessioninfo    1.1.1      2018-11-05</span></span>
-<span id="cb67-144"><a href="#cb67-144"></a><span class="co">##  stringi        1.4.6      2020-02-17</span></span>
-<span id="cb67-145"><a href="#cb67-145"></a><span class="co">##  stringr      * 1.4.0      2019-02-10</span></span>
-<span id="cb67-146"><a href="#cb67-146"></a><span class="co">##  survival       3.1-12     2020-04-10</span></span>
-<span id="cb67-147"><a href="#cb67-147"></a><span class="co">##  testthat       2.3.2      2020-03-02</span></span>
-<span id="cb67-148"><a href="#cb67-148"></a><span class="co">##  tibble       * 3.0.1      2020-04-20</span></span>
-<span id="cb67-149"><a href="#cb67-149"></a><span class="co">##  tidyr        * 1.1.0      2020-05-20</span></span>
-<span id="cb67-150"><a href="#cb67-150"></a><span class="co">##  tidyselect     1.1.0      2020-05-11</span></span>
-<span id="cb67-151"><a href="#cb67-151"></a><span class="co">##  tidyverse    * 1.3.0      2019-11-21</span></span>
-<span id="cb67-152"><a href="#cb67-152"></a><span class="co">##  timeDate       3043.102   2018-02-21</span></span>
-<span id="cb67-153"><a href="#cb67-153"></a><span class="co">##  TSA            1.2        2018-06-30</span></span>
-<span id="cb67-154"><a href="#cb67-154"></a><span class="co">##  tseries        0.10-47    2019-06-05</span></span>
-<span id="cb67-155"><a href="#cb67-155"></a><span class="co">##  TTR            0.23-6     2019-12-15</span></span>
-<span id="cb67-156"><a href="#cb67-156"></a><span class="co">##  tweenr         1.0.1      2018-12-14</span></span>
-<span id="cb67-157"><a href="#cb67-157"></a><span class="co">##  urca           1.3-0      2016-09-06</span></span>
-<span id="cb67-158"><a href="#cb67-158"></a><span class="co">##  usethis        1.6.1      2020-04-29</span></span>
-<span id="cb67-159"><a href="#cb67-159"></a><span class="co">##  vctrs          0.3.0      2020-05-11</span></span>
-<span id="cb67-160"><a href="#cb67-160"></a><span class="co">##  viridis        0.5.1      2018-03-29</span></span>
-<span id="cb67-161"><a href="#cb67-161"></a><span class="co">##  viridisLite    0.3.0      2018-02-01</span></span>
-<span id="cb67-162"><a href="#cb67-162"></a><span class="co">##  whisker        0.4        2019-08-28</span></span>
-<span id="cb67-163"><a href="#cb67-163"></a><span class="co">##  withr          2.2.0      2020-04-20</span></span>
-<span id="cb67-164"><a href="#cb67-164"></a><span class="co">##  xfun           0.14       2020-05-20</span></span>
-<span id="cb67-165"><a href="#cb67-165"></a><span class="co">##  xml2           1.3.2      2020-04-23</span></span>
-<span id="cb67-166"><a href="#cb67-166"></a><span class="co">##  xts            0.12-0     2020-01-19</span></span>
-<span id="cb67-167"><a href="#cb67-167"></a><span class="co">##  yaml           2.2.1      2020-02-01</span></span>
-<span id="cb67-168"><a href="#cb67-168"></a><span class="co">##  zip            2.0.4      2019-09-01</span></span>
-<span id="cb67-169"><a href="#cb67-169"></a><span class="co">##  zoo            1.8-8      2020-05-02</span></span>
-<span id="cb67-170"><a href="#cb67-170"></a><span class="co">##  lib</span></span>
+<span id="cb67-15"><a href="#cb67-15"></a><span class="co">##  package      * version  date      </span></span>
+<span id="cb67-16"><a href="#cb67-16"></a><span class="co">##  assertthat     0.2.1    2019-03-21</span></span>
+<span id="cb67-17"><a href="#cb67-17"></a><span class="co">##  backports      1.1.7    2020-05-13</span></span>
+<span id="cb67-18"><a href="#cb67-18"></a><span class="co">##  BiocManager    1.30.10  2019-11-16</span></span>
+<span id="cb67-19"><a href="#cb67-19"></a><span class="co">##  broom          0.5.6    2020-04-20</span></span>
+<span id="cb67-20"><a href="#cb67-20"></a><span class="co">##  callr          3.4.3    2020-03-28</span></span>
+<span id="cb67-21"><a href="#cb67-21"></a><span class="co">##  casnet         0.1.5    2020-05-23</span></span>
+<span id="cb67-22"><a href="#cb67-22"></a><span class="co">##  cellranger     1.1.0    2016-07-27</span></span>
+<span id="cb67-23"><a href="#cb67-23"></a><span class="co">##  cli            2.0.2    2020-02-28</span></span>
+<span id="cb67-24"><a href="#cb67-24"></a><span class="co">##  codetools      0.2-16   2018-12-24</span></span>
+<span id="cb67-25"><a href="#cb67-25"></a><span class="co">##  colorspace     1.4-1    2019-03-18</span></span>
+<span id="cb67-26"><a href="#cb67-26"></a><span class="co">##  cowplot        1.0.0    2019-07-11</span></span>
+<span id="cb67-27"><a href="#cb67-27"></a><span class="co">##  crayon         1.3.4    2017-09-16</span></span>
+<span id="cb67-28"><a href="#cb67-28"></a><span class="co">##  crosstalk      1.1.0.1  2020-03-13</span></span>
+<span id="cb67-29"><a href="#cb67-29"></a><span class="co">##  curl           4.3      2019-12-02</span></span>
+<span id="cb67-30"><a href="#cb67-30"></a><span class="co">##  DBI            1.1.0    2019-12-15</span></span>
+<span id="cb67-31"><a href="#cb67-31"></a><span class="co">##  dbplyr         1.4.3    2020-04-19</span></span>
+<span id="cb67-32"><a href="#cb67-32"></a><span class="co">##  desc           1.2.0    2018-05-01</span></span>
+<span id="cb67-33"><a href="#cb67-33"></a><span class="co">##  devtools       2.3.0    2020-04-10</span></span>
+<span id="cb67-34"><a href="#cb67-34"></a><span class="co">##  digest         0.6.25   2020-02-23</span></span>
+<span id="cb67-35"><a href="#cb67-35"></a><span class="co">##  dplyr        * 0.8.5    2020-03-07</span></span>
+<span id="cb67-36"><a href="#cb67-36"></a><span class="co">##  DT             0.13     2020-03-23</span></span>
+<span id="cb67-37"><a href="#cb67-37"></a><span class="co">##  ellipsis       0.3.1    2020-05-15</span></span>
+<span id="cb67-38"><a href="#cb67-38"></a><span class="co">##  evaluate       0.14     2019-05-28</span></span>
+<span id="cb67-39"><a href="#cb67-39"></a><span class="co">##  fansi          0.4.1    2020-01-08</span></span>
+<span id="cb67-40"><a href="#cb67-40"></a><span class="co">##  farver         2.0.3    2020-01-16</span></span>
+<span id="cb67-41"><a href="#cb67-41"></a><span class="co">##  forcats      * 0.5.0    2020-03-01</span></span>
+<span id="cb67-42"><a href="#cb67-42"></a><span class="co">##  forecast       8.12     2020-03-31</span></span>
+<span id="cb67-43"><a href="#cb67-43"></a><span class="co">##  fracdiff       1.5-1    2020-01-24</span></span>
+<span id="cb67-44"><a href="#cb67-44"></a><span class="co">##  fs             1.4.1    2020-04-04</span></span>
+<span id="cb67-45"><a href="#cb67-45"></a><span class="co">##  generics       0.0.2    2018-11-29</span></span>
+<span id="cb67-46"><a href="#cb67-46"></a><span class="co">##  gganimate      1.0.5    2020-02-09</span></span>
+<span id="cb67-47"><a href="#cb67-47"></a><span class="co">##  ggimage        0.2.8    2020-04-02</span></span>
+<span id="cb67-48"><a href="#cb67-48"></a><span class="co">##  ggplot2      * 3.3.0    2020-03-05</span></span>
+<span id="cb67-49"><a href="#cb67-49"></a><span class="co">##  ggplotify      0.0.5    2020-03-12</span></span>
+<span id="cb67-50"><a href="#cb67-50"></a><span class="co">##  glue           1.4.1    2020-05-13</span></span>
+<span id="cb67-51"><a href="#cb67-51"></a><span class="co">##  gridExtra      2.3      2017-09-09</span></span>
+<span id="cb67-52"><a href="#cb67-52"></a><span class="co">##  gridGraphics   0.5-0    2020-02-25</span></span>
+<span id="cb67-53"><a href="#cb67-53"></a><span class="co">##  gtable         0.3.0    2019-03-25</span></span>
+<span id="cb67-54"><a href="#cb67-54"></a><span class="co">##  haven          2.2.0    2019-11-08</span></span>
+<span id="cb67-55"><a href="#cb67-55"></a><span class="co">##  highr          0.8      2019-03-20</span></span>
+<span id="cb67-56"><a href="#cb67-56"></a><span class="co">##  hms            0.5.3    2020-01-08</span></span>
+<span id="cb67-57"><a href="#cb67-57"></a><span class="co">##  htmltools      0.4.0    2019-10-04</span></span>
+<span id="cb67-58"><a href="#cb67-58"></a><span class="co">##  htmlwidgets    1.5.1    2019-10-08</span></span>
+<span id="cb67-59"><a href="#cb67-59"></a><span class="co">##  httr           1.4.1    2019-08-05</span></span>
+<span id="cb67-60"><a href="#cb67-60"></a><span class="co">##  igraph         1.2.5    2020-03-19</span></span>
+<span id="cb67-61"><a href="#cb67-61"></a><span class="co">##  invctr         0.1.0    2019-03-07</span></span>
+<span id="cb67-62"><a href="#cb67-62"></a><span class="co">##  jsonlite       1.6.1    2020-02-02</span></span>
+<span id="cb67-63"><a href="#cb67-63"></a><span class="co">##  knitr          1.28     2020-02-06</span></span>
+<span id="cb67-64"><a href="#cb67-64"></a><span class="co">##  labeling       0.3      2014-08-23</span></span>
+<span id="cb67-65"><a href="#cb67-65"></a><span class="co">##  lattice        0.20-41  2020-04-02</span></span>
+<span id="cb67-66"><a href="#cb67-66"></a><span class="co">##  leaps          3.1      2020-01-16</span></span>
+<span id="cb67-67"><a href="#cb67-67"></a><span class="co">##  lifecycle      0.2.0    2020-03-06</span></span>
+<span id="cb67-68"><a href="#cb67-68"></a><span class="co">##  lmtest         0.9-37   2019-04-30</span></span>
+<span id="cb67-69"><a href="#cb67-69"></a><span class="co">##  locfit         1.5-9.4  2020-03-25</span></span>
+<span id="cb67-70"><a href="#cb67-70"></a><span class="co">##  lubridate      1.7.8    2020-04-06</span></span>
+<span id="cb67-71"><a href="#cb67-71"></a><span class="co">##  magick         2.3      2020-01-24</span></span>
+<span id="cb67-72"><a href="#cb67-72"></a><span class="co">##  magrittr       1.5      2014-11-22</span></span>
+<span id="cb67-73"><a href="#cb67-73"></a><span class="co">##  Matrix         1.2-18   2019-11-27</span></span>
+<span id="cb67-74"><a href="#cb67-74"></a><span class="co">##  memoise        1.1.0    2017-04-21</span></span>
+<span id="cb67-75"><a href="#cb67-75"></a><span class="co">##  mgcv           1.8-31   2019-11-09</span></span>
+<span id="cb67-76"><a href="#cb67-76"></a><span class="co">##  modelr         0.1.8    2020-05-19</span></span>
+<span id="cb67-77"><a href="#cb67-77"></a><span class="co">##  munsell        0.5.0    2018-06-12</span></span>
+<span id="cb67-78"><a href="#cb67-78"></a><span class="co">##  nlme           3.1-147  2020-04-13</span></span>
+<span id="cb67-79"><a href="#cb67-79"></a><span class="co">##  nnet           7.3-14   2020-04-26</span></span>
+<span id="cb67-80"><a href="#cb67-80"></a><span class="co">##  pander         0.6.3    2018-11-06</span></span>
+<span id="cb67-81"><a href="#cb67-81"></a><span class="co">##  pillar         1.4.4    2020-05-05</span></span>
+<span id="cb67-82"><a href="#cb67-82"></a><span class="co">##  pkgbuild       1.0.8    2020-05-07</span></span>
+<span id="cb67-83"><a href="#cb67-83"></a><span class="co">##  pkgconfig      2.0.3    2019-09-22</span></span>
+<span id="cb67-84"><a href="#cb67-84"></a><span class="co">##  pkgload        1.0.2    2018-10-29</span></span>
+<span id="cb67-85"><a href="#cb67-85"></a><span class="co">##  plyr           1.8.6    2020-03-03</span></span>
+<span id="cb67-86"><a href="#cb67-86"></a><span class="co">##  png            0.1-7    2013-12-03</span></span>
+<span id="cb67-87"><a href="#cb67-87"></a><span class="co">##  prettyunits    1.1.1    2020-01-24</span></span>
+<span id="cb67-88"><a href="#cb67-88"></a><span class="co">##  processx       3.4.2    2020-02-09</span></span>
+<span id="cb67-89"><a href="#cb67-89"></a><span class="co">##  progress       1.2.2    2019-05-16</span></span>
+<span id="cb67-90"><a href="#cb67-90"></a><span class="co">##  proxy          0.4-24   2020-04-25</span></span>
+<span id="cb67-91"><a href="#cb67-91"></a><span class="co">##  ps             1.3.3    2020-05-08</span></span>
+<span id="cb67-92"><a href="#cb67-92"></a><span class="co">##  purrr        * 0.3.4    2020-04-17</span></span>
+<span id="cb67-93"><a href="#cb67-93"></a><span class="co">##  quadprog       1.5-8    2019-11-20</span></span>
+<span id="cb67-94"><a href="#cb67-94"></a><span class="co">##  quantmod       0.4.17   2020-03-31</span></span>
+<span id="cb67-95"><a href="#cb67-95"></a><span class="co">##  R6             2.4.1    2019-11-12</span></span>
+<span id="cb67-96"><a href="#cb67-96"></a><span class="co">##  randtests      1.0      2014-11-17</span></span>
+<span id="cb67-97"><a href="#cb67-97"></a><span class="co">##  Rcpp           1.0.4.6  2020-04-09</span></span>
+<span id="cb67-98"><a href="#cb67-98"></a><span class="co">##  readr        * 1.3.1    2018-12-21</span></span>
+<span id="cb67-99"><a href="#cb67-99"></a><span class="co">##  readxl         1.3.1    2019-03-13</span></span>
+<span id="cb67-100"><a href="#cb67-100"></a><span class="co">##  remotes        2.1.1    2020-02-15</span></span>
+<span id="cb67-101"><a href="#cb67-101"></a><span class="co">##  reprex         0.3.0    2019-05-16</span></span>
+<span id="cb67-102"><a href="#cb67-102"></a><span class="co">##  reshape2       1.4.4    2020-04-09</span></span>
+<span id="cb67-103"><a href="#cb67-103"></a><span class="co">##  rlang          0.4.6    2020-05-02</span></span>
+<span id="cb67-104"><a href="#cb67-104"></a><span class="co">##  rmarkdown      2.1      2020-01-20</span></span>
+<span id="cb67-105"><a href="#cb67-105"></a><span class="co">##  rprojroot      1.3-2    2018-01-03</span></span>
+<span id="cb67-106"><a href="#cb67-106"></a><span class="co">##  rstudioapi     0.11     2020-02-07</span></span>
+<span id="cb67-107"><a href="#cb67-107"></a><span class="co">##  rvcheck        0.1.8    2020-03-01</span></span>
+<span id="cb67-108"><a href="#cb67-108"></a><span class="co">##  rvest          0.3.5    2019-11-08</span></span>
+<span id="cb67-109"><a href="#cb67-109"></a><span class="co">##  scales         1.1.1    2020-05-11</span></span>
+<span id="cb67-110"><a href="#cb67-110"></a><span class="co">##  sessioninfo    1.1.1    2018-11-05</span></span>
+<span id="cb67-111"><a href="#cb67-111"></a><span class="co">##  stringi        1.4.6    2020-02-17</span></span>
+<span id="cb67-112"><a href="#cb67-112"></a><span class="co">##  stringr      * 1.4.0    2019-02-10</span></span>
+<span id="cb67-113"><a href="#cb67-113"></a><span class="co">##  testthat       2.3.2    2020-03-02</span></span>
+<span id="cb67-114"><a href="#cb67-114"></a><span class="co">##  tibble       * 3.0.1    2020-04-20</span></span>
+<span id="cb67-115"><a href="#cb67-115"></a><span class="co">##  tidyr        * 1.1.0    2020-05-20</span></span>
+<span id="cb67-116"><a href="#cb67-116"></a><span class="co">##  tidyselect     1.1.0    2020-05-11</span></span>
+<span id="cb67-117"><a href="#cb67-117"></a><span class="co">##  tidyverse    * 1.3.0    2019-11-21</span></span>
+<span id="cb67-118"><a href="#cb67-118"></a><span class="co">##  timeDate       3043.102 2018-02-21</span></span>
+<span id="cb67-119"><a href="#cb67-119"></a><span class="co">##  TSA            1.2      2018-06-30</span></span>
+<span id="cb67-120"><a href="#cb67-120"></a><span class="co">##  tseries        0.10-47  2019-06-05</span></span>
+<span id="cb67-121"><a href="#cb67-121"></a><span class="co">##  TTR            0.23-6   2019-12-15</span></span>
+<span id="cb67-122"><a href="#cb67-122"></a><span class="co">##  tweenr         1.0.1    2018-12-14</span></span>
+<span id="cb67-123"><a href="#cb67-123"></a><span class="co">##  urca           1.3-0    2016-09-06</span></span>
+<span id="cb67-124"><a href="#cb67-124"></a><span class="co">##  usethis        1.6.1    2020-04-29</span></span>
+<span id="cb67-125"><a href="#cb67-125"></a><span class="co">##  vctrs          0.3.0    2020-05-11</span></span>
+<span id="cb67-126"><a href="#cb67-126"></a><span class="co">##  viridisLite    0.3.0    2018-02-01</span></span>
+<span id="cb67-127"><a href="#cb67-127"></a><span class="co">##  withr          2.2.0    2020-04-20</span></span>
+<span id="cb67-128"><a href="#cb67-128"></a><span class="co">##  xfun           0.14     2020-05-20</span></span>
+<span id="cb67-129"><a href="#cb67-129"></a><span class="co">##  xml2           1.3.2    2020-04-23</span></span>
+<span id="cb67-130"><a href="#cb67-130"></a><span class="co">##  xts            0.12-0   2020-01-19</span></span>
+<span id="cb67-131"><a href="#cb67-131"></a><span class="co">##  yaml           2.2.1    2020-02-01</span></span>
+<span id="cb67-132"><a href="#cb67-132"></a><span class="co">##  zoo            1.8-8    2020-05-02</span></span>
+<span id="cb67-133"><a href="#cb67-133"></a><span class="co">##  lib</span></span>
+<span id="cb67-134"><a href="#cb67-134"></a><span class="co">##  [1]</span></span>
+<span id="cb67-135"><a href="#cb67-135"></a><span class="co">##  [1]</span></span>
+<span id="cb67-136"><a href="#cb67-136"></a><span class="co">##  [1]</span></span>
+<span id="cb67-137"><a href="#cb67-137"></a><span class="co">##  [1]</span></span>
+<span id="cb67-138"><a href="#cb67-138"></a><span class="co">##  [1]</span></span>
+<span id="cb67-139"><a href="#cb67-139"></a><span class="co">##  [1]</span></span>
+<span id="cb67-140"><a href="#cb67-140"></a><span class="co">##  [1]</span></span>
+<span id="cb67-141"><a href="#cb67-141"></a><span class="co">##  [1]</span></span>
+<span id="cb67-142"><a href="#cb67-142"></a><span class="co">##  [2]</span></span>
+<span id="cb67-143"><a href="#cb67-143"></a><span class="co">##  [1]</span></span>
+<span id="cb67-144"><a href="#cb67-144"></a><span class="co">##  [1]</span></span>
+<span id="cb67-145"><a href="#cb67-145"></a><span class="co">##  [1]</span></span>
+<span id="cb67-146"><a href="#cb67-146"></a><span class="co">##  [1]</span></span>
+<span id="cb67-147"><a href="#cb67-147"></a><span class="co">##  [1]</span></span>
+<span id="cb67-148"><a href="#cb67-148"></a><span class="co">##  [1]</span></span>
+<span id="cb67-149"><a href="#cb67-149"></a><span class="co">##  [1]</span></span>
+<span id="cb67-150"><a href="#cb67-150"></a><span class="co">##  [1]</span></span>
+<span id="cb67-151"><a href="#cb67-151"></a><span class="co">##  [1]</span></span>
+<span id="cb67-152"><a href="#cb67-152"></a><span class="co">##  [1]</span></span>
+<span id="cb67-153"><a href="#cb67-153"></a><span class="co">##  [1]</span></span>
+<span id="cb67-154"><a href="#cb67-154"></a><span class="co">##  [1]</span></span>
+<span id="cb67-155"><a href="#cb67-155"></a><span class="co">##  [1]</span></span>
+<span id="cb67-156"><a href="#cb67-156"></a><span class="co">##  [1]</span></span>
+<span id="cb67-157"><a href="#cb67-157"></a><span class="co">##  [1]</span></span>
+<span id="cb67-158"><a href="#cb67-158"></a><span class="co">##  [1]</span></span>
+<span id="cb67-159"><a href="#cb67-159"></a><span class="co">##  [1]</span></span>
+<span id="cb67-160"><a href="#cb67-160"></a><span class="co">##  [1]</span></span>
+<span id="cb67-161"><a href="#cb67-161"></a><span class="co">##  [1]</span></span>
+<span id="cb67-162"><a href="#cb67-162"></a><span class="co">##  [1]</span></span>
+<span id="cb67-163"><a href="#cb67-163"></a><span class="co">##  [1]</span></span>
+<span id="cb67-164"><a href="#cb67-164"></a><span class="co">##  [1]</span></span>
+<span id="cb67-165"><a href="#cb67-165"></a><span class="co">##  [1]</span></span>
+<span id="cb67-166"><a href="#cb67-166"></a><span class="co">##  [1]</span></span>
+<span id="cb67-167"><a href="#cb67-167"></a><span class="co">##  [1]</span></span>
+<span id="cb67-168"><a href="#cb67-168"></a><span class="co">##  [1]</span></span>
+<span id="cb67-169"><a href="#cb67-169"></a><span class="co">##  [1]</span></span>
+<span id="cb67-170"><a href="#cb67-170"></a><span class="co">##  [1]</span></span>
 <span id="cb67-171"><a href="#cb67-171"></a><span class="co">##  [1]</span></span>
 <span id="cb67-172"><a href="#cb67-172"></a><span class="co">##  [1]</span></span>
 <span id="cb67-173"><a href="#cb67-173"></a><span class="co">##  [1]</span></span>
@@ -4026,21 +4008,21 @@ div.tocify {
 <span id="cb67-180"><a href="#cb67-180"></a><span class="co">##  [1]</span></span>
 <span id="cb67-181"><a href="#cb67-181"></a><span class="co">##  [1]</span></span>
 <span id="cb67-182"><a href="#cb67-182"></a><span class="co">##  [1]</span></span>
-<span id="cb67-183"><a href="#cb67-183"></a><span class="co">##  [1]</span></span>
+<span id="cb67-183"><a href="#cb67-183"></a><span class="co">##  [2]</span></span>
 <span id="cb67-184"><a href="#cb67-184"></a><span class="co">##  [1]</span></span>
-<span id="cb67-185"><a href="#cb67-185"></a><span class="co">##  [2]</span></span>
-<span id="cb67-186"><a href="#cb67-186"></a><span class="co">##  [2]</span></span>
+<span id="cb67-185"><a href="#cb67-185"></a><span class="co">##  [1]</span></span>
+<span id="cb67-186"><a href="#cb67-186"></a><span class="co">##  [1]</span></span>
 <span id="cb67-187"><a href="#cb67-187"></a><span class="co">##  [1]</span></span>
 <span id="cb67-188"><a href="#cb67-188"></a><span class="co">##  [1]</span></span>
 <span id="cb67-189"><a href="#cb67-189"></a><span class="co">##  [1]</span></span>
 <span id="cb67-190"><a href="#cb67-190"></a><span class="co">##  [1]</span></span>
-<span id="cb67-191"><a href="#cb67-191"></a><span class="co">##  [1]</span></span>
+<span id="cb67-191"><a href="#cb67-191"></a><span class="co">##  [2]</span></span>
 <span id="cb67-192"><a href="#cb67-192"></a><span class="co">##  [1]</span></span>
-<span id="cb67-193"><a href="#cb67-193"></a><span class="co">##  [1]</span></span>
+<span id="cb67-193"><a href="#cb67-193"></a><span class="co">##  [2]</span></span>
 <span id="cb67-194"><a href="#cb67-194"></a><span class="co">##  [1]</span></span>
 <span id="cb67-195"><a href="#cb67-195"></a><span class="co">##  [1]</span></span>
-<span id="cb67-196"><a href="#cb67-196"></a><span class="co">##  [1]</span></span>
-<span id="cb67-197"><a href="#cb67-197"></a><span class="co">##  [1]</span></span>
+<span id="cb67-196"><a href="#cb67-196"></a><span class="co">##  [2]</span></span>
+<span id="cb67-197"><a href="#cb67-197"></a><span class="co">##  [2]</span></span>
 <span id="cb67-198"><a href="#cb67-198"></a><span class="co">##  [1]</span></span>
 <span id="cb67-199"><a href="#cb67-199"></a><span class="co">##  [1]</span></span>
 <span id="cb67-200"><a href="#cb67-200"></a><span class="co">##  [1]</span></span>
@@ -4052,7 +4034,7 @@ div.tocify {
 <span id="cb67-206"><a href="#cb67-206"></a><span class="co">##  [1]</span></span>
 <span id="cb67-207"><a href="#cb67-207"></a><span class="co">##  [1]</span></span>
 <span id="cb67-208"><a href="#cb67-208"></a><span class="co">##  [1]</span></span>
-<span id="cb67-209"><a href="#cb67-209"></a><span class="co">##  [2]</span></span>
+<span id="cb67-209"><a href="#cb67-209"></a><span class="co">##  [1]</span></span>
 <span id="cb67-210"><a href="#cb67-210"></a><span class="co">##  [1]</span></span>
 <span id="cb67-211"><a href="#cb67-211"></a><span class="co">##  [1]</span></span>
 <span id="cb67-212"><a href="#cb67-212"></a><span class="co">##  [1]</span></span>
@@ -4082,7 +4064,7 @@ div.tocify {
 <span id="cb67-236"><a href="#cb67-236"></a><span class="co">##  [1]</span></span>
 <span id="cb67-237"><a href="#cb67-237"></a><span class="co">##  [1]</span></span>
 <span id="cb67-238"><a href="#cb67-238"></a><span class="co">##  [1]</span></span>
-<span id="cb67-239"><a href="#cb67-239"></a><span class="co">##  [2]</span></span>
+<span id="cb67-239"><a href="#cb67-239"></a><span class="co">##  [1]</span></span>
 <span id="cb67-240"><a href="#cb67-240"></a><span class="co">##  [1]</span></span>
 <span id="cb67-241"><a href="#cb67-241"></a><span class="co">##  [1]</span></span>
 <span id="cb67-242"><a href="#cb67-242"></a><span class="co">##  [1]</span></span>
@@ -4092,248 +4074,137 @@ div.tocify {
 <span id="cb67-246"><a href="#cb67-246"></a><span class="co">##  [1]</span></span>
 <span id="cb67-247"><a href="#cb67-247"></a><span class="co">##  [1]</span></span>
 <span id="cb67-248"><a href="#cb67-248"></a><span class="co">##  [1]</span></span>
-<span id="cb67-249"><a href="#cb67-249"></a><span class="co">##  [2]</span></span>
-<span id="cb67-250"><a href="#cb67-250"></a><span class="co">##  [2]</span></span>
-<span id="cb67-251"><a href="#cb67-251"></a><span class="co">##  [1]</span></span>
-<span id="cb67-252"><a href="#cb67-252"></a><span class="co">##  [2]</span></span>
-<span id="cb67-253"><a href="#cb67-253"></a><span class="co">##  [1]</span></span>
-<span id="cb67-254"><a href="#cb67-254"></a><span class="co">##  [1]</span></span>
-<span id="cb67-255"><a href="#cb67-255"></a><span class="co">##  [1]</span></span>
-<span id="cb67-256"><a href="#cb67-256"></a><span class="co">##  [2]</span></span>
-<span id="cb67-257"><a href="#cb67-257"></a><span class="co">##  [2]</span></span>
-<span id="cb67-258"><a href="#cb67-258"></a><span class="co">##  [1]</span></span>
-<span id="cb67-259"><a href="#cb67-259"></a><span class="co">##  [1]</span></span>
-<span id="cb67-260"><a href="#cb67-260"></a><span class="co">##  [1]</span></span>
-<span id="cb67-261"><a href="#cb67-261"></a><span class="co">##  [1]</span></span>
-<span id="cb67-262"><a href="#cb67-262"></a><span class="co">##  [1]</span></span>
-<span id="cb67-263"><a href="#cb67-263"></a><span class="co">##  [1]</span></span>
-<span id="cb67-264"><a href="#cb67-264"></a><span class="co">##  [1]</span></span>
-<span id="cb67-265"><a href="#cb67-265"></a><span class="co">##  [1]</span></span>
-<span id="cb67-266"><a href="#cb67-266"></a><span class="co">##  [1]</span></span>
-<span id="cb67-267"><a href="#cb67-267"></a><span class="co">##  [1]</span></span>
-<span id="cb67-268"><a href="#cb67-268"></a><span class="co">##  [1]</span></span>
-<span id="cb67-269"><a href="#cb67-269"></a><span class="co">##  [1]</span></span>
-<span id="cb67-270"><a href="#cb67-270"></a><span class="co">##  [1]</span></span>
-<span id="cb67-271"><a href="#cb67-271"></a><span class="co">##  [1]</span></span>
-<span id="cb67-272"><a href="#cb67-272"></a><span class="co">##  [1]</span></span>
-<span id="cb67-273"><a href="#cb67-273"></a><span class="co">##  [1]</span></span>
-<span id="cb67-274"><a href="#cb67-274"></a><span class="co">##  [1]</span></span>
-<span id="cb67-275"><a href="#cb67-275"></a><span class="co">##  [1]</span></span>
-<span id="cb67-276"><a href="#cb67-276"></a><span class="co">##  [1]</span></span>
-<span id="cb67-277"><a href="#cb67-277"></a><span class="co">##  [1]</span></span>
-<span id="cb67-278"><a href="#cb67-278"></a><span class="co">##  [1]</span></span>
-<span id="cb67-279"><a href="#cb67-279"></a><span class="co">##  [1]</span></span>
-<span id="cb67-280"><a href="#cb67-280"></a><span class="co">##  [1]</span></span>
-<span id="cb67-281"><a href="#cb67-281"></a><span class="co">##  [1]</span></span>
-<span id="cb67-282"><a href="#cb67-282"></a><span class="co">##  [1]</span></span>
-<span id="cb67-283"><a href="#cb67-283"></a><span class="co">##  [1]</span></span>
-<span id="cb67-284"><a href="#cb67-284"></a><span class="co">##  [1]</span></span>
-<span id="cb67-285"><a href="#cb67-285"></a><span class="co">##  [1]</span></span>
-<span id="cb67-286"><a href="#cb67-286"></a><span class="co">##  [1]</span></span>
-<span id="cb67-287"><a href="#cb67-287"></a><span class="co">##  [1]</span></span>
-<span id="cb67-288"><a href="#cb67-288"></a><span class="co">##  [1]</span></span>
-<span id="cb67-289"><a href="#cb67-289"></a><span class="co">##  [1]</span></span>
-<span id="cb67-290"><a href="#cb67-290"></a><span class="co">##  [1]</span></span>
-<span id="cb67-291"><a href="#cb67-291"></a><span class="co">##  [1]</span></span>
-<span id="cb67-292"><a href="#cb67-292"></a><span class="co">##  [2]</span></span>
-<span id="cb67-293"><a href="#cb67-293"></a><span class="co">##  [1]</span></span>
-<span id="cb67-294"><a href="#cb67-294"></a><span class="co">##  [1]</span></span>
-<span id="cb67-295"><a href="#cb67-295"></a><span class="co">##  [1]</span></span>
-<span id="cb67-296"><a href="#cb67-296"></a><span class="co">##  [1]</span></span>
-<span id="cb67-297"><a href="#cb67-297"></a><span class="co">##  [1]</span></span>
-<span id="cb67-298"><a href="#cb67-298"></a><span class="co">##  [1]</span></span>
-<span id="cb67-299"><a href="#cb67-299"></a><span class="co">##  [1]</span></span>
-<span id="cb67-300"><a href="#cb67-300"></a><span class="co">##  [1]</span></span>
-<span id="cb67-301"><a href="#cb67-301"></a><span class="co">##  [2]</span></span>
-<span id="cb67-302"><a href="#cb67-302"></a><span class="co">##  [1]</span></span>
-<span id="cb67-303"><a href="#cb67-303"></a><span class="co">##  [1]</span></span>
-<span id="cb67-304"><a href="#cb67-304"></a><span class="co">##  [1]</span></span>
-<span id="cb67-305"><a href="#cb67-305"></a><span class="co">##  [1]</span></span>
-<span id="cb67-306"><a href="#cb67-306"></a><span class="co">##  [1]</span></span>
-<span id="cb67-307"><a href="#cb67-307"></a><span class="co">##  [1]</span></span>
-<span id="cb67-308"><a href="#cb67-308"></a><span class="co">##  [1]</span></span>
-<span id="cb67-309"><a href="#cb67-309"></a><span class="co">##  [1]</span></span>
-<span id="cb67-310"><a href="#cb67-310"></a><span class="co">##  [1]</span></span>
-<span id="cb67-311"><a href="#cb67-311"></a><span class="co">##  [1]</span></span>
-<span id="cb67-312"><a href="#cb67-312"></a><span class="co">##  [1]</span></span>
-<span id="cb67-313"><a href="#cb67-313"></a><span class="co">##  [1]</span></span>
-<span id="cb67-314"><a href="#cb67-314"></a><span class="co">##  [1]</span></span>
-<span id="cb67-315"><a href="#cb67-315"></a><span class="co">##  [1]</span></span>
-<span id="cb67-316"><a href="#cb67-316"></a><span class="co">##  [1]</span></span>
-<span id="cb67-317"><a href="#cb67-317"></a><span class="co">##  [1]</span></span>
-<span id="cb67-318"><a href="#cb67-318"></a><span class="co">##  [1]</span></span>
-<span id="cb67-319"><a href="#cb67-319"></a><span class="co">##  [1]</span></span>
-<span id="cb67-320"><a href="#cb67-320"></a><span class="co">##  [1]</span></span>
-<span id="cb67-321"><a href="#cb67-321"></a><span class="co">##  [1]</span></span>
-<span id="cb67-322"><a href="#cb67-322"></a><span class="co">##  [1]</span></span>
-<span id="cb67-323"><a href="#cb67-323"></a><span class="co">##  [1]</span></span>
-<span id="cb67-324"><a href="#cb67-324"></a><span class="co">##  [1]</span></span>
-<span id="cb67-325"><a href="#cb67-325"></a><span class="co">##  source                               </span></span>
-<span id="cb67-326"><a href="#cb67-326"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
-<span id="cb67-327"><a href="#cb67-327"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-328"><a href="#cb67-328"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-329"><a href="#cb67-329"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-330"><a href="#cb67-330"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
-<span id="cb67-331"><a href="#cb67-331"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-332"><a href="#cb67-332"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-249"><a href="#cb67-249"></a><span class="co">##  [1]</span></span>
+<span id="cb67-250"><a href="#cb67-250"></a><span class="co">##  [1]</span></span>
+<span id="cb67-251"><a href="#cb67-251"></a><span class="co">##  source                               </span></span>
+<span id="cb67-252"><a href="#cb67-252"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-253"><a href="#cb67-253"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-254"><a href="#cb67-254"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-255"><a href="#cb67-255"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-256"><a href="#cb67-256"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-257"><a href="#cb67-257"></a><span class="co">##  Github (fredhasselman/casnet@287d98b)</span></span>
+<span id="cb67-258"><a href="#cb67-258"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-259"><a href="#cb67-259"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-260"><a href="#cb67-260"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-261"><a href="#cb67-261"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-262"><a href="#cb67-262"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-263"><a href="#cb67-263"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-264"><a href="#cb67-264"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-265"><a href="#cb67-265"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-266"><a href="#cb67-266"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-267"><a href="#cb67-267"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-268"><a href="#cb67-268"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-269"><a href="#cb67-269"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-270"><a href="#cb67-270"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-271"><a href="#cb67-271"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-272"><a href="#cb67-272"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-273"><a href="#cb67-273"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-274"><a href="#cb67-274"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-275"><a href="#cb67-275"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-276"><a href="#cb67-276"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-277"><a href="#cb67-277"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-278"><a href="#cb67-278"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-279"><a href="#cb67-279"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-280"><a href="#cb67-280"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-281"><a href="#cb67-281"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-282"><a href="#cb67-282"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-283"><a href="#cb67-283"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-284"><a href="#cb67-284"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-285"><a href="#cb67-285"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-286"><a href="#cb67-286"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-287"><a href="#cb67-287"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-288"><a href="#cb67-288"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-289"><a href="#cb67-289"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-290"><a href="#cb67-290"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-291"><a href="#cb67-291"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-292"><a href="#cb67-292"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-293"><a href="#cb67-293"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-294"><a href="#cb67-294"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-295"><a href="#cb67-295"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-296"><a href="#cb67-296"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-297"><a href="#cb67-297"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-298"><a href="#cb67-298"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-299"><a href="#cb67-299"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-300"><a href="#cb67-300"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
+<span id="cb67-301"><a href="#cb67-301"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-302"><a href="#cb67-302"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-303"><a href="#cb67-303"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-304"><a href="#cb67-304"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-305"><a href="#cb67-305"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-306"><a href="#cb67-306"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-307"><a href="#cb67-307"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-308"><a href="#cb67-308"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-309"><a href="#cb67-309"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-310"><a href="#cb67-310"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-311"><a href="#cb67-311"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-312"><a href="#cb67-312"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-313"><a href="#cb67-313"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-314"><a href="#cb67-314"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-315"><a href="#cb67-315"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-316"><a href="#cb67-316"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-317"><a href="#cb67-317"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-318"><a href="#cb67-318"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-319"><a href="#cb67-319"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-320"><a href="#cb67-320"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-321"><a href="#cb67-321"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-322"><a href="#cb67-322"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
+<span id="cb67-323"><a href="#cb67-323"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-324"><a href="#cb67-324"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-325"><a href="#cb67-325"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-326"><a href="#cb67-326"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-327"><a href="#cb67-327"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-328"><a href="#cb67-328"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-329"><a href="#cb67-329"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-330"><a href="#cb67-330"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-331"><a href="#cb67-331"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-332"><a href="#cb67-332"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
 <span id="cb67-333"><a href="#cb67-333"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-334"><a href="#cb67-334"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-335"><a href="#cb67-335"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-336"><a href="#cb67-336"></a><span class="co">##  Github (fredhasselman/casnet@287d98b)</span></span>
+<span id="cb67-334"><a href="#cb67-334"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-335"><a href="#cb67-335"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-336"><a href="#cb67-336"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
 <span id="cb67-337"><a href="#cb67-337"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
 <span id="cb67-338"><a href="#cb67-338"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
 <span id="cb67-339"><a href="#cb67-339"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-340"><a href="#cb67-340"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-340"><a href="#cb67-340"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
 <span id="cb67-341"><a href="#cb67-341"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-342"><a href="#cb67-342"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-343"><a href="#cb67-343"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
+<span id="cb67-342"><a href="#cb67-342"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-343"><a href="#cb67-343"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
 <span id="cb67-344"><a href="#cb67-344"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-345"><a href="#cb67-345"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-346"><a href="#cb67-346"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-345"><a href="#cb67-345"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-346"><a href="#cb67-346"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
 <span id="cb67-347"><a href="#cb67-347"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
 <span id="cb67-348"><a href="#cb67-348"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-349"><a href="#cb67-349"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-350"><a href="#cb67-350"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-351"><a href="#cb67-351"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-352"><a href="#cb67-352"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-353"><a href="#cb67-353"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-354"><a href="#cb67-354"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-355"><a href="#cb67-355"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-349"><a href="#cb67-349"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-350"><a href="#cb67-350"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-351"><a href="#cb67-351"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-352"><a href="#cb67-352"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-353"><a href="#cb67-353"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-354"><a href="#cb67-354"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
+<span id="cb67-355"><a href="#cb67-355"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
 <span id="cb67-356"><a href="#cb67-356"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-357"><a href="#cb67-357"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-357"><a href="#cb67-357"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
 <span id="cb67-358"><a href="#cb67-358"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-359"><a href="#cb67-359"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-360"><a href="#cb67-360"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-361"><a href="#cb67-361"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
-<span id="cb67-362"><a href="#cb67-362"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-359"><a href="#cb67-359"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-360"><a href="#cb67-360"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-361"><a href="#cb67-361"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-362"><a href="#cb67-362"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
 <span id="cb67-363"><a href="#cb67-363"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-364"><a href="#cb67-364"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-365"><a href="#cb67-365"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
+<span id="cb67-364"><a href="#cb67-364"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
+<span id="cb67-365"><a href="#cb67-365"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
 <span id="cb67-366"><a href="#cb67-366"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-367"><a href="#cb67-367"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-368"><a href="#cb67-368"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-369"><a href="#cb67-369"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-370"><a href="#cb67-370"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-371"><a href="#cb67-371"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-372"><a href="#cb67-372"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-373"><a href="#cb67-373"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-374"><a href="#cb67-374"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-375"><a href="#cb67-375"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-376"><a href="#cb67-376"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-377"><a href="#cb67-377"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-378"><a href="#cb67-378"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-379"><a href="#cb67-379"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-380"><a href="#cb67-380"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-381"><a href="#cb67-381"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-382"><a href="#cb67-382"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-383"><a href="#cb67-383"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-384"><a href="#cb67-384"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-385"><a href="#cb67-385"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-386"><a href="#cb67-386"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-387"><a href="#cb67-387"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-388"><a href="#cb67-388"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-389"><a href="#cb67-389"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-390"><a href="#cb67-390"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-391"><a href="#cb67-391"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-392"><a href="#cb67-392"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-393"><a href="#cb67-393"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
-<span id="cb67-394"><a href="#cb67-394"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-395"><a href="#cb67-395"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-396"><a href="#cb67-396"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-397"><a href="#cb67-397"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-398"><a href="#cb67-398"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-399"><a href="#cb67-399"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-400"><a href="#cb67-400"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-401"><a href="#cb67-401"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-402"><a href="#cb67-402"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-403"><a href="#cb67-403"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-404"><a href="#cb67-404"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-405"><a href="#cb67-405"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-406"><a href="#cb67-406"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-407"><a href="#cb67-407"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-408"><a href="#cb67-408"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-409"><a href="#cb67-409"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-410"><a href="#cb67-410"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-411"><a href="#cb67-411"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-412"><a href="#cb67-412"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-413"><a href="#cb67-413"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-414"><a href="#cb67-414"></a><span class="co">##  Github (crsh/papaja@02f3bd1)         </span></span>
-<span id="cb67-415"><a href="#cb67-415"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-416"><a href="#cb67-416"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-417"><a href="#cb67-417"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
-<span id="cb67-418"><a href="#cb67-418"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-419"><a href="#cb67-419"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-420"><a href="#cb67-420"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-421"><a href="#cb67-421"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-422"><a href="#cb67-422"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-423"><a href="#cb67-423"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
-<span id="cb67-424"><a href="#cb67-424"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-425"><a href="#cb67-425"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-426"><a href="#cb67-426"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-427"><a href="#cb67-427"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-428"><a href="#cb67-428"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-429"><a href="#cb67-429"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-430"><a href="#cb67-430"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-431"><a href="#cb67-431"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-432"><a href="#cb67-432"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-433"><a href="#cb67-433"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-434"><a href="#cb67-434"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-435"><a href="#cb67-435"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
-<span id="cb67-436"><a href="#cb67-436"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
-<span id="cb67-437"><a href="#cb67-437"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-438"><a href="#cb67-438"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-439"><a href="#cb67-439"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-440"><a href="#cb67-440"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-441"><a href="#cb67-441"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-442"><a href="#cb67-442"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-443"><a href="#cb67-443"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
-<span id="cb67-444"><a href="#cb67-444"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-445"><a href="#cb67-445"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-446"><a href="#cb67-446"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-447"><a href="#cb67-447"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-448"><a href="#cb67-448"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-449"><a href="#cb67-449"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-450"><a href="#cb67-450"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-451"><a href="#cb67-451"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-452"><a href="#cb67-452"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-453"><a href="#cb67-453"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-454"><a href="#cb67-454"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-455"><a href="#cb67-455"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-456"><a href="#cb67-456"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-457"><a href="#cb67-457"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-458"><a href="#cb67-458"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-459"><a href="#cb67-459"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-460"><a href="#cb67-460"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-461"><a href="#cb67-461"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-462"><a href="#cb67-462"></a><span class="co">##  CRAN (R 3.6.0)                       </span></span>
-<span id="cb67-463"><a href="#cb67-463"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-464"><a href="#cb67-464"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-465"><a href="#cb67-465"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-466"><a href="#cb67-466"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-467"><a href="#cb67-467"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-468"><a href="#cb67-468"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-469"><a href="#cb67-469"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-470"><a href="#cb67-470"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-471"><a href="#cb67-471"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-472"><a href="#cb67-472"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-473"><a href="#cb67-473"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-474"><a href="#cb67-474"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-475"><a href="#cb67-475"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-476"><a href="#cb67-476"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-477"><a href="#cb67-477"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
-<span id="cb67-478"><a href="#cb67-478"></a><span class="co">##  CRAN (R 3.6.1)                       </span></span>
-<span id="cb67-479"><a href="#cb67-479"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
-<span id="cb67-480"><a href="#cb67-480"></a><span class="co">## </span></span>
-<span id="cb67-481"><a href="#cb67-481"></a><span class="co">## [1] C:/localdata/hema/rlibs</span></span>
-<span id="cb67-482"><a href="#cb67-482"></a><span class="co">## [2] C:/Program Files/R/R-3.6.1/library</span></span>
-<span id="cb67-483"><a href="#cb67-483"></a></span>
-<span id="cb67-484"><a href="#cb67-484"></a>pander<span class="op">::</span><span class="kw">pander</span>(<span class="kw">sessionInfo</span>())</span></code></pre></div>
+<span id="cb67-367"><a href="#cb67-367"></a><span class="co">##  CRAN (R 3.6.2)                       </span></span>
+<span id="cb67-368"><a href="#cb67-368"></a><span class="co">##  CRAN (R 3.6.3)                       </span></span>
+<span id="cb67-369"><a href="#cb67-369"></a><span class="co">## </span></span>
+<span id="cb67-370"><a href="#cb67-370"></a><span class="co">## [1] C:/localdata/hema/rlibs</span></span>
+<span id="cb67-371"><a href="#cb67-371"></a><span class="co">## [2] C:/Program Files/R/R-3.6.1/library</span></span>
+<span id="cb67-372"><a href="#cb67-372"></a></span>
+<span id="cb67-373"><a href="#cb67-373"></a>pander<span class="op">::</span><span class="kw">pander</span>(<span class="kw">sessionInfo</span>())</span></code></pre></div>
 <p><strong>R version 3.6.1 (2019-07-05)</strong></p>
 <p><strong>Platform:</strong> x86_64-w64-mingw32/x64 (64-bit)</p>
 <p><strong>locale:</strong> <em>LC_COLLATE=Finnish_Finland.1252</em>, <em>LC_CTYPE=Finnish_Finland.1252</em>, <em>LC_MONETARY=Finnish_Finland.1252</em>, <em>LC_NUMERIC=C</em> and <em>LC_TIME=Finnish_Finland.1252</em></p>
 <p><strong>attached base packages:</strong> <em>stats</em>, <em>graphics</em>, <em>grDevices</em>, <em>utils</em>, <em>datasets</em>, <em>methods</em> and <em>base</em></p>
-<p><strong>other attached packages:</strong> <em>patchwork(v.1.0.0)</em>, <em>bookdown(v.0.19)</em>, <em>forcats(v.0.5.0)</em>, <em>stringr(v.1.4.0)</em>, <em>dplyr(v.0.8.5)</em>, <em>purrr(v.0.3.4)</em>, <em>readr(v.1.3.1)</em>, <em>tidyr(v.1.1.0)</em>, <em>tibble(v.3.0.1)</em>, <em>ggplot2(v.3.3.0)</em>, <em>tidyverse(v.1.3.0)</em> and <em>knitr(v.1.28)</em></p>
-<p><strong>loaded via a namespace (and not attached):</strong> <em>readxl(v.1.3.1)</em>, <em>backports(v.1.1.7)</em>, <em>Hmisc(v.4.4-0)</em>, <em>BDgraph(v.2.62)</em>, <em>plyr(v.1.8.6)</em>, <em>igraph(v.1.2.5)</em>, <em>splines(v.3.6.1)</em>, <em>crosstalk(v.1.1.0.1)</em>, <em>usethis(v.1.6.1)</em>, <em>digest(v.0.6.25)</em>, <em>casnet(v.0.1.5)</em>, <em>htmltools(v.0.4.0)</em>, <em>viridis(v.0.5.1)</em>, <em>magick(v.2.3)</em>, <em>fansi(v.0.4.1)</em>, <em>gganimate(v.1.0.5)</em>, <em>magrittr(v.1.5)</em>, <em>checkmate(v.2.0.0)</em>, <em>memoise(v.1.1.0)</em>, <em>cluster(v.2.1.0)</em>, <em>remotes(v.2.1.1)</em>, <em>modelr(v.0.1.8)</em>, <em>xts(v.0.12-0)</em>, <em>rmdfiltr(v.0.1.2)</em>, <em>forecast(v.8.12)</em>, <em>tseries(v.0.10-47)</em>, <em>prettyunits(v.1.1.1)</em>, <em>jpeg(v.0.1-8.1)</em>, <em>colorspace(v.1.4-1)</em>, <em>rvest(v.0.3.5)</em>, <em>haven(v.2.2.0)</em>, <em>xfun(v.0.14)</em>, <em>callr(v.3.4.3)</em>, <em>crayon(v.1.3.4)</em>, <em>jsonlite(v.1.6.1)</em>, <em>zoo(v.1.8-8)</em>, <em>survival(v.3.1-12)</em>, <em>glue(v.1.4.1)</em>, <em>gtable(v.0.3.0)</em>, <em>pkgbuild(v.1.0.8)</em>, <em>quantmod(v.0.4.17)</em>, <em>abind(v.1.4-5)</em>, <em>scales(v.1.1.1)</em>, <em>DBI(v.1.1.0)</em>, <em>Rcpp(v.1.0.4.6)</em>, <em>progress(v.1.2.2)</em>, <em>viridisLite(v.0.3.0)</em>, <em>htmlTable(v.1.13.3)</em>, <em>gridGraphics(v.0.5-0)</em>, <em>proxy(v.0.4-24)</em>, <em>foreign(v.0.8-76)</em>, <em>Formula(v.1.2-3)</em>, <em>DT(v.0.13)</em>, <em>stats4(v.3.6.1)</em>, <em>randtests(v.1.0)</em>, <em>htmlwidgets(v.1.5.1)</em>, <em>httr(v.1.4.1)</em>, <em>papaja(v.0.1.0.9942)</em>, <em>RColorBrewer(v.1.1-2)</em>, <em>lavaan(v.0.6-6)</em>, <em>acepack(v.1.4.1)</em>, <em>ellipsis(v.0.3.1)</em>, <em>pkgconfig(v.2.0.3)</em>, <em>farver(v.2.0.3)</em>, <em>invctr(v.0.1.0)</em>, <em>nnet(v.7.3-14)</em>, <em>dbplyr(v.1.4.3)</em>, <em>locfit(v.1.5-9.4)</em>, <em>ggplotify(v.0.0.5)</em>, <em>tidyselect(v.1.1.0)</em>, <em>labeling(v.0.3)</em>, <em>rlang(v.0.4.6)</em>, <em>reshape2(v.1.4.4)</em>, <em>munsell(v.0.5.0)</em>, <em>cellranger(v.1.1.0)</em>, <em>tools(v.3.6.1)</em>, <em>cli(v.2.0.2)</em>, <em>generics(v.0.0.2)</em>, <em>devtools(v.2.3.0)</em>, <em>broom(v.0.5.6)</em>, <em>fdrtool(v.1.2.15)</em>, <em>evaluate(v.0.14)</em>, <em>yaml(v.2.2.1)</em>, <em>processx(v.3.4.2)</em>, <em>fs(v.1.4.1)</em>, <em>pander(v.0.6.3)</em>, <em>zip(v.2.0.4)</em>, <em>glasso(v.1.11)</em>, <em>pbapply(v.1.4-2)</em>, <em>nlme(v.3.1-147)</em>, <em>whisker(v.0.4)</em>, <em>leaps(v.3.1)</em>, <em>xml2(v.1.3.2)</em>, <em>compiler(v.3.6.1)</em>, <em>rstudioapi(v.0.11)</em>, <em>curl(v.4.3)</em>, <em>png(v.0.1-7)</em>, <em>testthat(v.2.3.2)</em>, <em>reprex(v.0.3.0)</em>, <em>huge(v.1.3.4.1)</em>, <em>tweenr(v.1.0.1)</em>, <em>ggimage(v.0.2.8)</em>, <em>pbivnorm(v.0.6.0)</em>, <em>stringi(v.1.4.6)</em>, <em>highr(v.0.8)</em>, <em>ps(v.1.3.3)</em>, <em>TSA(v.1.2)</em>, <em>qgraph(v.1.6.5)</em>, <em>desc(v.1.2.0)</em>, <em>lattice(v.0.20-41)</em>, <em>Matrix(v.1.2-18)</em>, <em>psych(v.1.9.12.31)</em>, <em>urca(v.1.3-0)</em>, <em>vctrs(v.0.3.0)</em>, <em>pillar(v.1.4.4)</em>, <em>lifecycle(v.0.2.0)</em>, <em>BiocManager(v.1.30.10)</em>, <em>lmtest(v.0.9-37)</em>, <em>cowplot(v.1.0.0)</em>, <em>data.table(v.1.12.8)</em>, <em>corpcor(v.1.6.9)</em>, <em>R6(v.2.4.1)</em>, <em>latticeExtra(v.0.6-29)</em>, <em>gridExtra(v.2.3)</em>, <em>sessioninfo(v.1.1.1)</em>, <em>codetools(v.0.2-16)</em>, <em>MASS(v.7.3-51.6)</em>, <em>gtools(v.3.8.2)</em>, <em>assertthat(v.0.2.1)</em>, <em>pkgload(v.1.0.2)</em>, <em>rprojroot(v.1.3-2)</em>, <em>rjson(v.0.2.20)</em>, <em>withr(v.2.2.0)</em>, <em>fracdiff(v.1.5-1)</em>, <em>mnormt(v.1.5-7)</em>, <em>mgcv(v.1.8-31)</em>, <em>parallel(v.3.6.1)</em>, <em>hms(v.0.5.3)</em>, <em>timeDate(v.3043.102)</em>, <em>quadprog(v.1.5-8)</em>, <em>grid(v.3.6.1)</em>, <em>rpart(v.4.1-15)</em>, <em>rvcheck(v.0.1.8)</em>, <em>rmarkdown(v.2.1)</em>, <em>TTR(v.0.23-6)</em>, <em>d3Network(v.0.5.2.1)</em>, <em>lubridate(v.1.7.8)</em> and <em>base64enc(v.0.1-3)</em></p>
+<p><strong>other attached packages:</strong> <em>forcats(v.0.5.0)</em>, <em>stringr(v.1.4.0)</em>, <em>dplyr(v.0.8.5)</em>, <em>purrr(v.0.3.4)</em>, <em>readr(v.1.3.1)</em>, <em>tidyr(v.1.1.0)</em>, <em>tibble(v.3.0.1)</em>, <em>ggplot2(v.3.3.0)</em> and <em>tidyverse(v.1.3.0)</em></p>
+<p><strong>loaded via a namespace (and not attached):</strong> <em>colorspace(v.1.4-1)</em>, <em>ellipsis(v.0.3.1)</em>, <em>rprojroot(v.1.3-2)</em>, <em>fs(v.1.4.1)</em>, <em>proxy(v.0.4-24)</em>, <em>rstudioapi(v.0.11)</em>, <em>farver(v.2.0.3)</em>, <em>remotes(v.2.1.1)</em>, <em>DT(v.0.13)</em>, <em>fansi(v.0.4.1)</em>, <em>lubridate(v.1.7.8)</em>, <em>xml2(v.1.3.2)</em>, <em>codetools(v.0.2-16)</em>, <em>splines(v.3.6.1)</em>, <em>leaps(v.3.1)</em>, <em>knitr(v.1.28)</em>, <em>pkgload(v.1.0.2)</em>, <em>jsonlite(v.1.6.1)</em>, <em>broom(v.0.5.6)</em>, <em>gganimate(v.1.0.5)</em>, <em>dbplyr(v.1.4.3)</em>, <em>png(v.0.1-7)</em>, <em>BiocManager(v.1.30.10)</em>, <em>compiler(v.3.6.1)</em>, <em>httr(v.1.4.1)</em>, <em>rvcheck(v.0.1.8)</em>, <em>backports(v.1.1.7)</em>, <em>assertthat(v.0.2.1)</em>, <em>Matrix(v.1.2-18)</em>, <em>cli(v.2.0.2)</em>, <em>tweenr(v.1.0.1)</em>, <em>htmltools(v.0.4.0)</em>, <em>prettyunits(v.1.1.1)</em>, <em>tools(v.3.6.1)</em>, <em>igraph(v.1.2.5)</em>, <em>gtable(v.0.3.0)</em>, <em>glue(v.1.4.1)</em>, <em>reshape2(v.1.4.4)</em>, <em>Rcpp(v.1.0.4.6)</em>, <em>cellranger(v.1.1.0)</em>, <em>fracdiff(v.1.5-1)</em>, <em>invctr(v.0.1.0)</em>, <em>vctrs(v.0.3.0)</em>, <em>urca(v.1.3-0)</em>, <em>TSA(v.1.2)</em>, <em>nlme(v.3.1-147)</em>, <em>crosstalk(v.1.1.0.1)</em>, <em>casnet(v.0.1.5)</em>, <em>lmtest(v.0.9-37)</em>, <em>timeDate(v.3043.102)</em>, <em>xfun(v.0.14)</em>, <em>ps(v.1.3.3)</em>, <em>testthat(v.2.3.2)</em>, <em>rvest(v.0.3.5)</em>, <em>ggimage(v.0.2.8)</em>, <em>lifecycle(v.0.2.0)</em>, <em>devtools(v.2.3.0)</em>, <em>zoo(v.1.8-8)</em>, <em>scales(v.1.1.1)</em>, <em>hms(v.0.5.3)</em>, <em>randtests(v.1.0)</em>, <em>parallel(v.3.6.1)</em>, <em>yaml(v.2.2.1)</em>, <em>quantmod(v.0.4.17)</em>, <em>curl(v.4.3)</em>, <em>gridExtra(v.2.3)</em>, <em>memoise(v.1.1.0)</em>, <em>pander(v.0.6.3)</em>, <em>stringi(v.1.4.6)</em>, <em>highr(v.0.8)</em>, <em>tseries(v.0.10-47)</em>, <em>desc(v.1.2.0)</em>, <em>TTR(v.0.23-6)</em>, <em>pkgbuild(v.1.0.8)</em>, <em>rlang(v.0.4.6)</em>, <em>pkgconfig(v.2.0.3)</em>, <em>evaluate(v.0.14)</em>, <em>lattice(v.0.20-41)</em>, <em>labeling(v.0.3)</em>, <em>htmlwidgets(v.1.5.1)</em>, <em>cowplot(v.1.0.0)</em>, <em>processx(v.3.4.2)</em>, <em>tidyselect(v.1.1.0)</em>, <em>plyr(v.1.8.6)</em>, <em>magrittr(v.1.5)</em>, <em>R6(v.2.4.1)</em>, <em>magick(v.2.3)</em>, <em>generics(v.0.0.2)</em>, <em>DBI(v.1.1.0)</em>, <em>pillar(v.1.4.4)</em>, <em>haven(v.2.2.0)</em>, <em>withr(v.2.2.0)</em>, <em>mgcv(v.1.8-31)</em>, <em>xts(v.0.12-0)</em>, <em>nnet(v.7.3-14)</em>, <em>modelr(v.0.1.8)</em>, <em>crayon(v.1.3.4)</em>, <em>rmarkdown(v.2.1)</em>, <em>progress(v.1.2.2)</em>, <em>usethis(v.1.6.1)</em>, <em>locfit(v.1.5-9.4)</em>, <em>grid(v.3.6.1)</em>, <em>readxl(v.1.3.1)</em>, <em>callr(v.3.4.3)</em>, <em>reprex(v.0.3.0)</em>, <em>forecast(v.8.12)</em>, <em>digest(v.0.6.25)</em>, <em>gridGraphics(v.0.5-0)</em>, <em>munsell(v.0.5.0)</em>, <em>viridisLite(v.0.3.0)</em>, <em>ggplotify(v.0.0.5)</em>, <em>sessioninfo(v.1.1.1)</em> and <em>quadprog(v.1.5-8)</em></p>
 <!-- </div> -->
 </div>
 

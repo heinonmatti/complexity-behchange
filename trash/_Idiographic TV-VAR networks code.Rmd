@@ -15,8 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(mgm)
 
-sdtVarData <- readr::read_rds("../motivation-dynamics/shareable_data/EMA_data_Moti13.RDS")
-username <- "Moti13"
+sdtVarData <- readr::read_rds("../motivation-dynamics/shareable_data/EMA_data_Moti_P10.csv")
+username <- "Moti_P10"
 
 sdtVarData <- sdtVarData %>% 
   dplyr::mutate_at(vars(anxiety_guilt, autonomy, competence, 
@@ -100,7 +100,7 @@ resample_obj <- readr::read_rds(path  = paste0("RDS_files/", username, "_6nodes_
 ## Make plot
 
 ```{r TV-VAR-six-nodes, dpi = 300}
-username <- "Moti13"
+username <- "Moti_P10"
 tvvar_obj <- readr::read_rds(path  = paste0("RDS_files/", username, "_6nodes_tvvar_obj.RDS"))
 
 # Maximum edge weight to scale edges to:

@@ -21,7 +21,9 @@ knitr::opts_chunk$set(echo = TRUE,
 ```
 
 ```{r rqa-dataprep}
-emadata <- readr::read_rds("./data/EMA_data_Moti13.RDS")
+# emadata <- readr::read_rds("./data/EMA_data_Moti_P10.csv")
+# readr::write_csv(emadata, "./data/EMA_data_Moti_P10.csv")
+emadata <- readr::read_csv("./data/EMA_data_Moti_P10.csv")
 
 emadata_nested <- emadata %>% dplyr::group_by(User) %>% 
                   dplyr::select(#autonomy, competence, relatedness,
@@ -867,7 +869,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
 ```
 
 
-### Spiral graph with colored nodes {.unlisted .unnumbered}
+**Spiral graph with colored nodes**
 
 ```{r}
 emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
@@ -913,7 +915,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
 # emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
 ```
 
-### Attractor plot {.unlisted .unnumbered}
+**Attractor plot**
 
 ```{r attractor-plots_sample1}
 emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
@@ -1285,7 +1287,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
 ```
 
 
-### Spiral graph with colored nodes {.unlisted .unnumbered}
+**Spiral graph with colored nodes**
 
 ```{r}
 emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
@@ -1331,7 +1333,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
 # emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
 ```
 
-### Attractor plot {.unlisted .unnumbered}
+**Attractor plot**
 
 ```{r attractor-plots_sample2}
 emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
@@ -1703,7 +1705,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
 ```
 
 
-### Spiral graph with colored nodes {.unlisted .unnumbered}
+**Spiral graph with colored nodes**
 
 ```{r}
 emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
@@ -1749,7 +1751,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
 # emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
 ```
 
-### Attractor plot {.unlisted .unnumbered}
+**Attractor plot**
 
 ```{r attractor-plots_sample3}
 emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
@@ -2121,7 +2123,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
 ```
 
 
-### Spiral graph with colored nodes {.unlisted .unnumbered}
+**Spiral graph with colored nodes**
 
 ```{r}
 emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
@@ -2167,7 +2169,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
 # emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
 ```
 
-### Attractor plot {.unlisted .unnumbered}
+**Attractor plot**
 
 ```{r attractor-plots_alldata}
 emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
@@ -2539,7 +2541,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
 ```
 
 
-### Spiral graph with colored nodes {.unlisted .unnumbered}
+**Spiral graph with colored nodes**
 
 ```{r}
 emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
@@ -2585,7 +2587,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
 # emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
 ```
 
-### Attractor plot {.unlisted .unnumbered}
+**Attractor plot**
 
 ```{r attractor-plots_taskNormed}
 emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
@@ -2650,7 +2652,7 @@ $~$
 
 As the ecological momentary assessment questions are [formulated](https://git.io/JfLmS) according to self-determination theory in such a way, that they inquire one's motivation to do a particular task, it would be intuitive to think each task falls into a particular profile. 
 
-We can examine this, as each time the participant responded to the questionnaire, they also indicated, which task they were performing at the moment. These responses were coarse-grained to ensure anonymity. In collaboration with the participant, highly specific tasks that were considered similar enough, were combined under a more general descriptive label. One task, "Moti13_1", could not be fit in any category but was highly specific, so it was anonymised.
+We can examine this, as each time the participant responded to the questionnaire, they also indicated, which task they were performing at the moment. These responses were coarse-grained to ensure anonymity. In collaboration with the participant, highly specific tasks that were considered similar enough, were combined under a more general descriptive label. One task, "Moti_P10_1", could not be fit in any category but was highly specific, so it was anonymised.
 
 Lists below indicate, which tasks each attractor consists of.
 
