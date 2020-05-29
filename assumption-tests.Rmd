@@ -963,6 +963,12 @@ cat(knitr::knit_print(test_results))
 }
 ```
 
+# {-}
+
+---
+
+$~$
+
 # Session information
 
 Description of the R environment can be found below.
