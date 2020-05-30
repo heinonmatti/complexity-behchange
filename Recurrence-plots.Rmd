@@ -2718,7 +2718,7 @@ taskdata_tasks_named$data[i] %>% knitr::kable() %>% show()
 # taskdata_tasks_named <-  purrr::set_names(taskdata_tasks$data, nm = taskdata_tasks$attractors)
 ```
 
-In line with Navarro et al. (2013), this is mostly not true, and the profiles are quite heterogeneous in terms of tasks -- that is, within tasks there are several possible motivational profiles, and motivation profiles consist of several different tasks (see next section).
+In line with Navarro et al. (2013), it seems that the task-dependence of profiles is mostly not true, and they are indeed quite heterogeneous in terms of tasks -- that is, within tasks there are several possible motivational profiles, and motivation profiles consist of several different tasks (see next section).
 
 Navarro, J., Curioso, F., Gomes, D., Arrieta, C., & Cortes, M. (2013). Fluctuations in work motivation: tasks do not matter! Nonlinear Dynamics, Psychology, and Life Sciences, 17(1), 3–22.
 
@@ -3296,7 +3296,7 @@ rqa_plot
 
 Quantification of temporal patterns is done by extracting complexity measures from line structures in a recurrence plot; the detailed process is beyond the scope here, but fully described in Marwan, Romano, Thiel, & Kurths (pp. 251 and 263-283).
 
-Marwan, N., Romano, M. C., Thiel, M., & Kurths, J. (2007). Recurrence plots for the analysis of complex systems. Physics Reports, 438(5), 237–329. https://doi.org/10.1016/j.physrep.2006.11.001
+* Marwan, N., Romano, M. C., Thiel, M., & Kurths, J. (2007). Recurrence plots for the analysis of complex systems. Physics Reports, 438(5), 237–329. https://doi.org/10.1016/j.physrep.2006.11.001  
 
 The table below shows four complexity measures derived from the three recurrence plots (B, D and F) above. Main difference is in Laminarity; the observed real data has much more points forming vertical lines than either of the comparisons. Notably, Trapping Time indicates the length of these line segments does not differ between conditions.
 
@@ -3401,7 +3401,7 @@ $~$
 
 Cross-Recurrence Quantification Analysis, or CRQA, is a method of studying the coupling of two time series. As with other types of RQA, the first step of the analysis involves creating recurrence plots. In recurrence plots, the re-occurrence of values is visualised by plotting a time series against another time series (to explore cross-recurrence) or itself (to explore auto-recurrence). Figure below depicts a cross-recurrence plot of two hypothetical time series with discrete states coded as 1 to 6: Yellow (1, 5, 4, 3, 2, 6) and Blue (5, 4, 3, 4, 3, 2). Black cells indicate places where the same value occurs in both series. 
 
-```{r rqa-pedagogical, fig.width = 8.27/2.5/3, fig.height = 8.27/2.5/3}
+```{r rqa-pedagogical}
 
 # knitr::include_graphics(path = "./figures/rqa_pedagogical.png")
 
