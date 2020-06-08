@@ -72,107 +72,10 @@ emadata_nested_wrangled <- emadata_nested %>%
                                                        timediff = c(NA, diff(Date))))) %>% 
   # Filter out answers less than 15 minutes from the last one, then remove the difference variable
   dplyr::mutate(data = purrr::map(data, ~dplyr::filter(.x, timediff > 15))) %>% 
-  dplyr::mutate(data = purrr::map(data, ~dplyr::select(.x, -timediff))) %>% 
-  # Reverse-code the controlled motivation variables:
-  # dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(.x,
-  #                                                      situation_requires = 50 - situation_requires,
-  #                                                      anxiety_guilt_avoidance = 50 - anxiety_guilt_avoidance,
-  #                                                      another_wants = 50 - another_wants))) %>%
-  # Save the time variables:
-  dplyr::mutate(daytime = purrr::map(data, ~dplyr::select(.x, Date, date))) %>%     
-  # # Create "task-normed" variables, where the previous instance of the task is substracted from the current one:
-  # dplyr::mutate(taskNormed = purrr::map(data, ~dplyr::group_by(., task))) %>% 
-  # dplyr::mutate(taskNormed = purrr::map(taskNormed, ~dplyr::mutate_if(.x, is.numeric, ~(.-lag(.))))) %>%
-  # dplyr::mutate(taskNormed = purrr::map(taskNormed, ~na.omit(.x))) %>%
-  # # Moving average (not taking into account the current time point):
-  # dplyr::mutate(changeProfile = purrr::map(taskNormed, ~dplyr::mutate_if(.x, 
-  #                                                                           is.numeric, 
-  #                                                                           ~(zoo::rollapply(.x, 
-  #                                                                                       width = 5, 
-  #                                                                                       by.column = TRUE,
-  #                                                                                       FUN = mean, 
-  #                                                                                       na.rm = TRUE, 
-  #                                                                                       fill = NA,
-  #                                                                                       partial = TRUE,
-  #                                                                                       align = "right"))))) %>% 
-  # # Take daily averages to ensure ~equally spaced observations: 
-  dplyr::mutate(data_daily = purrr::map(data, 
-                                        ~dplyr::group_by(., date))) %>%
-  dplyr::mutate(data_daily = purrr::map(data_daily, 
-                                        ~dplyr::summarise_if(.x, is.numeric, mean, na.rm = TRUE))) %>%
-  # Choose daily extreme values
-  dplyr::mutate(data_extremes = purrr::map(.x = data, 
-                                           .f = ~dplyr::group_by(.x, date) %>% 
-                                             dplyr::mutate_at(vars(autonomy, competence, relatedness,
-                                                                   pleasure, interest, importance,
-                                                                   situation_requires, anxiety_guilt_avoidance, another_wants), 
-                                                              funs(mean_of_day = mean)) %>% 
-                                             dplyr::ungroup() %>% 
-                                             dplyr::mutate(autonomy_deviance = 
-                                                                autonomy - autonomy_mean_of_day,
-                                                           competence_deviance = 
-                                                             competence - competence_mean_of_day,
-                                                           relatedness_deviance = 
-                                                             relatedness - relatedness_mean_of_day,
-                                                           pleasure_deviance = 
-                                                             pleasure - pleasure_mean_of_day, 
-                                                           interest_deviance = 
-                                                             interest - interest_mean_of_day, 
-                                                           importance_deviance = 
-                                                             importance - importance_mean_of_day,
-                                                           situation_requires_deviance = 
-                                                             situation_requires - situation_requires_mean_of_day, 
-                                                           anxiety_guilt_avoidance_deviance = 
-                                                             anxiety_guilt_avoidance - autonomy_mean_of_day, 
-                                                           another_wants_deviance = 
-                                                             another_wants - another_wants_mean_of_day,
-                                                           extremity = (autonomy_deviance + 
-                                                             competence_deviance + 
-                                                             relatedness_deviance +
-                                                             pleasure_deviance +
-                                                             interest_deviance +
-                                                             importance_deviance +
-                                                             situation_requires_deviance + 
-                                                             another_wants_deviance)) %>% 
-                                             dplyr::group_by(date) %>% 
-                                             dplyr::filter(extremity == min(extremity)) %>%   
-                                             # If there are ties, preserve the last one
-                                             dplyr::filter(row_number() == n()) %>% 
-                                             dplyr::ungroup())) %>% 
-    # dplyr::mutate(data_daily_changeProfile = purrr::map(data, 
-  #                                                     ~dplyr::group_by(., date))) %>%
-  # dplyr::mutate(data_daily_changeProfile = purrr::map(data_daily_changeProfile, 
-  #                                                     ~dplyr::summarise_if(.x, is.numeric, mean, na.rm = TRUE))) %>%
-  # Remove day and task variables
-  dplyr::mutate(data_extremes_analysis = purrr::map(data_extremes, ~dplyr::select(.x, autonomy:another_wants))) %>% 
-  dplyr::mutate(data_with_dates = data,
-    data = purrr::map(data, ~dplyr::select(.x, -Date, -date))) %>% 
-  dplyr::mutate(data_daily_with_dates = data_daily,
-                data_daily = purrr::map(data_daily, ~dplyr::select(.x, -date))) %>% 
-  # Normalise all variables
-  dplyr::mutate(data_standardised = purrr::map(data, ~dplyr::mutate_if(.x, is.numeric,
-                                                           ~(.x - median(.x, na.rm = TRUE)) / mad(.x)))) %>% 
-  dplyr::mutate(data_daily_standardised = purrr::map(data_daily, ~dplyr::mutate_if(.x, is.numeric,
-                                                           ~(.x - median(.x, na.rm = TRUE)) / mad(.x)))) %>% 
-  dplyr::mutate(data_divided_by_max = purrr::map(data, ~dplyr::mutate_if(.x, is.numeric,
-                                                           ~(.x / max(.x, na.rm = TRUE))))) %>% 
-  dplyr::mutate(data_daily_divided_by_max = purrr::map(data_daily, ~dplyr::mutate_if(.x, is.numeric,
-                                                           ~(.x / max(.x, na.rm = TRUE))))) %>% 
-  dplyr::mutate(data_extremes_analysis_divided_by_max = purrr::map(data_extremes_analysis, 
-                                                                   ~dplyr::mutate_if(.x, 
-                                                                                     is.numeric,
-                                                                                     ~(.x / max(.x, na.rm = TRUE))))) %>% 
-  # Retain first and last observation of the day:
-  dplyr::mutate(data_firstlast_divided_by_max = purrr::map(.x = data_with_dates, 
-                                           .f = ~dplyr::group_by(.x, date) %>% 
-                                             dplyr::arrange(Date) %>%
-                                             dplyr::filter(row_number() == 1 | row_number() == n()) %>% 
-                                             dplyr::ungroup() %>% 
-                                             dplyr::mutate_if(., is.numeric,
-                                                              ~(. / max(., na.rm = TRUE))))) %>% 
-  # Grand means for each variable
-  dplyr::mutate(grand_means = purrr::map(.x = data_divided_by_max, 
-                                         .f = ~dplyr::summarise_if(.x, is.numeric, median))) 
+  dplyr::mutate(data = purrr::map(data, ~dplyr::select(.x, 
+                                                       -timediff,
+                                                       -Date,
+                                                       -date)))
 
 ```
 
@@ -287,11 +190,7 @@ test_nested <- test_results %>% purrr::map_df(., rbind) %>%
 
 test_nested <- test_nested %>% 
   dplyr::mutate(data = purrr::map(.x = data,
-                                  .f = ~dplyr::mutate_at(.x, vars(autonomy, competence, relatedness,
-                                                                  pleasure, interest, importance,
-                                                                  situation_requires, 
-                                                                  anxiety_guilt_avoidance, 
-                                                                  another_wants), 
+                                  .f = ~dplyr::mutate_at(.x, vars(2:ncol(test_nested$data[[1]])), 
                                                               funs(as.numeric))),
                 data_binarised = purrr::map(.x = data,
                                             .f = ~dplyr::transmute_if(.x, is.numeric,
@@ -471,11 +370,7 @@ alphaLo_test_nested <- alphaLo_test_results %>% purrr::map_df(., rbind) %>%
 
 alphaLo_test_nested <- alphaLo_test_nested %>% 
   dplyr::mutate(data = purrr::map(.x = data,
-                                  .f = ~dplyr::mutate_at(.x, vars(autonomy, competence, relatedness,
-                                                                  pleasure, interest, importance,
-                                                                  situation_requires, 
-                                                                  anxiety_guilt_avoidance, 
-                                                                  another_wants), 
+                                  .f = ~dplyr::mutate_at(.x, vars(2:ncol(alphaLo_test_nested$data[[1]])), 
                                                               funs(as.numeric))),
                 data_binarised = purrr::map(.x = data,
                                             .f = ~dplyr::transmute_if(.x, is.numeric,

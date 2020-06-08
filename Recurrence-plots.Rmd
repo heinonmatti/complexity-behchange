@@ -2650,7 +2650,7 @@ $~$
 
 # Which tasks do attractors consist of?
 
-As the ecological momentary assessment questions are [formulated](https://git.io/JfLmS) according to self-determination theory in such a way, that they inquire one's motivation to do a particular task, it would be intuitive to think each task falls into a particular profile. 
+As the ecological momentary assessment questions are [formulated](https://heinonmatti.github.io/complexity-behchange/dataset-info.html) according to self-determination theory in such a way, that they inquire one's motivation to do a particular task, it would be intuitive to think each task falls into a particular profile. 
 
 We can examine this, as each time the participant responded to the questionnaire, they also indicated, which task they were performing at the moment. These responses were coarse-grained to ensure anonymity. In collaboration with the participant, highly specific tasks that were considered similar enough, were combined under a more general descriptive label. One task, "Moti_P10_1", could not be fit in any category but was highly specific, so it was anonymised.
 
