@@ -554,6 +554,435 @@ A few additional attractors can be seen in the _Uncategorised_ panel. These unch
 
 The _Unique_ panel depicts profiles that cannot be grouped under one of the other configurations, thus deemed to only occur once. These also consist mostly of internal meetings and email. 
 
+## Robustness to recurrence rate
+
+Here we perform the same analysis, but with recurrence rate of 0.10 instead of 0.05.
+
+Here's the 6-dimensional motivation system's recurrence plot, weighted by similarity.
+
+```{r firstlast-weighted-rr}
+set.seed(100)
+
+#######################
+
+# si = similarity under the radius
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled %>% 
+  dplyr::mutate(RN = purrr::map(.x = data_firstlast_divided_by_max,
+                                .f =  ~casnet::rn(.x %>% dplyr::select(#autonomy, competence, relatedness,
+                                                                       pleasure, interest, importance,
+                                                                       situation_requires, 
+                                                                       anxiety_guilt_avoidance, 
+                                                                       another_wants), 
+                                                  doEmbed = FALSE, 
+                                                  weighted = TRUE, 
+                                                  weightedBy = "si", 
+                                                  emRad = NA,
+                                                  targetValue = 0.10)))
+
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(graph_from_adjacency = purrr::map(.x = RN,
+                                                  .f = ~igraph::graph_from_adjacency_matrix(.x, 
+                                                                                            weighted = TRUE, 
+                                                                                            mode = "upper", 
+                                                                                            diag = FALSE)))
+
+# Edges with their distances
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(edges_with_distances = purrr::map(.x = graph_from_adjacency,
+                                                  .f = ~igraph::E(.x)$weight),
+                graph_from_adjacency_orig = graph_from_adjacency)
+
+# Larger values are closer to the state; inverse of weight makes it more intuitive
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets)) {
+igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$weight <- (1/emadata_nested_wrangled_both_recnets$edges_with_distances[[i]])
+}
+# A later note to self: Now weight is a measure of distance; how far apart two time points are
+# (under the radius, i.e. they're reasonably similar to begin with)
+
+####### To check:
+# igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[1]])$weight
+# igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency_orig[[1]])$weight
+
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(RN_plot = purrr::map(.x = RN,
+                                .f =  ~casnet::rn_plot(.x,
+                                                       plotDimensions = TRUE,
+                                                       xlab = "6-dimensional motivation system",
+                                                       ylab = "6-dimensional motivation system")))
+
+# Make node size equal to strength. Strength is the sum of a node's edge weights.
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets)) {
+igraph::V(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$size <- (igraph::strength(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]]))
+}
+
+# Rescaling weight as "width"; varies between 5 and 10
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets)) {
+igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$width <- 
+  casnet::elascer(igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$weight, lo = 5, hi = 10)
+}
+
+```
+
+The lengthy code chunk below extracts and marks attractors in the data.
+
+```{r firstlast-attractor-extraction-rr}
+# Get number of maximally connected node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(max_connected_day = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~which.max(igraph::degree(.x))
+                                     ))
+
+
+
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(list_of_edges = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~igraph::get.data.frame(.x)
+                                     ))
+
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = 
+                  purrr::map2(.x = data_firstlast_divided_by_max,
+                              .y = graph_from_adjacency,
+                              .f = ~{
+                                data.frame(.x %>% 
+                                             dplyr::select(#autonomy, competence, relatedness,
+                                                                       pleasure, interest, importance,
+                                                                       situation_requires, anxiety_guilt_avoidance, another_wants), 
+                                           strength = igraph::strength(.y)) %>% 
+                                  dplyr::mutate(time = dplyr::row_number()) %>% 
+                                  tidyr::pivot_longer(cols = c(-strength, -time))
+                              }
+  ))
+
+# Extract nodes (i.e. times) which connect to the strongest (i.e. most connected) node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = max_connected_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+# Get number of 2nd maximally connected node, which doesn't connect to the 1st
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(secondary_attractor_day = purrr::map2(.x = graph_from_adjacency,
+                                                      .y = connecting_to_strongest,
+                                                      .f =  ~{
+                                                        data.frame(degree = igraph::degree(.x), 
+                                                                   time = 1:length(igraph::degree(.x))) %>% 
+                                                          dplyr::filter(!time %in% .y) %>% 
+                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::slice(1) %>% 
+                                                          dplyr::pull(time)
+                                                      }                                                    
+  ))
+
+# Extract nodes (i.e. times) which connect to the 2nd strongest node, which doesn't connect to the 1st
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_2nd_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = secondary_attractor_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+# Save as a variable in the dataset
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_2nd_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_2nd_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+# Get number of 3rd maximally connected node, which doesn't connect to the 1st or second
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(tertiary_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
+                                                      ..2 = connecting_to_strongest,
+                                                      ..3 = connecting_to_2nd_strongest),
+                                                      .f =  ~{
+                                                        data.frame(degree = igraph::degree(..1), 
+                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                          dplyr::filter(!time %in% ..2, 
+                                                                        !time %in% ..3) %>% 
+                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::slice(1) %>% 
+                                                          dplyr::pull(time)
+                                                      }                                                    
+  ))
+
+# Extract nodes (i.e. times) which connect to the 3rd strongest node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_3rd_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = tertiary_attractor_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+# Save as a variable
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_3rd_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_3rd_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+
+
+# Get number of 4th maximally connected node, which doesn't connect to the 1st or second
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(fourth_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
+                                                      ..2 = connecting_to_strongest,
+                                                      ..3 = connecting_to_2nd_strongest,
+                                                      ..4 = connecting_to_3rd_strongest),
+                                                      .f =  ~{
+                                                        data.frame(degree = igraph::degree(..1), 
+                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                          dplyr::filter(!time %in% ..2, 
+                                                                        !time %in% ..3, 
+                                                                        !time %in% ..4) %>% 
+                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::slice(1) %>% 
+                                                          dplyr::pull(time)
+                                                      }                                                    
+  ))
+
+# Extract nodes (i.e. times) which connect to the 3rd strongest node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_4th_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = fourth_attractor_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+# Save as a variable
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_4th_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_4th_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+################### Make plots
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = 
+                  purrr::map(.x = all_nodes_with_strengths,
+                             .f = ~{
+                               dplyr::mutate(.x,
+                                             attractors = dplyr::case_when(
+                                               strength == 0 ~ "Unique",
+                                               connecting_to_strongest == TRUE ~ "1st",
+                                               connecting_to_2nd_strongest == TRUE ~ "2nd",
+                                               connecting_to_3rd_strongest == TRUE ~ "3rd",
+                                               connecting_to_4th_strongest == TRUE ~ "4th",
+                                               TRUE ~ "Uncategorised"),
+                                             attractors = factor(attractors,
+                                                                 levels = c("1st",
+                                                                            "2nd",
+                                                                            "3rd",
+                                                                            "4th",
+                                                                            "Uncategorised",
+                                                                            "Unique")),
+                                             name = factor(name,
+                                                           levels = c("pleasure",
+                                                                      "interest",
+                                                                      "importance",
+                                                                      "situation_requires",
+                                                                      "anxiety_guilt_avoidance",
+                                                                      "another_wants"),
+                                                           labels = c("Pleasure",
+                                                                      "Interest",
+                                                                      "Importance",
+                                                                      "Situation requires",
+                                                                      "Anxiety guilt avoidance",
+                                                                      "Another wants")) %>% 
+                                               forcats::fct_drop()) %>% 
+                                 dplyr::group_by(attractors, name) %>% 
+                                 dplyr::mutate(n = n()) %>% 
+                                 dplyr::ungroup() %>%
+                                 dplyr::mutate(maxtime = max(time),
+                                               percentage_of_total =
+                                                 (n / maxtime) %>% scales::percent(accuracy = 0.1),
+                                               proportion_of_total = n/maxtime,
+                                               attractors_n = 
+                                                 factor(paste0(attractors,
+                                                               " (n = ", n, "; ", 
+                                                               percentage_of_total, ")")))
+                             }
+                  ))
+
+
+```
+
+
+Spiral graph with colored nodes 
+
+```{r firstlast-spiralgraph-rr}
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+  dplyr::mutate(node_colors = purrr::map(.x = all_nodes_with_strengths,
+                                         .f = ~{tidyr::pivot_wider(.x, names_from = name) %>%
+                                             dplyr::pull(attractors)}))
+
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets_nodes_plots)) {
+levels(emadata_nested_wrangled_both_recnets_nodes_plots$node_colors[[i]]) <- 
+  c(viridisLite::plasma(4, 
+                      end = 0.8, 
+                      direction = -1), "gray48", "white")
+  }
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(spiralgraph_epochs = purrr::pmap(list(..1 = graph_from_adjacency,
+                                          ..2 = node_colors,
+                                          ..3 = User),
+                                     .f =  ~casnet::make_spiral_graph(g = ..1, 
+                                                                      arcs = 4, 
+                                                                      # a = .1, 
+                                                                      # b = 2, 
+                                                                      markTimeBy = TRUE,
+                                                                      markEpochsBy = ..2,
+                                                                      epochColours = ..2,
+                                                                      showEpochLegend = FALSE,
+                                                                      scaleEdgeSize = 1/10,
+                                                                      scaleVertexSize = c(1, 5),
+                                                                      showSizeLegend = FALSE,
+                                                                      sizeLabel = "Node strength",
+                                                                      type = "Euler",
+                                                                      # alphaE = 0.1
+                                                                      # title = ..3
+                                     )))
+
+# emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +
+#   theme(plot.margin=grid::unit(c(0,0,0,0), "mm"))
+
+# ggsave(filename = "./figures/recnetwork.png",
+#        width = 7, 
+#        height = 7)
+
+# emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
+```
+
+Attractor plot
+
+```{r attractor-plots-rr}
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+  dplyr::mutate(observations = purrr::map_dbl(.x = data_firstlast_divided_by_max,
+                                              .f = ~nrow(.)))
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+  dplyr::mutate(observations_daily = purrr::map_dbl(.x = data_daily,
+                                              .f = ~nrow(.)))
+
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(
+    attractor_plots = 
+      purrr::pmap(list(..1 = all_nodes_with_strengths,
+                       ..2 = observations,
+                       ..3 = observations_daily,
+                       ..4 = User),
+                  .f = ~{
+                    dplyr::mutate(..1,
+                                  strength_rescaled = 
+                                    scales::rescale(strength, to = c(0.3, 1.1)),
+                                  alpha_strength = ifelse(strength_rescaled == 0.3, 
+                                                          0.5, 
+                                                          strength_rescaled)) %>% 
+                      ggplot(data = .,
+                             aes(x = forcats::fct_rev(name), 
+                                 y = value, 
+                                 size = strength_rescaled,
+                                 alpha = alpha_strength,
+                                 color = attractors_n)) +
+                      scale_size_identity() +
+                      scale_alpha_identity() +
+                      geom_point(aes(alpha = alpha_strength)) +
+                      geom_line(aes(group = time,
+                                    alpha = alpha_strength)) +
+                      scale_color_manual(values = c(viridisLite::plasma(4, 
+                                                                        end = 0.8, 
+                                                                        direction = -1), 
+                                                    "gray40", "gray50")) +
+                      scale_y_continuous(labels = scales::label_percent(accuracy = 1)) +
+                      theme_bw() +
+                      theme(legend.position = "none") +
+                      labs(y = "Percentage of maximum reported value of variable, across full time series",
+                           x = NULL,
+                           title = paste0("Participant \"", ..4, "\" - based on ", ..2, " data points (", ..3, " days)")) +
+                      facet_wrap(~attractors_n) +
+                      coord_flip(ylim = c(0, 1))
+                  }
+      ))
+
+emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots[[1]]
+# emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
+
+# # Save this to be used for the task analysis later; otherwise overwritten by sensitivity analyses:
+# firstlast_emadata_nested_wrangled_both_recnets_nodes_plots <- 
+#   emadata_nested_wrangled_both_recnets_nodes_plots
+
+# cowplot::save_plot("./figures/attractors.png", 
+#                    emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots[[1]], 
+#                    dpi = 300,
+#                    base_height = 11.69/2)
+```
+
 ## 1. Single randomly sampled daily observation {.unlisted .unnumbered}
 
 Here's the 6-dimensional motivation system's recurrence plot, weighted by similarity.
@@ -2648,7 +3077,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots[[1]]
 
 $~$
 
-# Which tasks do attractors consist of?
+### Which tasks do attractors consist of?
 
 As the ecological momentary assessment questions are [formulated](https://heinonmatti.github.io/complexity-behchange/dataset-info.html) according to self-determination theory in such a way, that they inquire one's motivation to do a particular task, it would be intuitive to think each task falls into a particular profile. 
 
@@ -3197,6 +3626,112 @@ emadata_nested_wrangled_both_withMeasures_shuffled <- emadata_nested_wrangled_bo
                                               .f = ~casnet::rp_measures(.x,
                                                                         emRad = NA)))
 ```
+
+# Transition networks 
+
+```{r}
+attractor_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(relative_freqs = purrr::map(.x = all_nodes_with_strengths,
+                                       .f = ~.x %>% 
+                                         tidyr::pivot_wider(names_from = name,
+                                                            values_from = value) %>% 
+                                         dplyr::transmute(previousone = lag(attractors, n = 1),
+                                                          nextone = attractors) %>% 
+                                         dplyr::slice(-1) %>%  
+                                         dplyr::group_by(previousone, nextone) %>% 
+                                         dplyr::summarise(n = n()) %>% 
+                                         dplyr::mutate(freq = n / sum(n)) %>% 
+                                         dplyr::select(-n) %>%
+                                         data.table::dcast(previousone ~ nextone)))
+
+# absolutes <- emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]] %>% 
+#   tidyr::pivot_wider(names_from = name,
+#                      values_from = value) %>% 
+#   dplyr::transmute(current = attractors,
+#                    previous = lag(attractors, n = 1)) %>% 
+#   data.table::dcast(current ~ previous)
+
+attractor_plots <- attractor_plots %>% 
+  dplyr::mutate(relative_freqs_plots = purrr::pmap(list(..1 = relative_freqs,
+                                                        ..2 = User),
+                                                  .f = ~..1 %>% 
+                                                    tidyr::pivot_longer(-previousone,
+                                                                        values_to = "value",
+                                                                        names_to = "nextone") %>% 
+                                                    ggplot(aes(x = previousone,
+                                                               y = nextone)) +
+                                                    geom_tile(aes(fill = value),
+                                                              colour = "black") +
+                                                    geom_text(aes(label = ifelse(is.na(value),
+                                                                                 ".00",
+                                                                                 (gsub("0\\.",
+                                                                                       "\\.",
+                                                                                       (sprintf("%.2f", value))))))) +
+                                                    scale_fill_gradient(low = "white", 
+                                                                        high = "red", 
+                                                                        na.value = "grey",
+                                                                        guide = "none") +
+                                                    theme_bw() +
+                                                    scale_y_discrete(expand = c(0, 0)) +
+                                                    scale_x_discrete(expand = c(0, 0)) +
+                                                    theme(axis.text.x = element_text(angle = 30, hjust = 1),
+                                                          axis.text.y = element_text(angle = 30, hjust = 1),
+                                                          legend.position = "right",
+                                                          legend.title = element_blank()) +
+                                                    coord_equal() +
+                                                    labs(x = "Previous state", y = "Next state",
+                                                         title = paste0(#..2, ": ",
+                                                                        "Transitions between the 6-dimensional states"))))
+
+attractor_plots <- attractor_plots %>% 
+  dplyr::mutate(relative_freqs_networks = purrr::pmap(list(..1 = relative_freqs,
+                                                        ..2 = User),
+                                                  .f = ~..1 %>% 
+                                                    tidyr::pivot_longer(-previousone,
+                                                                        values_to = "value",
+                                                                        names_to = "nextone") %>% 
+                                                    qgraph::qgraph(.,
+                                                                   #layout = "circle",
+                                                                   edgelist = TRUE,
+                                                                   directed = TRUE,
+                                                                   label.scale = FALSE,
+                                                                   trans = TRUE,
+                                                                   layout = "spring",
+                                                                   # lty = .[["line_type"]],
+                                                                   # edge.color = .[["line_colour"]],
+                                                                   # edge.width = .[["line_width"]],
+                                                                   # node.label.position = 3, # If offset doesn't work
+                                                                   # node.label.offset = c(0.5, -2), # x, y
+                                                                   # title = .[["User"]],
+                                                                   # labels = TRUE,
+                                                                   label.cex = 1.25,
+                                                                   probabilityEdges = TRUE,
+                                                                   edge.labels = TRUE,
+                                                                   curveAll = FALSE,
+                                                                   # minimum = 1/6,
+                                                                   asize = 5,
+                                                                   color = c(viridisLite::plasma(4, 
+                                                                                                       end = 0.8, 
+                                                                                                       direction = -1),
+                                                                                   "gray48", "white"),
+                                                                   label.color = c("black", "black", "white", "white",
+                                                                                   "black", "black"),
+                                                                   filetype = "png",
+                                                                   filename = paste0("./figures/transition_network_", ..2),
+                                                                   mar = c(3, 3, 3, 3) # bottom, left, top, right
+                                                    )))
+
+relative_freq_network <- grid::rasterGrob(png::readPNG("./figures/transition_network_Moti_P10.png"), 
+                                          interpolate = TRUE)
+
+png(filename = "figures/transition_grid_network.png",
+    height = 210*(2/3), width = 297, units = "mm", res = 300)
+cowplot::plot_grid(attractor_plots$relative_freqs_plots[[1]], 
+                                          relative_freq_network, 
+                                          nrow = 1, labels = c("A", "B"))
+dev.off()
+```
+
 
 ```{r rqa-plots-uniform, include = FALSE}
 
