@@ -116,6 +116,96 @@ Note: We use the terms motivational attractor, profile and configuration interch
 
 ---
 
+# Recurrence quantification and recurrence network analysis
+
+As described in the manuscript, to explore the dynamics of a phenomenon while making no assumptions about distributional shapes of observations or their errors, about linearity, or about the time-lags involved, researchers can perform Recurrence Quantification Analysis, which provides a visual intuition about the temporal organisation of a system. There are two flavours of recurrence-based analysis: Recurrence Quantification Analysis (RQA), which quantifies the dynamics and temporal patterns of the states of a system (Marwan et al. 2007) and Recurrence Network Analysis, which quantifies the geometric structure and evolution of the system in a multidimensional state space (Zou et al. 2019).
+
+* Marwan, N., Romano, M. C., Thiel, M., & Kurths, J. (2007). Recurrence plots for the analysis of complex systems. Physics Reports, 438(5), 237–329. https://doi.org/10.1016/j.physrep.2006.11.001
+* Zou, Y., Donner, R. V., Marwan, N., Donges, J. F., & Kurths, J. (2019). Complex network approaches to nonlinear time series analysis. Physics Reports, 787, 1–97. https://doi.org/10.1016/j.physrep.2018.10.005
+
+The first step of the analysis is to plot the data points with their distances to all other data points in a matrix, as shown in the left panel of Figure below. Red cells indicate highly similar values, white cells intermediate ones, and blue cells highly dissimilar values. After this, the distance matrix can be thresholded (as in the right panel of Figure 4) by applying a rule, that binarises each cell into recurring (black) or not (white). The rule in Figure below is "preserve recurrences with absolute distance of 1 or less". 
+
+```{r rqa-pedagogical-distance, out.width='200%', fig.cap = "Left: A distance matrix of a hypothetical time series of length 6: {1, 5, 4, 3, 2, 6}. Red cells indicate highly similar values, white cells intermediate ones, and blue cells highly dissimilar values. Right: A recurrence plot created by thresholding the distance matrix such, that only cells indicating distances of 1 or less are preserved."}
+
+rqa_pedagogical_distance <- magick::image_read("./figures/rqa_pedagogical_distance.png") %>% 
+  magick::image_border(., color = "white", geometry = "20x10")
+
+rqa_pedagogical_thresholded <- magick::image_read("./figures/rqa_pedagogical_thresholded.png") %>% 
+  magick::image_border(., color = "white", geometry = "20x10")
+
+magick::image_append(c(rqa_pedagogical_distance, rqa_pedagogical_thresholded))
+
+# grid::grid.raster(png::readPNG("./figures/rqa_pedagogical_distance.png"))
+
+```
+
+```{r rqa-setup, include = FALSE, eval = FALSE}
+
+# knitr::include_graphics(path = "./figures/rqa_multiplot.png")
+
+emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled %>% 
+  dplyr::mutate(unthresholded = purrr::map(.x = data_firstlast_divided_by_max, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE)))
+
+
+emadata_nested_wrangled_unthresholded <- emadata_nested_wrangled_unthresholded %>% 
+  dplyr::mutate(unthresholded_plot = purrr::map(.x = unthresholded, 
+                                                .f = ~casnet::rp_plot(.x, 
+                                                                      title = "A)",
+                                                                      xlabel = "6-dimensional motivation system",
+                                                                      ylabel = "6-dimensional motivation system",
+                                                                      plotRadiusRRbar = FALSE, 
+                                                                      plotDimensions = TRUE)))
+
+emadata_nested_wrangled_both <- emadata_nested_wrangled_unthresholded %>% 
+  dplyr::mutate(thresholded = purrr::map(.x = data_firstlast_divided_by_max, 
+                                        .f = ~casnet::rp(.x, 
+                                                         doEmbed = FALSE,
+                                                         emRad = NA,
+                                                         doPlot = TRUE,
+                                                         xlabel = " ",
+                                                         ylabel = " ")))
+
+
+
+# At 15 Dec 2019, crqa_rp is deprecated but called by rp_plot when plotMeasures = TRUE. This hack helps:
+crqa_rp <- casnet::rp_measures
+
+emadata_nested_wrangled_both <- emadata_nested_wrangled_both %>% 
+  dplyr::mutate(thresholded_plot = purrr::map(.x = thresholded, 
+                                              .f = ~casnet::rp_plot(.x,
+                                                                    title = "B)",
+                                                                    xlabel = "6-dimensional motivation system",
+                                                                    ylabel = "6-dimensional motivation system",
+                                                                    plotRadiusRRbar = FALSE, 
+                                                                    plotDimensions = TRUE,
+                                                                    plotMeasures = FALSE)))
+
+emadata_nested_wrangled_both_withMeasures <- emadata_nested_wrangled_both %>% 
+  dplyr::mutate(measures = purrr::map(.x = thresholded, 
+                                              .f = ~casnet::rp_measures(.x,
+                                                                        emRad = NA)))
+
+# rqa_plot <- gridExtra::grid.arrange(
+#                         emadata_nested_wrangled_both_withMeasures$unthresholded_plot[[1]],
+#                         emadata_nested_wrangled_both_withMeasures$thresholded_plot[[1]],
+#                         layout_matrix = matrix(c(1, 2),
+#                                                nrow = 1, byrow = FALSE))
+# 
+# cowplot::save_plot("./figures/rqa_biplot.png", rqa_plot, dpi = 300)
+```
+
+While Figure above presents an auto-recurrence plot of a single time series, similar matrices can be used to represent the progression and recurrent states of entire systems over time: Recurrence plots are, in essence, visualisations of (Euclidean) distance matrices, and the distance in a cell can in principle be calculated for an arbitrary number of variables. Figure below presents actual data from one participant, where---instead of single values---the time points consist of configurations of six motivation-related variables (the same as in manuscript's Figure with the time-varying vector autoregressive model). The thresholding rule in the right panel of the plot is "preserve only 5% of the closest configurations", with closeness defined as proximity of coordinates in six-dimensional space. A visual inspection of Figure below shows that the recurrent states mostly happen in the second half of the study period. Quantifying patterns produced by recurrence plots, that is, deriving complexity measures from them, can tell important information about the system the data represents. 
+
+```{r rqa-biplot, fig.height = 3.71, fig.width = 6, fig.cap = "A 6-variable motivation system of a single participant. Panel A depicts an unthresholded distance matrix, where each cell represents a measurement occasion, with red colours indicating the value is close to the corresponding time point on the other axis, while blue colours indicate the contrary, and white implies an intermediate distance. Panel B is a recurrence plot, where this unthresholded plot has been binarised with the rule of retaining only 5% of the closest recurrences. Drawn with R package casnet."}
+
+grid::grid.raster(png::readPNG("./figures/rqa_biplot.png"))
+
+```
+
+Due to the recurrence plot being in essence a distance matrix, they can also be represented as networks, with time points as nodes -- connected by lines if they are close enough to correspond to a configuration observed in some previous time point. 
+
 # Recurrence network demonstration {.tabset}
 
 The participant was beeped 5 times a day for all the questions, during an 8-hour period they determined as their workday -- see [here](https://heinonmatti.github.io/complexity-behchange/dataset-info.html) for details. In order to meet the requirement of approximately equidistant measures as well as possible, in the analysis presented in the manuscript, we chose to only use the first and last observation of the day (when more than 2 time points were available for a given day). 
@@ -529,7 +619,8 @@ emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both
                       theme(legend.position = "none") +
                       labs(y = "Percentage of maximum reported value of variable, across full time series",
                            x = NULL,
-                           title = paste0("Participant \"", ..4, "\" - based on ", ..2, " data points (", ..3, " days)")) +
+                           title = #paste0("Participant \"", ..4, "\" - based on ", ..2, " data points (", ..3, " days)")
+                                   paste0("Temporal motivation profiles - based on ", ..2, " data points (", ..3, " days)")) +
                       facet_wrap(~attractors_n) +
                       coord_flip(ylim = c(0, 1))
                   }
@@ -553,6 +644,124 @@ We can observe four main attractors in the plot. The panel labeled _1st_ shows a
 A few additional attractors can be seen in the _Uncategorised_ panel. These uncharted, weaker profiles (as measured by their frequency and homogeneity), seem to consist of mostly low profiles on the "another wants" dimension. Two profiles seem to be distinguished; one consisting of high values on pleasure, interest and importance, combined with low values on situational requirements and avoiding anxiety or guilt, whereas another uncategorised profile seems to indicate the opposite of these. Tasks vary widely, the modal ones being internal meetings and email.
 
 The _Unique_ panel depicts profiles that cannot be grouped under one of the other configurations, thus deemed to only occur once. These also consist mostly of internal meetings and email. 
+
+### Transition networks 
+
+```{r}
+attractor_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(relative_freqs = purrr::map(.x = all_nodes_with_strengths,
+                                       .f = ~.x %>% 
+                                         tidyr::pivot_wider(names_from = name,
+                                                            values_from = value) %>% 
+                                         dplyr::transmute(previousone = lag(attractors, n = 1),
+                                                          nextone = attractors) %>% 
+                                         dplyr::slice(-1) %>%  
+                                         dplyr::group_by(previousone, nextone) %>% 
+                                         dplyr::summarise(n = n()) %>% 
+                                         dplyr::mutate(freq = n / sum(n)) %>% 
+                                         dplyr::select(-n) %>%
+                                         data.table::dcast(previousone ~ nextone)))
+
+# absolutes <- emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]] %>% 
+#   tidyr::pivot_wider(names_from = name,
+#                      values_from = value) %>% 
+#   dplyr::transmute(current = attractors,
+#                    previous = lag(attractors, n = 1)) %>% 
+#   data.table::dcast(current ~ previous)
+
+attractor_plots <- attractor_plots %>% 
+  dplyr::mutate(relative_freqs_plots = purrr::pmap(list(..1 = relative_freqs,
+                                                        ..2 = User),
+                                                  .f = ~..1 %>% 
+                                                    tidyr::pivot_longer(-previousone,
+                                                                        values_to = "value",
+                                                                        names_to = "nextone") %>% 
+                                                    ggplot(aes(x = previousone,
+                                                               y = nextone)) +
+                                                    geom_tile(aes(fill = value),
+                                                              colour = "black") +
+                                                    geom_text(aes(label = ifelse(is.na(value),
+                                                                                 ".00",
+                                                                                 (gsub("0\\.",
+                                                                                       "\\.",
+                                                                                       (sprintf("%.2f", value))))))) +
+                                                    scale_fill_gradient(low = "white", 
+                                                                        high = "red", 
+                                                                        na.value = "grey",
+                                                                        guide = "none") +
+                                                    theme_bw() +
+                                                    scale_y_discrete(expand = c(0, 0)) +
+                                                    scale_x_discrete(expand = c(0, 0)) +
+                                                    theme(axis.text.x = element_text(angle = 30, hjust = 1),
+                                                          axis.text.y = element_text(angle = 30, hjust = 1),
+                                                          legend.position = "right",
+                                                          legend.title = element_blank()) +
+                                                    coord_equal() +
+                                                    labs(x = "Previous state", y = "Next state",
+                                                         title = paste0(#..2, ": ",
+                                                                        "Transitions between the 6-dimensional states"))))
+
+attractor_plots <- attractor_plots %>% 
+  dplyr::mutate(relative_freqs_networks = purrr::pmap(list(..1 = relative_freqs,
+                                                        ..2 = User),
+                                                  .f = ~..1 %>% 
+                                                    tidyr::pivot_longer(-previousone,
+                                                                        values_to = "value",
+                                                                        names_to = "nextone") %>% 
+                                                    qgraph::qgraph(.,
+                                                                   #layout = "circle",
+                                                                   edgelist = TRUE,
+                                                                   directed = TRUE,
+                                                                   label.scale = FALSE,
+                                                                   trans = TRUE,
+                                                                   layout = "spring",
+                                                                   # lty = .[["line_type"]],
+                                                                   # edge.color = .[["line_colour"]],
+                                                                   # edge.width = .[["line_width"]],
+                                                                   # node.label.position = 3, # If offset doesn't work
+                                                                   # node.label.offset = c(0.5, -2), # x, y
+                                                                   # title = .[["User"]],
+                                                                   # labels = TRUE,
+                                                                   label.cex = 1.25,
+                                                                   probabilityEdges = TRUE,
+                                                                   edge.labels = TRUE,
+                                                                   curveAll = FALSE,
+                                                                   # minimum = 1/6,
+                                                                   asize = 5,
+                                                                   color = c(viridisLite::plasma(4, 
+                                                                                                       end = 0.8, 
+                                                                                                       direction = -1),
+                                                                                   "gray48", "white"),
+                                                                   label.color = c("black", "black", "white", "white",
+                                                                                   "black", "black"),
+                                                                   filetype = "png",
+                                                                   filename = paste0("./figures/transition_network_", ..2),
+                                                                   mar = c(3, 3, 3, 3) # bottom, left, top, right
+                                                    )))
+
+relative_freq_network <- grid::rasterGrob(png::readPNG("./figures/transition_network_Moti_P10.png"), 
+                                          interpolate = TRUE)
+
+knitr::include_graphics("./figures/transition_grid_network.png") 
+
+# png(filename = "figures/transition_grid_network.png",
+#     height = 210*(2/3), width = 297, units = "mm", res = 300)
+# cowplot::plot_grid(attractor_plots$relative_freqs_plots[[1]], 
+#                                           relative_freq_network, 
+#                                           nrow = 1, labels = c("A", "B"))
+# dev.off()
+```
+
+It is also possible to compute a variety of network indices from the transition network.
+
+```{r}
+attractor_plots <- attractor_plots %>% 
+  dplyr::mutate(centralities = purrr::map2(.x = relative_freqs_networks,
+                                           .y = User,
+                                           .f = ~qgraph::centralityPlot(.x, weighted = TRUE, signed = FALSE)))
+
+# attractor_plots$centralities
+```
 
 ## Robustness to recurrence rate
 
@@ -3627,110 +3836,6 @@ emadata_nested_wrangled_both_withMeasures_shuffled <- emadata_nested_wrangled_bo
                                                                         emRad = NA)))
 ```
 
-# Transition networks 
-
-```{r}
-attractor_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
-  dplyr::mutate(relative_freqs = purrr::map(.x = all_nodes_with_strengths,
-                                       .f = ~.x %>% 
-                                         tidyr::pivot_wider(names_from = name,
-                                                            values_from = value) %>% 
-                                         dplyr::transmute(previousone = lag(attractors, n = 1),
-                                                          nextone = attractors) %>% 
-                                         dplyr::slice(-1) %>%  
-                                         dplyr::group_by(previousone, nextone) %>% 
-                                         dplyr::summarise(n = n()) %>% 
-                                         dplyr::mutate(freq = n / sum(n)) %>% 
-                                         dplyr::select(-n) %>%
-                                         data.table::dcast(previousone ~ nextone)))
-
-# absolutes <- emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]] %>% 
-#   tidyr::pivot_wider(names_from = name,
-#                      values_from = value) %>% 
-#   dplyr::transmute(current = attractors,
-#                    previous = lag(attractors, n = 1)) %>% 
-#   data.table::dcast(current ~ previous)
-
-attractor_plots <- attractor_plots %>% 
-  dplyr::mutate(relative_freqs_plots = purrr::pmap(list(..1 = relative_freqs,
-                                                        ..2 = User),
-                                                  .f = ~..1 %>% 
-                                                    tidyr::pivot_longer(-previousone,
-                                                                        values_to = "value",
-                                                                        names_to = "nextone") %>% 
-                                                    ggplot(aes(x = previousone,
-                                                               y = nextone)) +
-                                                    geom_tile(aes(fill = value),
-                                                              colour = "black") +
-                                                    geom_text(aes(label = ifelse(is.na(value),
-                                                                                 ".00",
-                                                                                 (gsub("0\\.",
-                                                                                       "\\.",
-                                                                                       (sprintf("%.2f", value))))))) +
-                                                    scale_fill_gradient(low = "white", 
-                                                                        high = "red", 
-                                                                        na.value = "grey",
-                                                                        guide = "none") +
-                                                    theme_bw() +
-                                                    scale_y_discrete(expand = c(0, 0)) +
-                                                    scale_x_discrete(expand = c(0, 0)) +
-                                                    theme(axis.text.x = element_text(angle = 30, hjust = 1),
-                                                          axis.text.y = element_text(angle = 30, hjust = 1),
-                                                          legend.position = "right",
-                                                          legend.title = element_blank()) +
-                                                    coord_equal() +
-                                                    labs(x = "Previous state", y = "Next state",
-                                                         title = paste0(#..2, ": ",
-                                                                        "Transitions between the 6-dimensional states"))))
-
-attractor_plots <- attractor_plots %>% 
-  dplyr::mutate(relative_freqs_networks = purrr::pmap(list(..1 = relative_freqs,
-                                                        ..2 = User),
-                                                  .f = ~..1 %>% 
-                                                    tidyr::pivot_longer(-previousone,
-                                                                        values_to = "value",
-                                                                        names_to = "nextone") %>% 
-                                                    qgraph::qgraph(.,
-                                                                   #layout = "circle",
-                                                                   edgelist = TRUE,
-                                                                   directed = TRUE,
-                                                                   label.scale = FALSE,
-                                                                   trans = TRUE,
-                                                                   layout = "spring",
-                                                                   # lty = .[["line_type"]],
-                                                                   # edge.color = .[["line_colour"]],
-                                                                   # edge.width = .[["line_width"]],
-                                                                   # node.label.position = 3, # If offset doesn't work
-                                                                   # node.label.offset = c(0.5, -2), # x, y
-                                                                   # title = .[["User"]],
-                                                                   # labels = TRUE,
-                                                                   label.cex = 1.25,
-                                                                   probabilityEdges = TRUE,
-                                                                   edge.labels = TRUE,
-                                                                   curveAll = FALSE,
-                                                                   # minimum = 1/6,
-                                                                   asize = 5,
-                                                                   color = c(viridisLite::plasma(4, 
-                                                                                                       end = 0.8, 
-                                                                                                       direction = -1),
-                                                                                   "gray48", "white"),
-                                                                   label.color = c("black", "black", "white", "white",
-                                                                                   "black", "black"),
-                                                                   filetype = "png",
-                                                                   filename = paste0("./figures/transition_network_", ..2),
-                                                                   mar = c(3, 3, 3, 3) # bottom, left, top, right
-                                                    )))
-
-relative_freq_network <- grid::rasterGrob(png::readPNG("./figures/transition_network_Moti_P10.png"), 
-                                          interpolate = TRUE)
-
-png(filename = "figures/transition_grid_network.png",
-    height = 210*(2/3), width = 297, units = "mm", res = 300)
-cowplot::plot_grid(attractor_plots$relative_freqs_plots[[1]], 
-                                          relative_freq_network, 
-                                          nrow = 1, labels = c("A", "B"))
-dev.off()
-```
 
 
 ```{r rqa-plots-uniform, include = FALSE}
