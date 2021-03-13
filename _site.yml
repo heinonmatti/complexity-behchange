@@ -18,11 +18,13 @@ navbar:
   left:
   - text: About
     href: index.html
-  - text: Manuscript
-    href: https://psyarxiv.com/fxgw4
+  # - text: Manuscript
+  #   href: https://psyarxiv.com/fxgw4
   - text: Assumption tests
     href: assumption-tests.html
-  - text: Recurrence-based Analyses 
+  - text: Recurrence-based analyses 
     href: Recurrence-plots.html
+  - text: Surrogate analysis
+    href: Recurrence-plots-surrogates.html
   - text: Dataset 
     href: dataset-info.html

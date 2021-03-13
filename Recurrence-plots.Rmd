@@ -231,7 +231,8 @@ emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled %>%
                                                                        another_wants), 
                                                   doEmbed = FALSE, 
                                                   weighted = TRUE, 
-                                                  weightedBy = "si", 
+                                                  weightedBy = "si",
+                                                  targetValue = 0.1, 
                                                   emRad = NA)))
 
 emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
@@ -278,13 +279,13 @@ igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$width 
 
 ```
 
-The lengthy code chunk below extracts and marks attractors in the data.
+The lengthy code chunk below extracts and marks attractors in the data. The code first finds the node with largest strength centrality, then classifies all nodes connecting to it as the attractor labelled "1st". Then it looks for the node with second largest strength centrality, _which does not connect to the first_, and labelles all nodes connecting to it as "2nd, and so forth. If the 6-variable configuration could be classified under several attractors, our "algorithm" categorises it under the strongest pattern it connects to.
 
 ```{r firstlast-attractor-extraction}
 # Get number of maximally connected node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets %>% 
-  dplyr::mutate(max_connected_day = purrr::map(.x = graph_from_adjacency,
-                                     .f =  ~which.max(igraph::degree(.x))
+  dplyr::mutate(strongest_day = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~which.max(igraph::strength(.x))
                                      ))
 
 
@@ -299,10 +300,7 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                   purrr::map2(.x = data_firstlast_divided_by_max,
                               .y = graph_from_adjacency,
                               .f = ~{
-                                data.frame(.x %>% 
-                                             dplyr::select(#autonomy, competence, relatedness,
-                                                                       pleasure, interest, importance,
-                                                                       situation_requires, anxiety_guilt_avoidance, another_wants), 
+                                data.frame(.x, 
                                            strength = igraph::strength(.y)) %>% 
                                   dplyr::mutate(time = dplyr::row_number()) %>% 
                                   tidyr::pivot_longer(cols = c(-strength, -time))
@@ -312,7 +310,7 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
 # Extract nodes (i.e. times) which connect to the strongest (i.e. most connected) node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_strongest = purrr::map2(.x = list_of_edges,
-                                                      .y = max_connected_day,
+                                                      .y = strongest_day,
                                                       .f = ~{
                                                         .x %>% dplyr::filter(from == .y | to == .y) %>% 
                                                           dplyr::arrange(weight) %>% 
@@ -337,15 +335,16 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
+
 # Get number of 2nd maximally connected node, which doesn't connect to the 1st
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(secondary_attractor_day = purrr::map2(.x = graph_from_adjacency,
                                                       .y = connecting_to_strongest,
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(.x), 
-                                                                   time = 1:length(igraph::degree(.x))) %>% 
+                                                        data.frame(strength = igraph::strength(.x), 
+                                                                   time = 1:length(igraph::strength(.x))) %>% 
                                                           dplyr::filter(!time %in% .y) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -386,11 +385,11 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -425,27 +424,25 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
-
-
-# Get number of 4th maximally connected node, which doesn't connect to the 1st or second
+# Get number of 4th maximally connected node, which doesn't connect to the 1st, 2nd, or 3rd
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(fourth_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest,
                                                       ..4 = connecting_to_3rd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3, 
                                                                         !time %in% ..4) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
   ))
 
-# Extract nodes (i.e. times) which connect to the 3rd strongest node
+# Extract nodes (i.e. times) which connect to the 4th strongest node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_4th_strongest = purrr::map2(.x = list_of_edges,
                                                       .y = fourth_attractor_day,
@@ -744,28 +741,17 @@ relative_freq_network <- grid::rasterGrob(png::readPNG("./figures/transition_net
 
 knitr::include_graphics("./figures/transition_grid_network.png") 
 
-# png(filename = "figures/transition_grid_network.png",
-#     height = 210*(2/3), width = 297, units = "mm", res = 300)
-# cowplot::plot_grid(attractor_plots$relative_freqs_plots[[1]], 
-#                                           relative_freq_network, 
-#                                           nrow = 1, labels = c("A", "B"))
-# dev.off()
-```
-
-It is also possible to compute a variety of network indices from the transition network.
-
-```{r}
-attractor_plots <- attractor_plots %>% 
-  dplyr::mutate(centralities = purrr::map2(.x = relative_freqs_networks,
-                                           .y = User,
-                                           .f = ~qgraph::centralityPlot(.x, weighted = TRUE, signed = FALSE)))
-
-# attractor_plots$centralities
+png(filename = "figures/transition_grid_network.png",
+    height = 210*(2/3), width = 297, units = "mm", res = 300)
+cowplot::plot_grid(attractor_plots$relative_freqs_plots[[1]],
+                                          relative_freq_network,
+                                          nrow = 1, labels = c("A", "B"))
+dev.off()
 ```
 
 ## Robustness to recurrence rate
 
-Here we perform the same analysis, but with recurrence rate of 0.10 instead of 0.05.
+Here we perform the same analysis, but with recurrence rate of 0.05 instead of 0.10.
 
 Here's the 6-dimensional motivation system's recurrence plot, weighted by similarity.
 
@@ -786,7 +772,7 @@ emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled %>%
                                                   weighted = TRUE, 
                                                   weightedBy = "si", 
                                                   emRad = NA,
-                                                  targetValue = 0.10)))
+                                                  targetValue = 0.05)))
 
 emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
   dplyr::mutate(graph_from_adjacency = purrr::map(.x = RN,
@@ -837,8 +823,8 @@ The lengthy code chunk below extracts and marks attractors in the data.
 ```{r firstlast-attractor-extraction-rr}
 # Get number of maximally connected node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets %>% 
-  dplyr::mutate(max_connected_day = purrr::map(.x = graph_from_adjacency,
-                                     .f =  ~which.max(igraph::degree(.x))
+  dplyr::mutate(strongest_day = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~which.max(igraph::strength(.x))
                                      ))
 
 
@@ -853,10 +839,7 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                   purrr::map2(.x = data_firstlast_divided_by_max,
                               .y = graph_from_adjacency,
                               .f = ~{
-                                data.frame(.x %>% 
-                                             dplyr::select(#autonomy, competence, relatedness,
-                                                                       pleasure, interest, importance,
-                                                                       situation_requires, anxiety_guilt_avoidance, another_wants), 
+                                data.frame(.x, 
                                            strength = igraph::strength(.y)) %>% 
                                   dplyr::mutate(time = dplyr::row_number()) %>% 
                                   tidyr::pivot_longer(cols = c(-strength, -time))
@@ -866,7 +849,7 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
 # Extract nodes (i.e. times) which connect to the strongest (i.e. most connected) node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_strongest = purrr::map2(.x = list_of_edges,
-                                                      .y = max_connected_day,
+                                                      .y = strongest_day,
                                                       .f = ~{
                                                         .x %>% dplyr::filter(from == .y | to == .y) %>% 
                                                           dplyr::arrange(weight) %>% 
@@ -891,15 +874,16 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
+
 # Get number of 2nd maximally connected node, which doesn't connect to the 1st
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(secondary_attractor_day = purrr::map2(.x = graph_from_adjacency,
                                                       .y = connecting_to_strongest,
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(.x), 
-                                                                   time = 1:length(igraph::degree(.x))) %>% 
+                                                        data.frame(strength = igraph::strength(.x), 
+                                                                   time = 1:length(igraph::strength(.x))) %>% 
                                                           dplyr::filter(!time %in% .y) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -940,11 +924,11 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -979,27 +963,25 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
-
-
-# Get number of 4th maximally connected node, which doesn't connect to the 1st or second
+# Get number of 4th maximally connected node, which doesn't connect to the 1st, 2nd, or 3rd
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(fourth_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest,
                                                       ..4 = connecting_to_3rd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3, 
                                                                         !time %in% ..4) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
   ))
 
-# Extract nodes (i.e. times) which connect to the 3rd strongest node
+# Extract nodes (i.e. times) which connect to the 4th strongest node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_4th_strongest = purrr::map2(.x = list_of_edges,
                                                       .y = fourth_attractor_day,
@@ -1263,8 +1245,8 @@ The lengthy code chunk below extracts and marks attractors in the data.
 ```{r}
 # Get number of maximally connected node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets %>% 
-  dplyr::mutate(max_connected_day = purrr::map(.x = graph_from_adjacency,
-                                     .f =  ~which.max(igraph::degree(.x))
+  dplyr::mutate(strongest_day = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~which.max(igraph::strength(.x))
                                      ))
 
 
@@ -1281,8 +1263,8 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                               .f = ~{
                                 data.frame(.x %>% 
                                              dplyr::select(#autonomy, competence, relatedness,
-                                                                       pleasure, interest, importance,
-                                                                       situation_requires, anxiety_guilt_avoidance, another_wants), 
+                                               pleasure, interest, importance,
+                                               situation_requires, anxiety_guilt_avoidance, another_wants), 
                                            strength = igraph::strength(.y)) %>% 
                                   dplyr::mutate(time = dplyr::row_number()) %>% 
                                   tidyr::pivot_longer(cols = c(-strength, -time))
@@ -1292,7 +1274,7 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
 # Extract nodes (i.e. times) which connect to the strongest (i.e. most connected) node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_strongest = purrr::map2(.x = list_of_edges,
-                                                      .y = max_connected_day,
+                                                      .y = strongest_day,
                                                       .f = ~{
                                                         .x %>% dplyr::filter(from == .y | to == .y) %>% 
                                                           dplyr::arrange(weight) %>% 
@@ -1317,15 +1299,16 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
+
 # Get number of 2nd maximally connected node, which doesn't connect to the 1st
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(secondary_attractor_day = purrr::map2(.x = graph_from_adjacency,
                                                       .y = connecting_to_strongest,
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(.x), 
-                                                                   time = 1:length(igraph::degree(.x))) %>% 
+                                                        data.frame(strength = igraph::strength(.x), 
+                                                                   time = 1:length(igraph::strength(.x))) %>% 
                                                           dplyr::filter(!time %in% .y) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -1366,11 +1349,11 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -1405,27 +1388,25 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
-
-
-# Get number of 4th maximally connected node, which doesn't connect to the 1st or second
+# Get number of 4th maximally connected node, which doesn't connect to the 1st, 2nd, or 3rd
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(fourth_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest,
                                                       ..4 = connecting_to_3rd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3, 
                                                                         !time %in% ..4) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
   ))
 
-# Extract nodes (i.e. times) which connect to the 3rd strongest node
+# Extract nodes (i.e. times) which connect to the 4th strongest node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_4th_strongest = purrr::map2(.x = list_of_edges,
                                                       .y = fourth_attractor_day,
@@ -1681,8 +1662,8 @@ The lengthy code chunk below extracts and marks attractors in the data.
 ```{r}
 # Get number of maximally connected node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets %>% 
-  dplyr::mutate(max_connected_day = purrr::map(.x = graph_from_adjacency,
-                                     .f =  ~which.max(igraph::degree(.x))
+  dplyr::mutate(strongest_day = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~which.max(igraph::strength(.x))
                                      ))
 
 
@@ -1699,8 +1680,8 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                               .f = ~{
                                 data.frame(.x %>% 
                                              dplyr::select(#autonomy, competence, relatedness,
-                                                                       pleasure, interest, importance,
-                                                                       situation_requires, anxiety_guilt_avoidance, another_wants), 
+                                               pleasure, interest, importance,
+                                               situation_requires, anxiety_guilt_avoidance, another_wants), 
                                            strength = igraph::strength(.y)) %>% 
                                   dplyr::mutate(time = dplyr::row_number()) %>% 
                                   tidyr::pivot_longer(cols = c(-strength, -time))
@@ -1710,7 +1691,7 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
 # Extract nodes (i.e. times) which connect to the strongest (i.e. most connected) node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_strongest = purrr::map2(.x = list_of_edges,
-                                                      .y = max_connected_day,
+                                                      .y = strongest_day,
                                                       .f = ~{
                                                         .x %>% dplyr::filter(from == .y | to == .y) %>% 
                                                           dplyr::arrange(weight) %>% 
@@ -1735,15 +1716,16 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
+
 # Get number of 2nd maximally connected node, which doesn't connect to the 1st
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(secondary_attractor_day = purrr::map2(.x = graph_from_adjacency,
                                                       .y = connecting_to_strongest,
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(.x), 
-                                                                   time = 1:length(igraph::degree(.x))) %>% 
+                                                        data.frame(strength = igraph::strength(.x), 
+                                                                   time = 1:length(igraph::strength(.x))) %>% 
                                                           dplyr::filter(!time %in% .y) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -1784,11 +1766,11 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -1823,27 +1805,25 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
-
-
-# Get number of 4th maximally connected node, which doesn't connect to the 1st or second
+# Get number of 4th maximally connected node, which doesn't connect to the 1st, 2nd, or 3rd
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(fourth_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest,
                                                       ..4 = connecting_to_3rd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3, 
                                                                         !time %in% ..4) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
   ))
 
-# Extract nodes (i.e. times) which connect to the 3rd strongest node
+# Extract nodes (i.e. times) which connect to the 4th strongest node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_4th_strongest = purrr::map2(.x = list_of_edges,
                                                       .y = fourth_attractor_day,
@@ -2099,8 +2079,8 @@ The lengthy code chunk below extracts and marks attractors in the data.
 ```{r}
 # Get number of maximally connected node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets %>% 
-  dplyr::mutate(max_connected_day = purrr::map(.x = graph_from_adjacency,
-                                     .f =  ~which.max(igraph::degree(.x))
+  dplyr::mutate(strongest_day = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~which.max(igraph::strength(.x))
                                      ))
 
 
@@ -2117,8 +2097,8 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                               .f = ~{
                                 data.frame(.x %>% 
                                              dplyr::select(#autonomy, competence, relatedness,
-                                                                       pleasure, interest, importance,
-                                                                       situation_requires, anxiety_guilt_avoidance, another_wants), 
+                                               pleasure, interest, importance,
+                                               situation_requires, anxiety_guilt_avoidance, another_wants), 
                                            strength = igraph::strength(.y)) %>% 
                                   dplyr::mutate(time = dplyr::row_number()) %>% 
                                   tidyr::pivot_longer(cols = c(-strength, -time))
@@ -2128,7 +2108,7 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
 # Extract nodes (i.e. times) which connect to the strongest (i.e. most connected) node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_strongest = purrr::map2(.x = list_of_edges,
-                                                      .y = max_connected_day,
+                                                      .y = strongest_day,
                                                       .f = ~{
                                                         .x %>% dplyr::filter(from == .y | to == .y) %>% 
                                                           dplyr::arrange(weight) %>% 
@@ -2153,15 +2133,16 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
+
 # Get number of 2nd maximally connected node, which doesn't connect to the 1st
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(secondary_attractor_day = purrr::map2(.x = graph_from_adjacency,
                                                       .y = connecting_to_strongest,
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(.x), 
-                                                                   time = 1:length(igraph::degree(.x))) %>% 
+                                                        data.frame(strength = igraph::strength(.x), 
+                                                                   time = 1:length(igraph::strength(.x))) %>% 
                                                           dplyr::filter(!time %in% .y) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -2202,11 +2183,11 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -2241,27 +2222,25 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
-
-
-# Get number of 4th maximally connected node, which doesn't connect to the 1st or second
+# Get number of 4th maximally connected node, which doesn't connect to the 1st, 2nd, or 3rd
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(fourth_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest,
                                                       ..4 = connecting_to_3rd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3, 
                                                                         !time %in% ..4) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
   ))
 
-# Extract nodes (i.e. times) which connect to the 3rd strongest node
+# Extract nodes (i.e. times) which connect to the 4th strongest node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_4th_strongest = purrr::map2(.x = list_of_edges,
                                                       .y = fourth_attractor_day,
@@ -2517,8 +2496,8 @@ The lengthy code chunk below extracts and marks attractors in the data.
 ```{r}
 # Get number of maximally connected node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets %>% 
-  dplyr::mutate(max_connected_day = purrr::map(.x = graph_from_adjacency,
-                                     .f =  ~which.max(igraph::degree(.x))
+  dplyr::mutate(strongest_day = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~which.max(igraph::strength(.x))
                                      ))
 
 
@@ -2535,8 +2514,8 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                               .f = ~{
                                 data.frame(.x %>% 
                                              dplyr::select(#autonomy, competence, relatedness,
-                                                                       pleasure, interest, importance,
-                                                                       situation_requires, anxiety_guilt_avoidance, another_wants), 
+                                               pleasure, interest, importance,
+                                               situation_requires, anxiety_guilt_avoidance, another_wants), 
                                            strength = igraph::strength(.y)) %>% 
                                   dplyr::mutate(time = dplyr::row_number()) %>% 
                                   tidyr::pivot_longer(cols = c(-strength, -time))
@@ -2546,7 +2525,7 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
 # Extract nodes (i.e. times) which connect to the strongest (i.e. most connected) node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_strongest = purrr::map2(.x = list_of_edges,
-                                                      .y = max_connected_day,
+                                                      .y = strongest_day,
                                                       .f = ~{
                                                         .x %>% dplyr::filter(from == .y | to == .y) %>% 
                                                           dplyr::arrange(weight) %>% 
@@ -2571,15 +2550,16 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
+
 # Get number of 2nd maximally connected node, which doesn't connect to the 1st
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(secondary_attractor_day = purrr::map2(.x = graph_from_adjacency,
                                                       .y = connecting_to_strongest,
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(.x), 
-                                                                   time = 1:length(igraph::degree(.x))) %>% 
+                                                        data.frame(strength = igraph::strength(.x), 
+                                                                   time = 1:length(igraph::strength(.x))) %>% 
                                                           dplyr::filter(!time %in% .y) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -2620,11 +2600,11 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -2659,27 +2639,25 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
-
-
-# Get number of 4th maximally connected node, which doesn't connect to the 1st or second
+# Get number of 4th maximally connected node, which doesn't connect to the 1st, 2nd, or 3rd
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(fourth_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest,
                                                       ..4 = connecting_to_3rd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3, 
                                                                         !time %in% ..4) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
   ))
 
-# Extract nodes (i.e. times) which connect to the 3rd strongest node
+# Extract nodes (i.e. times) which connect to the 4th strongest node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_4th_strongest = purrr::map2(.x = list_of_edges,
                                                       .y = fourth_attractor_day,
@@ -2935,8 +2913,8 @@ The lengthy code chunk below extracts and marks attractors in the data.
 ```{r}
 # Get number of maximally connected node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets %>% 
-  dplyr::mutate(max_connected_day = purrr::map(.x = graph_from_adjacency,
-                                     .f =  ~which.max(igraph::degree(.x))
+  dplyr::mutate(strongest_day = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~which.max(igraph::strength(.x))
                                      ))
 
 
@@ -2953,8 +2931,8 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                               .f = ~{
                                 data.frame(.x %>% 
                                              dplyr::select(#autonomy, competence, relatedness,
-                                                                       pleasure, interest, importance,
-                                                                       situation_requires, anxiety_guilt_avoidance, another_wants), 
+                                               pleasure, interest, importance,
+                                               situation_requires, anxiety_guilt_avoidance, another_wants), 
                                            strength = igraph::strength(.y)) %>% 
                                   dplyr::mutate(time = dplyr::row_number()) %>% 
                                   tidyr::pivot_longer(cols = c(-strength, -time))
@@ -2964,7 +2942,7 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
 # Extract nodes (i.e. times) which connect to the strongest (i.e. most connected) node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_strongest = purrr::map2(.x = list_of_edges,
-                                                      .y = max_connected_day,
+                                                      .y = strongest_day,
                                                       .f = ~{
                                                         .x %>% dplyr::filter(from == .y | to == .y) %>% 
                                                           dplyr::arrange(weight) %>% 
@@ -2989,15 +2967,16 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
+
 # Get number of 2nd maximally connected node, which doesn't connect to the 1st
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(secondary_attractor_day = purrr::map2(.x = graph_from_adjacency,
                                                       .y = connecting_to_strongest,
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(.x), 
-                                                                   time = 1:length(igraph::degree(.x))) %>% 
+                                                        data.frame(strength = igraph::strength(.x), 
+                                                                   time = 1:length(igraph::strength(.x))) %>% 
                                                           dplyr::filter(!time %in% .y) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -3038,11 +3017,11 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
@@ -3077,27 +3056,25 @@ emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recne
                                                        }
   ))
 
-
-
-# Get number of 4th maximally connected node, which doesn't connect to the 1st or second
+# Get number of 4th maximally connected node, which doesn't connect to the 1st, 2nd, or 3rd
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(fourth_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
                                                       ..2 = connecting_to_strongest,
                                                       ..3 = connecting_to_2nd_strongest,
                                                       ..4 = connecting_to_3rd_strongest),
                                                       .f =  ~{
-                                                        data.frame(degree = igraph::degree(..1), 
-                                                                   time = 1:length(igraph::degree(..1))) %>% 
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
                                                           dplyr::filter(!time %in% ..2, 
                                                                         !time %in% ..3, 
                                                                         !time %in% ..4) %>% 
-                                                          dplyr::arrange(desc(degree)) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
                                                           dplyr::slice(1) %>% 
                                                           dplyr::pull(time)
                                                       }                                                    
   ))
 
-# Extract nodes (i.e. times) which connect to the 3rd strongest node
+# Extract nodes (i.e. times) which connect to the 4th strongest node
 emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
   dplyr::mutate(connecting_to_4th_strongest = purrr::map2(.x = list_of_edges,
                                                       .y = fourth_attractor_day,
@@ -3307,7 +3284,7 @@ emadata_nested_wrangled_both_recnets_nodes_plots$data_extremes[[4]]$own_question
 #   nrow()
 
 # Binarise task variable into 1/0
-task_n_by_date <- emadata_nested_wrangled_both_recnets_nodes_plots$
+task_n_by_date <- firstlast_emadata_nested_wrangled_both_recnets_nodes_plots$
                     data_firstlast_divided_by_max_with_tasks_and_dates[[1]]  %>% 
   dplyr::mutate(value = 1,
                 col_temp = paste0("task_", task)) %>%
@@ -3397,7 +3374,7 @@ taskdata_full %>%
   
 ```
 
-We can see, that no task consistently falls in one attractor. On the other hand, e.g. _Email_ is absent from 1st, 2nd and 4th attractor, and _Providing training_ does not appear in the 1st or 3rd. In the case of the latter, it might be due to the low number of observations, i.e. had more data been collected, Providing training could have exhibited new motivation profiles.
+We can see, that no task consistently falls in one attractor.
 
 $~$
 
@@ -4070,3 +4047,4 @@ pander::pander(sessionInfo())
 ```
 
 <!-- </div> -->
+

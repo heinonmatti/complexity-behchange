@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Surrogate data analysis</title>
+
+<script src="site_libs/header-attrs-2.5/header-attrs.js"></script>
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/accessible-code-block-0.0.1/empty-anchor.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 66px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h2 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h3 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h4 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h5 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h6 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Complexity in behaviour change</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">About</a>
+</li>
+<li>
+  <a href="assumption-tests.html">Assumption tests</a>
+</li>
+<li>
+  <a href="Recurrence-plots.html">Recurrence-based analyses</a>
+</li>
+<li>
+  <a href="Recurrence-plots-surrogates.html">Surrogate analysis</a>
+</li>
+<li>
+  <a href="dataset-info.html">Dataset</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Surrogate data analysis</h1>
+
+</div>
+
+
+<!-- <div style="line-height: 1.7em;"> -->
+<p>This document presents an investigation into how the results differ from patterns derived from random data.</p>
+<p>Some code involving data preprocessing is omitted here for clarity of presentation. It can be found in the source code for this document, <a href="https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/Recurrence-plots-surrogates.Rmd">here</a>.</p>
+<!-- Below is the same graph for each surrogate data series. -->
+<p>Here is the figure depicting the attractor patterns found in the main analysis:</p>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/attractor-plots-1.png" width="2100" /></p>
+<div id="surrogate-data-analysis" class="section level1">
+<h1>Surrogate data analysis</h1>
+<p>Surrogate data analysis is a method for testing hypotheses about temporal structure in time series data. We use the Amplitude Adjusted Fourier Transform to create surrogate data. This data is a transformation of the original time series; a shuffled version, which in the case of Amplitude Adjusted Fourier Transform also attempts to preserve certain properties such as the original autocorrelation function while destroying any non-linear temporal structure.</p>
+<p>Comparing the results from real data against surrogates, hence allows us to answer the question “Would it be common for this analysis to find patterns from data where none exist?”</p>
+<!-- ### Strongest patterns in same plot -->
+</div>
+<div id="comparing-surrogates-to-observed-data" class="section level1">
+<h1>Comparing surrogates to observed data</h1>
+<p>The next figure depicts the minimums and maximums of the previous figure as bounds for the attractors. Overlaid in grey are the results where the same analysis has been applied to the 19 surrogate participants (i.e. the original data shuffled while retaining some linear properties such as autocovariance).</p>
+<p>Our classification rule categorises any pattern which could belong to several attractors, as belonging to the strongest one – hence there are more classified as the first than the second, more in second than the third, and so on. We can readily observe, that the grey lines do not match the bounds very well. This means that the original attractors are not commonly observed in data without non-linear structure.</p>
+<p>Each of the 19 surrogate participants have 87 configurations (i.e. time points) of six variables, making the total number of grey lines 1653.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>minmax_test &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">minmax =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> all_nodes_with_strengths,</span>
+<span id="cb1-3"><a href="#cb1-3"></a>                                    <span class="dt">.f =</span> <span class="op">~</span>.x <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="st">                                      </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(name, attractors) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="st">                                      </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">min_or_max =</span> dplyr<span class="op">::</span><span class="kw">case_when</span>(value <span class="op">==</span><span class="st"> </span><span class="kw">min</span>(value) <span class="op">~</span><span class="st"> &quot;mini&quot;</span>,</span>
+<span id="cb1-6"><a href="#cb1-6"></a>                                                                                  value <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(value) <span class="op">~</span><span class="st"> &quot;maxi&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="st">                                      </span>dplyr<span class="op">::</span><span class="kw">select</span>(name, value, min_or_max, attractors) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="st">                                      </span>dplyr<span class="op">::</span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(min_or_max)) <span class="op">%&gt;%</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="st">                                      </span>dplyr<span class="op">::</span><span class="kw">distinct</span>(value, <span class="dt">.keep_all =</span> <span class="ot">TRUE</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="st">                                      </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="st">                                      </span>tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> min_or_max,</span>
+<span id="cb1-12"><a href="#cb1-12"></a>                                                         <span class="dt">values_from =</span> value) <span class="op">%&gt;%</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="st">                                      </span>dplyr<span class="op">::</span><span class="kw">arrange</span>(attractors, name)))</span>
+<span id="cb1-14"><a href="#cb1-14"></a></span>
+<span id="cb1-15"><a href="#cb1-15"></a>datalists &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>all_nodes_with_strengths[<span class="dv">2</span><span class="op">:</span><span class="kw">nrow</span>(emadata_nested_wrangled_both_recnets_nodes_plots)] </span>
+<span id="cb1-16"><a href="#cb1-16"></a></span>
+<span id="cb1-17"><a href="#cb1-17"></a>surrogate_data &lt;-<span class="st">  </span></span>
+<span id="cb1-18"><a href="#cb1-18"></a><span class="st">  </span>purrr<span class="op">::</span><span class="kw">imap</span>(<span class="dt">.x =</span> datalists, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate</span>(.x, </span>
+<span id="cb1-19"><a href="#cb1-19"></a>                                             <span class="dt">case =</span> .y,</span>
+<span id="cb1-20"><a href="#cb1-20"></a>                                             <span class="dt">time_case =</span> <span class="kw">paste0</span>(time, <span class="st">&quot;_&quot;</span>, .y)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-21"><a href="#cb1-21"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(attractors) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-22"><a href="#cb1-22"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">filter</span>(strength <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(strength)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-23"><a href="#cb1-23"></a><span class="st">    </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-24"><a href="#cb1-24"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">bind_rows</span>()</span>
+<span id="cb1-25"><a href="#cb1-25"></a></span>
+<span id="cb1-26"><a href="#cb1-26"></a>surrogate_data_all &lt;-<span class="st">  </span></span>
+<span id="cb1-27"><a href="#cb1-27"></a><span class="st">  </span>purrr<span class="op">::</span><span class="kw">imap</span>(<span class="dt">.x =</span> datalists, <span class="op">~</span>dplyr<span class="op">::</span><span class="kw">mutate</span>(.x, </span>
+<span id="cb1-28"><a href="#cb1-28"></a>                                             <span class="dt">case =</span> .y,</span>
+<span id="cb1-29"><a href="#cb1-29"></a>                                             <span class="dt">time_case =</span> <span class="kw">paste0</span>(time, <span class="st">&quot;_&quot;</span>, .y))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-30"><a href="#cb1-30"></a><span class="st">                </span>dplyr<span class="op">::</span><span class="kw">bind_rows</span>()</span>
+<span id="cb1-31"><a href="#cb1-31"></a></span>
+<span id="cb1-32"><a href="#cb1-32"></a>minmax_test<span class="op">$</span>minmax[[<span class="dv">1</span>]] <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-33"><a href="#cb1-33"></a><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> forcats<span class="op">::</span><span class="kw">fct_rev</span>(name),</span>
+<span id="cb1-34"><a href="#cb1-34"></a>             <span class="dt">color =</span> attractors,</span>
+<span id="cb1-35"><a href="#cb1-35"></a>             <span class="dt">group =</span> attractors)) <span class="op">+</span></span>
+<span id="cb1-36"><a href="#cb1-36"></a><span class="st">      </span><span class="kw">geom_ribbon</span>(<span class="dt">data =</span> minmax_test<span class="op">$</span>minmax[[<span class="dv">1</span>]],</span>
+<span id="cb1-37"><a href="#cb1-37"></a>              <span class="kw">aes</span>(<span class="dt">ymin =</span> mini,</span>
+<span id="cb1-38"><a href="#cb1-38"></a>                  <span class="dt">ymax =</span> maxi,</span>
+<span id="cb1-39"><a href="#cb1-39"></a>                  <span class="dt">fill =</span> attractors),</span>
+<span id="cb1-40"><a href="#cb1-40"></a>              <span class="dt">alpha =</span> <span class="dv">1</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb1-41"><a href="#cb1-41"></a><span class="st">  </span><span class="kw">geom_line</span>(<span class="dt">data =</span> surrogate_data_all,</span>
+<span id="cb1-42"><a href="#cb1-42"></a>            <span class="co"># combined_data %&gt;%</span></span>
+<span id="cb1-43"><a href="#cb1-43"></a>            <span class="co"># tidyr::pivot_longer(cols = c(interest, pleasure, importance,</span></span>
+<span id="cb1-44"><a href="#cb1-44"></a>            <span class="co">#                              situation_requires, anxiety_guilt_avoidance, another_wants)) %&gt;%</span></span>
+<span id="cb1-45"><a href="#cb1-45"></a>            <span class="co"># dplyr::filter(within_bounds == &quot;Surrogates within bounds&quot;),</span></span>
+<span id="cb1-46"><a href="#cb1-46"></a>            <span class="kw">aes</span>(<span class="dt">y =</span> value,</span>
+<span id="cb1-47"><a href="#cb1-47"></a>                <span class="dt">x =</span> forcats<span class="op">::</span><span class="kw">fct_rev</span>(name),</span>
+<span id="cb1-48"><a href="#cb1-48"></a>                <span class="dt">group =</span> time_case),</span>
+<span id="cb1-49"><a href="#cb1-49"></a>            <span class="dt">alpha =</span> <span class="fl">0.05</span>,</span>
+<span id="cb1-50"><a href="#cb1-50"></a>            <span class="dt">size =</span> <span class="fl">0.75</span>,</span>
+<span id="cb1-51"><a href="#cb1-51"></a>            <span class="dt">colour =</span> <span class="st">&quot;grey&quot;</span>) <span class="op">+</span></span>
+<span id="cb1-52"><a href="#cb1-52"></a><span class="st">  </span><span class="kw">scale_fill_manual</span>(<span class="dt">values =</span> <span class="kw">c</span>(viridisLite<span class="op">::</span><span class="kw">plasma</span>(<span class="dv">4</span>, </span>
+<span id="cb1-53"><a href="#cb1-53"></a>                                                   <span class="dt">end =</span> <span class="fl">0.8</span>, </span>
+<span id="cb1-54"><a href="#cb1-54"></a>                                                   <span class="dt">direction =</span> <span class="dv">-1</span>), </span>
+<span id="cb1-55"><a href="#cb1-55"></a>                               <span class="st">&quot;gray40&quot;</span>, <span class="st">&quot;gray50&quot;</span>)) <span class="op">+</span></span>
+<span id="cb1-56"><a href="#cb1-56"></a><span class="st">  </span><span class="kw">scale_color_manual</span>(<span class="dt">values =</span> <span class="kw">c</span>(viridisLite<span class="op">::</span><span class="kw">plasma</span>(<span class="dv">4</span>, </span>
+<span id="cb1-57"><a href="#cb1-57"></a>                                                    <span class="dt">end =</span> <span class="fl">0.8</span>, </span>
+<span id="cb1-58"><a href="#cb1-58"></a>                                                    <span class="dt">direction =</span> <span class="dv">-1</span>), </span>
+<span id="cb1-59"><a href="#cb1-59"></a>                                <span class="st">&quot;gray40&quot;</span>, <span class="st">&quot;gray50&quot;</span>)) <span class="op">+</span></span>
+<span id="cb1-60"><a href="#cb1-60"></a><span class="st">  </span><span class="co"># geom_point(data = surrogate_data_all %&gt;% dplyr::filter(time_case == &quot;45_1&quot;) %&gt;%</span></span>
+<span id="cb1-61"><a href="#cb1-61"></a><span class="st">  </span><span class="co">#              dplyr::mutate(attractors = as.character(&quot;4th&quot;)),</span></span>
+<span id="cb1-62"><a href="#cb1-62"></a><span class="st">  </span><span class="co">#            aes(x = forcats::fct_rev(name),</span></span>
+<span id="cb1-63"><a href="#cb1-63"></a><span class="st">  </span><span class="co">#                y = value,</span></span>
+<span id="cb1-64"><a href="#cb1-64"></a><span class="st">  </span><span class="co">#                size = 2,</span></span>
+<span id="cb1-65"><a href="#cb1-65"></a><span class="st">  </span><span class="co">#                alpha = 1),</span></span>
+<span id="cb1-66"><a href="#cb1-66"></a><span class="st">  </span><span class="co">#            shape = 8,</span></span>
+<span id="cb1-67"><a href="#cb1-67"></a><span class="st">  </span><span class="co">#            colour = &quot;black&quot;) +</span></span>
+<span id="cb1-68"><a href="#cb1-68"></a><span class="st">  </span><span class="kw">coord_flip</span>(<span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)) <span class="op">+</span></span>
+<span id="cb1-69"><a href="#cb1-69"></a><span class="st">  </span><span class="kw">theme_bw</span>() <span class="op">+</span></span>
+<span id="cb1-70"><a href="#cb1-70"></a><span class="st">  </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;none&quot;</span>) <span class="op">+</span></span>
+<span id="cb1-71"><a href="#cb1-71"></a><span class="st">  </span><span class="kw">labs</span>(<span class="dt">y =</span> <span class="ot">NULL</span>,</span>
+<span id="cb1-72"><a href="#cb1-72"></a>       <span class="dt">x =</span> <span class="ot">NULL</span>) <span class="op">+</span></span>
+<span id="cb1-73"><a href="#cb1-73"></a><span class="st">  </span><span class="kw">facet_wrap</span>(<span class="op">~</span>attractors)</span></code></pre></div>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-1-1.png" width="2100" /></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2"></a>df_minmax &lt;-<span class="st"> </span>minmax_test<span class="op">$</span>minmax[[<span class="dv">1</span>]] <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(attractors) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="st">  </span>tidyr<span class="op">::</span><span class="kw">nest</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">data =</span> purrr<span class="op">::</span><span class="kw">map2</span>(<span class="dt">.x =</span> data,</span>
+<span id="cb2-6"><a href="#cb2-6"></a>                                   <span class="dt">.y =</span> attractors,</span>
+<span id="cb2-7"><a href="#cb2-7"></a>                                     <span class="dt">.f =</span> <span class="op">~</span>.x <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb2-8"><a href="#cb2-8"></a><span class="st">                                     </span><span class="kw">setNames</span>(<span class="kw">paste0</span>(<span class="kw">names</span>(.), <span class="st">&quot;_&quot;</span>, .y))))</span>
+<span id="cb2-9"><a href="#cb2-9"></a></span>
+<span id="cb2-10"><a href="#cb2-10"></a>real_data_bounds &lt;-<span class="st"> </span>dplyr<span class="op">::</span><span class="kw">bind_cols</span>(df_minmax<span class="op">$</span>data)</span>
+<span id="cb2-11"><a href="#cb2-11"></a></span>
+<span id="cb2-12"><a href="#cb2-12"></a><span class="co"># real_data_bounds %&gt;% dplyr::select_if(is.numeric)</span></span></code></pre></div>
+<p>In the next table, these results are quantified. Recall that each pattern is clustered within the “surrogate person”. Some number of these configurations fit within the bounds of each of the attractors derived from the original data: If this number significantly differs from the numbers observed in the real data, we can infer that the observed configurations tap into non-linear temporal structure instead of randomness alone.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>surrogate_data_all_cleaned &lt;-<span class="st"> </span>surrogate_data_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(time, name, value, case, time_case, attractors, strength) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="st">  </span>tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> name,</span>
+<span id="cb3-4"><a href="#cb3-4"></a>                     <span class="dt">values_from =</span> value)</span>
+<span id="cb3-5"><a href="#cb3-5"></a>  </span>
+<span id="cb3-6"><a href="#cb3-6"></a>real_data &lt;-<span class="st"> </span>minmax_test<span class="op">$</span>minmax[[<span class="dv">1</span>]] <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="st">  </span>tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> name,</span>
+<span id="cb3-8"><a href="#cb3-8"></a>                     <span class="dt">values_from =</span> <span class="kw">c</span>(mini, maxi),</span>
+<span id="cb3-9"><a href="#cb3-9"></a>                     )</span>
+<span id="cb3-10"><a href="#cb3-10"></a>  </span>
+<span id="cb3-11"><a href="#cb3-11"></a>combined_data &lt;-<span class="st"> </span>dplyr<span class="op">::</span><span class="kw">full_join</span>(surrogate_data_all_cleaned, real_data, <span class="dt">by =</span> <span class="st">&quot;attractors&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb3-12"><a href="#cb3-12"></a><span class="st">  </span><span class="kw">rowwise</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">within_bounds =</span> dplyr<span class="op">::</span><span class="kw">case_when</span>(pleasure <span class="op">&lt;=</span><span class="st"> </span>maxi_pleasure <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb3-14"><a href="#cb3-14"></a><span class="st">                                                   </span>pleasure <span class="op">&gt;=</span><span class="st"> </span>mini_pleasure <span class="op">&amp;</span></span>
+<span id="cb3-15"><a href="#cb3-15"></a><span class="st">                                                  </span>interest <span class="op">&lt;=</span><span class="st"> </span>maxi_interest <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb3-16"><a href="#cb3-16"></a><span class="st">                                                   </span>interest <span class="op">&gt;=</span><span class="st"> </span>mini_interest <span class="op">&amp;</span></span>
+<span id="cb3-17"><a href="#cb3-17"></a><span class="st">                                                  </span>importance <span class="op">&lt;=</span><span class="st"> </span>maxi_importance <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb3-18"><a href="#cb3-18"></a><span class="st">                                                   </span>importance <span class="op">&gt;=</span><span class="st"> </span>mini_importance <span class="op">&amp;</span></span>
+<span id="cb3-19"><a href="#cb3-19"></a><span class="st">                                                  </span>situation_requires <span class="op">&lt;=</span><span class="st"> </span>maxi_situation_requires <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb3-20"><a href="#cb3-20"></a><span class="st">                                                   </span>situation_requires <span class="op">&gt;=</span><span class="st"> </span>mini_situation_requires <span class="op">&amp;</span></span>
+<span id="cb3-21"><a href="#cb3-21"></a><span class="st">                                                  </span>anxiety_guilt_avoidance <span class="op">&lt;=</span><span class="st"> </span>maxi_anxiety_guilt_avoidance <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb3-22"><a href="#cb3-22"></a><span class="st">                                                   </span>anxiety_guilt_avoidance <span class="op">&gt;=</span><span class="st"> </span>mini_anxiety_guilt_avoidance <span class="op">&amp;</span></span>
+<span id="cb3-23"><a href="#cb3-23"></a><span class="st">                                                  </span>another_wants <span class="op">&lt;=</span><span class="st"> </span>maxi_another_wants <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb3-24"><a href="#cb3-24"></a><span class="st">                                                   </span>another_wants <span class="op">&gt;=</span><span class="st"> </span>mini_another_wants <span class="op">~</span><span class="st"> &quot;Surrogates within bounds&quot;</span>,</span>
+<span id="cb3-25"><a href="#cb3-25"></a>                                                 <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> &quot;Surrogates out of bounds&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb3-26"><a href="#cb3-26"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a></span>
+<span id="cb4-2"><a href="#cb4-2"></a>attractor_prevalence_table_<span class="dv">1</span> &lt;-<span class="st"> </span>surrogate_data_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="st">  </span><span class="co"># dplyr::group_by(attractors) %&gt;% </span></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">count</span>(attractors,</span>
+<span id="cb4-5"><a href="#cb4-5"></a>               <span class="dt">name =</span> <span class="st">&quot;n in surrogates&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-6"><a href="#cb4-6"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="st">`</span><span class="dt">Proportion in surrogates</span><span class="st">`</span> =<span class="st"> </span>(<span class="st">`</span><span class="dt">n in surrogates</span><span class="st">`</span><span class="op">/</span><span class="kw">sum</span>(<span class="st">`</span><span class="dt">n in surrogates</span><span class="st">`</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-7"><a href="#cb4-7"></a><span class="st">                  </span><span class="kw">round</span>(., <span class="dt">digits =</span> <span class="dv">2</span>))</span>
+<span id="cb4-8"><a href="#cb4-8"></a></span>
+<span id="cb4-9"><a href="#cb4-9"></a>attractor_prevalence_table2 &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>all_nodes_with_strengths[[<span class="dv">1</span>]] <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-10"><a href="#cb4-10"></a><span class="st">  </span>tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> name,</span>
+<span id="cb4-11"><a href="#cb4-11"></a>                     <span class="dt">values_from =</span> value) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-12"><a href="#cb4-12"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">count</span>(attractors, <span class="dt">name =</span> <span class="st">&quot;n in real data&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-13"><a href="#cb4-13"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="st">`</span><span class="dt">Proportion in real data</span><span class="st">`</span> =<span class="st"> </span>(<span class="st">`</span><span class="dt">n in real data</span><span class="st">`</span><span class="op">/</span><span class="kw">sum</span>(<span class="st">`</span><span class="dt">n in real data</span><span class="st">`</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-14"><a href="#cb4-14"></a><span class="st">                  </span><span class="kw">round</span>(., <span class="dt">digits =</span> <span class="dv">2</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-15"><a href="#cb4-15"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(<span class="op">-</span>attractors)</span>
+<span id="cb4-16"><a href="#cb4-16"></a></span>
+<span id="cb4-17"><a href="#cb4-17"></a><span class="co"># dplyr::bind_cols(attractor_prevalence_table_1, attractor_prevalence_table2) %&gt;% </span></span>
+<span id="cb4-18"><a href="#cb4-18"></a><span class="co">#   knitr::kable()</span></span>
+<span id="cb4-19"><a href="#cb4-19"></a></span>
+<span id="cb4-20"><a href="#cb4-20"></a>surrogate_data_all_cleaned &lt;-<span class="st"> </span>surrogate_data_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-21"><a href="#cb4-21"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(time, name, value, case, time_case, attractors, strength) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-22"><a href="#cb4-22"></a><span class="st">  </span>tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> name,</span>
+<span id="cb4-23"><a href="#cb4-23"></a>                     <span class="dt">values_from =</span> value)</span>
+<span id="cb4-24"><a href="#cb4-24"></a>  </span>
+<span id="cb4-25"><a href="#cb4-25"></a>real_data &lt;-<span class="st"> </span>minmax_test<span class="op">$</span>minmax[[<span class="dv">1</span>]] <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb4-26"><a href="#cb4-26"></a><span class="st">  </span>tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> name,</span>
+<span id="cb4-27"><a href="#cb4-27"></a>                     <span class="dt">values_from =</span> <span class="kw">c</span>(mini, maxi),</span>
+<span id="cb4-28"><a href="#cb4-28"></a>                     )</span>
+<span id="cb4-29"><a href="#cb4-29"></a></span>
+<span id="cb4-30"><a href="#cb4-30"></a><span class="co">########## MINMAX table with proportions of patterns in attractors, compared to real data</span></span>
+<span id="cb4-31"><a href="#cb4-31"></a><span class="co"># surrogate_data_all %&gt;% </span></span>
+<span id="cb4-32"><a href="#cb4-32"></a><span class="co">#   dplyr::group_by(attractors, case) %&gt;% </span></span>
+<span id="cb4-33"><a href="#cb4-33"></a><span class="co">#   tidyr::pivot_wider(names_from = name,</span></span>
+<span id="cb4-34"><a href="#cb4-34"></a><span class="co">#                      values_from = value) %&gt;% </span></span>
+<span id="cb4-35"><a href="#cb4-35"></a><span class="co">#   dplyr::summarise(`n in surrogates` = n()) %&gt;% </span></span>
+<span id="cb4-36"><a href="#cb4-36"></a><span class="co">#   dplyr::group_by(case) %&gt;% </span></span>
+<span id="cb4-37"><a href="#cb4-37"></a><span class="co">#   dplyr::mutate(`Proportion in surrogates` = (`n in surrogates`/sum(`n in surrogates`)) %&gt;% </span></span>
+<span id="cb4-38"><a href="#cb4-38"></a><span class="co">#                   round(., digits = 2)) %&gt;% </span></span>
+<span id="cb4-39"><a href="#cb4-39"></a><span class="co">#   dplyr::group_by(attractors) %&gt;% </span></span>
+<span id="cb4-40"><a href="#cb4-40"></a><span class="co">#   dplyr::summarise(`Min proportion in surrogates`= min(`Proportion in surrogates`),</span></span>
+<span id="cb4-41"><a href="#cb4-41"></a><span class="co">#                    `Max proportion in surrogates`= max(`Proportion in surrogates`)) %&gt;% </span></span>
+<span id="cb4-42"><a href="#cb4-42"></a><span class="co">#   dplyr::bind_cols(., attractor_prevalence_table2) %&gt;% </span></span>
+<span id="cb4-43"><a href="#cb4-43"></a><span class="co">#   knitr::kable()</span></span></code></pre></div>
+<p>Table below shows, how many of the surrogate configurations would fit the bounds of each observed attractor. The results give credence to the proposal that the attractors observed in real data (first row) indeed tap into temporal information in the time series.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>df &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">patterns =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> data_firstlast_divided_by_max,</span>
+<span id="cb5-3"><a href="#cb5-3"></a>                                      <span class="dt">.f =</span> <span class="op">~</span>.x <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="st">                                        </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">time =</span> dplyr<span class="op">::</span><span class="kw">row_number</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="st">                                        </span>tidyr<span class="op">::</span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="op">-</span>time) <span class="op">%&gt;%</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="st">                                        </span>tidyr<span class="op">::</span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> time,</span>
+<span id="cb5-7"><a href="#cb5-7"></a>                                                           <span class="dt">values_from =</span> value)),</span>
+<span id="cb5-8"><a href="#cb5-8"></a>                <span class="dt">real_data_bounds =</span> <span class="kw">rep</span>(<span class="kw">list</span>(real_data_bounds <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">select_if</span>(is.numeric)),</span>
+<span id="cb5-9"><a href="#cb5-9"></a>                                       <span class="kw">nrow</span>(emadata_nested_wrangled_both_recnets_nodes_plots)),</span>
+<span id="cb5-10"><a href="#cb5-10"></a>                ) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-11"><a href="#cb5-11"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(User, real_data_bounds, patterns)</span>
+<span id="cb5-12"><a href="#cb5-12"></a></span>
+<span id="cb5-13"><a href="#cb5-13"></a>df_attractors_within_bounds &lt;-<span class="st"> </span>df <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-14"><a href="#cb5-14"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">inside_1st =</span> purrr<span class="op">::</span><span class="kw">map2_dbl</span>(<span class="dt">.x =</span> real_data_bounds,</span>
+<span id="cb5-15"><a href="#cb5-15"></a>                                             <span class="dt">.y =</span> patterns,</span>
+<span id="cb5-16"><a href="#cb5-16"></a>                                             <span class="dt">.f =</span> <span class="op">~</span><span class="kw">as_tibble</span>(.x[[<span class="st">&quot;maxi_1st&quot;</span>]] <span class="op">&gt;=</span><span class="st"> </span>.y <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb5-17"><a href="#cb5-17"></a><span class="st">                                                               </span>.x[[<span class="st">&quot;mini_1st&quot;</span>]] <span class="op">&lt;=</span><span class="st"> </span>.y) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-18"><a href="#cb5-18"></a><span class="st">                                               </span><span class="co"># Result is a vector of 6 TRUE/FALSE values per timepoint</span></span>
+<span id="cb5-19"><a href="#cb5-19"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="dt">.cols =</span> <span class="op">-</span>name, </span>
+<span id="cb5-20"><a href="#cb5-20"></a>                                                                       <span class="op">~</span><span class="kw">all</span>(.))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-21"><a href="#cb5-21"></a><span class="st">                                               </span><span class="co"># Result is just one value per timepoint, TRUE if all within bounds</span></span>
+<span id="cb5-22"><a href="#cb5-22"></a><span class="st">                                               </span>tidyr<span class="op">::</span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="kw">everything</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-23"><a href="#cb5-23"></a><span class="st">                                               </span><span class="co"># Result is a data frame with columns for timepoint and TRUE/FALSE value</span></span>
+<span id="cb5-24"><a href="#cb5-24"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="dt">n =</span> <span class="kw">sum</span>(value)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-25"><a href="#cb5-25"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">pull</span>(n)),</span>
+<span id="cb5-26"><a href="#cb5-26"></a>                <span class="dt">inside_2nd =</span> purrr<span class="op">::</span><span class="kw">map2_dbl</span>(<span class="dt">.x =</span> real_data_bounds,</span>
+<span id="cb5-27"><a href="#cb5-27"></a>                                             <span class="dt">.y =</span> patterns,</span>
+<span id="cb5-28"><a href="#cb5-28"></a>                                             <span class="dt">.f =</span> <span class="op">~</span><span class="kw">as_tibble</span>(.x[[<span class="st">&quot;maxi_2nd&quot;</span>]] <span class="op">&gt;=</span><span class="st"> </span>.y <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb5-29"><a href="#cb5-29"></a><span class="st">                                                               </span>.x[[<span class="st">&quot;mini_2nd&quot;</span>]] <span class="op">&lt;=</span><span class="st"> </span>.y) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-30"><a href="#cb5-30"></a><span class="st">                                               </span><span class="co"># Result is a vector of 6 TRUE/FALSE values per timepoint</span></span>
+<span id="cb5-31"><a href="#cb5-31"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="dt">.cols =</span> <span class="op">-</span>name, </span>
+<span id="cb5-32"><a href="#cb5-32"></a>                                                                       <span class="op">~</span><span class="kw">all</span>(.))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-33"><a href="#cb5-33"></a><span class="st">                                               </span><span class="co"># Result is just one value per timepoint, TRUE if all within bounds</span></span>
+<span id="cb5-34"><a href="#cb5-34"></a><span class="st">                                               </span>tidyr<span class="op">::</span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="kw">everything</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-35"><a href="#cb5-35"></a><span class="st">                                               </span><span class="co"># Result is a data frame with columns for timepoint and TRUE/FALSE value</span></span>
+<span id="cb5-36"><a href="#cb5-36"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="dt">n =</span> <span class="kw">sum</span>(value)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-37"><a href="#cb5-37"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">pull</span>(n)),</span>
+<span id="cb5-38"><a href="#cb5-38"></a>                <span class="dt">inside_3rd =</span> purrr<span class="op">::</span><span class="kw">map2_dbl</span>(<span class="dt">.x =</span> real_data_bounds,</span>
+<span id="cb5-39"><a href="#cb5-39"></a>                                             <span class="dt">.y =</span> patterns,</span>
+<span id="cb5-40"><a href="#cb5-40"></a>                                             <span class="dt">.f =</span> <span class="op">~</span><span class="kw">as_tibble</span>(.x[[<span class="st">&quot;maxi_3rd&quot;</span>]] <span class="op">&gt;=</span><span class="st"> </span>.y <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb5-41"><a href="#cb5-41"></a><span class="st">                                                               </span>.x[[<span class="st">&quot;mini_3rd&quot;</span>]] <span class="op">&lt;=</span><span class="st"> </span>.y) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-42"><a href="#cb5-42"></a><span class="st">                                               </span><span class="co"># Result is a vector of 6 TRUE/FALSE values per timepoint</span></span>
+<span id="cb5-43"><a href="#cb5-43"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="dt">.cols =</span> <span class="op">-</span>name, </span>
+<span id="cb5-44"><a href="#cb5-44"></a>                                                                       <span class="op">~</span><span class="kw">all</span>(.))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-45"><a href="#cb5-45"></a><span class="st">                                               </span><span class="co"># Result is just one value per timepoint, TRUE if all within bounds</span></span>
+<span id="cb5-46"><a href="#cb5-46"></a><span class="st">                                               </span>tidyr<span class="op">::</span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="kw">everything</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-47"><a href="#cb5-47"></a><span class="st">                                               </span><span class="co"># Result is a data frame with columns for timepoint and TRUE/FALSE value</span></span>
+<span id="cb5-48"><a href="#cb5-48"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="dt">n =</span> <span class="kw">sum</span>(value)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-49"><a href="#cb5-49"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">pull</span>(n)),</span>
+<span id="cb5-50"><a href="#cb5-50"></a>                <span class="dt">inside_4th =</span> purrr<span class="op">::</span><span class="kw">map2_dbl</span>(<span class="dt">.x =</span> real_data_bounds,</span>
+<span id="cb5-51"><a href="#cb5-51"></a>                                             <span class="dt">.y =</span> patterns,</span>
+<span id="cb5-52"><a href="#cb5-52"></a>                                             <span class="dt">.f =</span> <span class="op">~</span><span class="kw">as_tibble</span>(.x[[<span class="st">&quot;maxi_4th&quot;</span>]] <span class="op">&gt;=</span><span class="st"> </span>.y <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb5-53"><a href="#cb5-53"></a><span class="st">                                                               </span>.x[[<span class="st">&quot;mini_4th&quot;</span>]] <span class="op">&lt;=</span><span class="st"> </span>.y) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-54"><a href="#cb5-54"></a><span class="st">                                               </span><span class="co"># Result is a vector of 6 TRUE/FALSE values per timepoint</span></span>
+<span id="cb5-55"><a href="#cb5-55"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="dt">.cols =</span> <span class="op">-</span>name, </span>
+<span id="cb5-56"><a href="#cb5-56"></a>                                                                       <span class="op">~</span><span class="kw">all</span>(.))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-57"><a href="#cb5-57"></a><span class="st">                                               </span><span class="co"># Result is just one value per timepoint, TRUE if all within bounds</span></span>
+<span id="cb5-58"><a href="#cb5-58"></a><span class="st">                                               </span>tidyr<span class="op">::</span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="kw">everything</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-59"><a href="#cb5-59"></a><span class="st">                                               </span><span class="co"># Result is a data frame with columns for timepoint and TRUE/FALSE value</span></span>
+<span id="cb5-60"><a href="#cb5-60"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="dt">n =</span> <span class="kw">sum</span>(value)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-61"><a href="#cb5-61"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">pull</span>(n)),</span>
+<span id="cb5-62"><a href="#cb5-62"></a>                <span class="dt">inside_Uncategorised =</span> purrr<span class="op">::</span><span class="kw">map2_dbl</span>(<span class="dt">.x =</span> real_data_bounds,</span>
+<span id="cb5-63"><a href="#cb5-63"></a>                                             <span class="dt">.y =</span> patterns,</span>
+<span id="cb5-64"><a href="#cb5-64"></a>                                             <span class="dt">.f =</span> <span class="op">~</span><span class="kw">as_tibble</span>(.x[[<span class="st">&quot;maxi_Uncategorised&quot;</span>]] <span class="op">&gt;=</span><span class="st"> </span>.y <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb5-65"><a href="#cb5-65"></a><span class="st">                                                               </span>.x[[<span class="st">&quot;mini_Uncategorised&quot;</span>]] <span class="op">&lt;=</span><span class="st"> </span>.y) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-66"><a href="#cb5-66"></a><span class="st">                                               </span><span class="co"># Result is a vector of 6 TRUE/FALSE values per timepoint</span></span>
+<span id="cb5-67"><a href="#cb5-67"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="dt">.cols =</span> <span class="op">-</span>name, </span>
+<span id="cb5-68"><a href="#cb5-68"></a>                                                                       <span class="op">~</span><span class="kw">all</span>(.))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-69"><a href="#cb5-69"></a><span class="st">                                               </span><span class="co"># Result is just one value per timepoint, TRUE if all within bounds</span></span>
+<span id="cb5-70"><a href="#cb5-70"></a><span class="st">                                               </span>tidyr<span class="op">::</span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="kw">everything</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-71"><a href="#cb5-71"></a><span class="st">                                               </span><span class="co"># Result is a data frame with columns for timepoint and TRUE/FALSE value</span></span>
+<span id="cb5-72"><a href="#cb5-72"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="dt">n =</span> <span class="kw">sum</span>(value)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-73"><a href="#cb5-73"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">pull</span>(n)),</span>
+<span id="cb5-74"><a href="#cb5-74"></a>                <span class="dt">inside_Unique =</span> purrr<span class="op">::</span><span class="kw">map2_dbl</span>(<span class="dt">.x =</span> real_data_bounds,</span>
+<span id="cb5-75"><a href="#cb5-75"></a>                                             <span class="dt">.y =</span> patterns,</span>
+<span id="cb5-76"><a href="#cb5-76"></a>                                             <span class="dt">.f =</span> <span class="op">~</span><span class="kw">as_tibble</span>(.x[[<span class="st">&quot;maxi_Unique&quot;</span>]] <span class="op">&gt;=</span><span class="st"> </span>.y <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb5-77"><a href="#cb5-77"></a><span class="st">                                                               </span>.x[[<span class="st">&quot;mini_Unique&quot;</span>]] <span class="op">&lt;=</span><span class="st"> </span>.y) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-78"><a href="#cb5-78"></a><span class="st">                                               </span><span class="co"># Result is a vector of 6 TRUE/FALSE values per timepoint</span></span>
+<span id="cb5-79"><a href="#cb5-79"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="dt">.cols =</span> <span class="op">-</span>name, </span>
+<span id="cb5-80"><a href="#cb5-80"></a>                                                                       <span class="op">~</span><span class="kw">all</span>(.))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-81"><a href="#cb5-81"></a><span class="st">                                               </span><span class="co"># Result is just one value per timepoint, TRUE if all within bounds</span></span>
+<span id="cb5-82"><a href="#cb5-82"></a><span class="st">                                               </span>tidyr<span class="op">::</span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="kw">everything</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-83"><a href="#cb5-83"></a><span class="st">                                               </span><span class="co"># Result is a data frame with columns for timepoint and TRUE/FALSE value</span></span>
+<span id="cb5-84"><a href="#cb5-84"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="dt">n =</span> <span class="kw">sum</span>(value)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-85"><a href="#cb5-85"></a><span class="st">                                               </span>dplyr<span class="op">::</span><span class="kw">pull</span>(n)))</span>
+<span id="cb5-86"><a href="#cb5-86"></a></span>
+<span id="cb5-87"><a href="#cb5-87"></a>attractor_table_per_person &lt;-<span class="st"> </span>df_attractors_within_bounds <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-88"><a href="#cb5-88"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(<span class="op">-</span>real_data_bounds,</span>
+<span id="cb5-89"><a href="#cb5-89"></a>                <span class="op">-</span>patterns,</span>
+<span id="cb5-90"><a href="#cb5-90"></a>                <span class="op">-</span>inside_Uncategorised,</span>
+<span id="cb5-91"><a href="#cb5-91"></a>                <span class="op">-</span>inside_Unique) </span>
+<span id="cb5-92"><a href="#cb5-92"></a></span>
+<span id="cb5-93"><a href="#cb5-93"></a>attractor_table_per_person <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb5-94"><a href="#cb5-94"></a><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>()</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">User</th>
+<th align="right">inside_1st</th>
+<th align="right">inside_2nd</th>
+<th align="right">inside_3rd</th>
+<th align="right">inside_4th</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Moti_P10</td>
+<td align="right">19</td>
+<td align="right">18</td>
+<td align="right">11</td>
+<td align="right">10</td>
+</tr>
+<tr class="even">
+<td align="left">Moti_P10_surrogate1</td>
+<td align="right">2</td>
+<td align="right">8</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Moti_P10_surrogate2</td>
+<td align="right">3</td>
+<td align="right">5</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Moti_P10_surrogate3</td>
+<td align="right">4</td>
+<td align="right">7</td>
+<td align="right">2</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">Moti_P10_surrogate4</td>
+<td align="right">2</td>
+<td align="right">6</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Moti_P10_surrogate5</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="right">2</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">Moti_P10_surrogate6</td>
+<td align="right">1</td>
+<td align="right">6</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Moti_P10_surrogate7</td>
+<td align="right">2</td>
+<td align="right">6</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Moti_P10_surrogate8</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Moti_P10_surrogate9</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">Moti_P10_surrogate10</td>
+<td align="right">4</td>
+<td align="right">9</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Moti_P10_surrogate11</td>
+<td align="right">4</td>
+<td align="right">6</td>
+<td align="right">2</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Moti_P10_surrogate12</td>
+<td align="right">1</td>
+<td align="right">5</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Moti_P10_surrogate13</td>
+<td align="right">0</td>
+<td align="right">8</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Moti_P10_surrogate14</td>
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">Moti_P10_surrogate15</td>
+<td align="right">2</td>
+<td align="right">6</td>
+<td align="right">1</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">Moti_P10_surrogate16</td>
+<td align="right">2</td>
+<td align="right">4</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Moti_P10_surrogate17</td>
+<td align="right">4</td>
+<td align="right">4</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Moti_P10_surrogate18</td>
+<td align="right">2</td>
+<td align="right">7</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">Moti_P10_surrogate19</td>
+<td align="right">0</td>
+<td align="right">9</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>Taking the averages of the columns above, excluding the real data (first row), we can observe the following:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>attractor_table_summary &lt;-<span class="st"> </span>attractor_table_per_person <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">filter</span>(stringr<span class="op">::</span><span class="kw">str_detect</span>(<span class="dt">string =</span> User,</span>
+<span id="cb6-3"><a href="#cb6-3"></a>                                    <span class="dt">pattern =</span> <span class="st">&quot;surrogate&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="kw">where</span>(is.numeric), <span class="op">~</span><span class="kw">mean</span>(.) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">round</span>(., <span class="dt">digits =</span> <span class="dv">3</span>)))</span>
+<span id="cb6-5"><a href="#cb6-5"></a></span>
+<span id="cb6-6"><a href="#cb6-6"></a>attractor_table_summary <span class="op">%&gt;%</span><span class="st"> </span>knitr<span class="op">::</span><span class="kw">kable</span>()</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="right">inside_1st</th>
+<th align="right">inside_2nd</th>
+<th align="right">inside_3rd</th>
+<th align="right">inside_4th</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1.895</td>
+<td align="right">5.789</td>
+<td align="right">0.632</td>
+<td align="right">0.368</td>
+</tr>
+</tbody>
+</table>
+<p>We find that, for example, on average 1.895 out of 87 surrogate time points would depict a pattern where all 6 values fit within the bounds of what was identified as the first attractor.</p>
+<p>To gain insight into why this happens, we can examine the radius which defines whether a value is deemed “recurring” or not in the recurrence plot. We chose this radius such, that 10% of the points on the plot recur. In the figure below, we can observe that when the same analysis is conducted on data stripped of non-linear structure, the radius required to achieve the aforementioned recurrence rate is vastly larger.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>purrr<span class="op">::</span><span class="kw">map</span>(emadata_nested_wrangled_both_recnets<span class="op">$</span>RN, </span>
+<span id="cb7-2"><a href="#cb7-2"></a>           <span class="op">~</span><span class="st"> </span>base<span class="op">::</span><span class="kw">attr</span>(., <span class="st">&quot;emRad&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="st">             </span>tibble<span class="op">::</span><span class="kw">as_tibble</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">bind_rows</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">User =</span> emadata_nested_wrangled_both_recnets<span class="op">$</span>User,</span>
+<span id="cb7-6"><a href="#cb7-6"></a>                <span class="dt">surrogate =</span> dplyr<span class="op">::</span><span class="kw">case_when</span>(stringr<span class="op">::</span><span class="kw">str_detect</span>(</span>
+<span id="cb7-7"><a href="#cb7-7"></a>                                                <span class="dt">string =</span> User,</span>
+<span id="cb7-8"><a href="#cb7-8"></a>                                                <span class="dt">pattern =</span> <span class="st">&quot;surrogate&quot;</span>) <span class="op">~</span><span class="st"> &quot;Surrogate datasets&quot;</span>,</span>
+<span id="cb7-9"><a href="#cb7-9"></a>                                                <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> &quot;Real dataset&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb7-10"><a href="#cb7-10"></a><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">y =</span> value,</span>
+<span id="cb7-11"><a href="#cb7-11"></a>             <span class="dt">x =</span> User)) <span class="op">+</span></span>
+<span id="cb7-12"><a href="#cb7-12"></a><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span></span>
+<span id="cb7-13"><a href="#cb7-13"></a><span class="st">  </span><span class="kw">geom_segment</span>(<span class="kw">aes</span>(<span class="dt">y =</span> <span class="dv">0</span>, </span>
+<span id="cb7-14"><a href="#cb7-14"></a>                   <span class="dt">x =</span> User, </span>
+<span id="cb7-15"><a href="#cb7-15"></a>                   <span class="dt">yend =</span> value, </span>
+<span id="cb7-16"><a href="#cb7-16"></a>                   <span class="dt">xend =</span> User), </span>
+<span id="cb7-17"><a href="#cb7-17"></a>               <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>) <span class="op">+</span></span>
+<span id="cb7-18"><a href="#cb7-18"></a><span class="st">  </span><span class="co"># geom_vline(xintercept = 1.5) +</span></span>
+<span id="cb7-19"><a href="#cb7-19"></a><span class="st">  </span><span class="kw">theme_bw</span>() <span class="op">+</span></span>
+<span id="cb7-20"><a href="#cb7-20"></a><span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="ot">NULL</span>,</span>
+<span id="cb7-21"><a href="#cb7-21"></a>       <span class="dt">y =</span> <span class="ot">NULL</span>,</span>
+<span id="cb7-22"><a href="#cb7-22"></a>       <span class="dt">title =</span> <span class="kw">paste0</span>(<span class="st">&quot;Radius required to produce &quot;</span>, scales<span class="op">::</span><span class="kw">percent</span>(recurrence_rate), <span class="st">&quot; recurrence rate&quot;</span>)) <span class="op">+</span></span>
+<span id="cb7-23"><a href="#cb7-23"></a><span class="st">  </span><span class="kw">theme</span>(<span class="dt">panel.grid.minor.x =</span> <span class="kw">element_blank</span>(),</span>
+<span id="cb7-24"><a href="#cb7-24"></a>        <span class="dt">panel.grid.major.x =</span> <span class="kw">element_blank</span>(),</span>
+<span id="cb7-25"><a href="#cb7-25"></a>        <span class="dt">axis.ticks.x =</span> <span class="kw">element_blank</span>(),</span>
+<span id="cb7-26"><a href="#cb7-26"></a>        <span class="dt">axis.text.x =</span> <span class="kw">element_blank</span>()) <span class="op">+</span></span>
+<span id="cb7-27"><a href="#cb7-27"></a><span class="st">  </span><span class="kw">facet_grid</span>(<span class="op">~</span>surrogate, <span class="dt">scales =</span> <span class="st">&quot;free_x&quot;</span>)</span></code></pre></div>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-8-1.png" width="2100" /></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>  <span class="co"># facet_wrap(~surrogate)</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a></span>
+<span id="cb8-3"><a href="#cb8-3"></a>  </span></code></pre></div>
+</div>
+<div id="strength-vs.-degree" class="section level1">
+<h1>Strength vs. degree</h1>
+<p>It is also interesting to examine, whether the relationship between node degree (i.e. how many times the configuration at a particular time point is deemed to recur) and strength centrality. Strength centrality in this context means a node’s degree weighted by the configuration’s similarity to those states it’s deemed recurrent with.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>strength_degree &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">strength_degree_data =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> all_nodes_with_strengths,</span>
+<span id="cb9-3"><a href="#cb9-3"></a>                                                  <span class="dt">.f =</span> <span class="op">~</span>.x <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="st">                                                    </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(time) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="st">                                                    </span>dplyr<span class="op">::</span><span class="kw">slice</span>(<span class="dv">1</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="st">                                                    </span>dplyr<span class="op">::</span><span class="kw">ungroup</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="st">                                                    </span>dplyr<span class="op">::</span><span class="kw">select</span>(strength,</span>
+<span id="cb9-8"><a href="#cb9-8"></a>                                                                  degree)),</span>
+<span id="cb9-9"><a href="#cb9-9"></a>                <span class="dt">spearman_strength_degree =</span> purrr<span class="op">::</span><span class="kw">map</span>(<span class="dt">.x =</span> strength_degree_data,</span>
+<span id="cb9-10"><a href="#cb9-10"></a>                                                      <span class="dt">.f=</span> <span class="op">~</span><span class="kw">cor</span>(.x, <span class="dt">method =</span> <span class="st">&quot;pearson&quot;</span>)[<span class="dv">2</span>] <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="st">                                                        </span><span class="kw">round</span>(., <span class="dt">digits =</span> <span class="dv">4</span>)),</span>
+<span id="cb9-12"><a href="#cb9-12"></a>                <span class="dt">strength_degree_plot =</span> purrr<span class="op">::</span><span class="kw">pmap</span>(<span class="kw">list</span>(<span class="dt">..1 =</span> strength_degree_data,</span>
+<span id="cb9-13"><a href="#cb9-13"></a>                                                        <span class="dt">..2 =</span> User,</span>
+<span id="cb9-14"><a href="#cb9-14"></a>                                                        <span class="dt">..3 =</span> spearman_strength_degree),</span>
+<span id="cb9-15"><a href="#cb9-15"></a>                                                  <span class="dt">.f =</span> <span class="op">~</span>.x <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-16"><a href="#cb9-16"></a><span class="st">                                                    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> strength, </span>
+<span id="cb9-17"><a href="#cb9-17"></a>                                                               <span class="dt">y =</span> degree)) <span class="op">+</span></span>
+<span id="cb9-18"><a href="#cb9-18"></a><span class="st">                                                    </span><span class="kw">geom_point</span>() <span class="op">+</span></span>
+<span id="cb9-19"><a href="#cb9-19"></a><span class="st">                                                    </span><span class="kw">theme_bw</span>() <span class="op">+</span></span>
+<span id="cb9-20"><a href="#cb9-20"></a><span class="st">                                                    </span><span class="kw">labs</span>(<span class="dt">title =</span> ..<span class="dv">2</span>,</span>
+<span id="cb9-21"><a href="#cb9-21"></a>                                                         <span class="dt">caption =</span> <span class="kw">paste0</span>(<span class="st">&quot;Spearman correlation: &quot;</span>, ..<span class="dv">3</span>))))</span>
+<span id="cb9-22"><a href="#cb9-22"></a></span>
+<span id="cb9-23"><a href="#cb9-23"></a><span class="co"># strength_degree$strength_degree_plot</span></span>
+<span id="cb9-24"><a href="#cb9-24"></a></span>
+<span id="cb9-25"><a href="#cb9-25"></a>strength_degree <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-26"><a href="#cb9-26"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(User, spearman_strength_degree) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-27"><a href="#cb9-27"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">spearman_strength_degree =</span> purrr<span class="op">::</span><span class="kw">map_dbl</span>(<span class="dt">.x =</span> spearman_strength_degree,</span>
+<span id="cb9-28"><a href="#cb9-28"></a>                                                          <span class="dt">.f =</span> <span class="op">~</span>.x)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-29"><a href="#cb9-29"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">surrogate =</span> dplyr<span class="op">::</span><span class="kw">case_when</span>(stringr<span class="op">::</span><span class="kw">str_detect</span>(<span class="dt">string =</span> User,</span>
+<span id="cb9-30"><a href="#cb9-30"></a>                                                                 <span class="dt">pattern =</span> <span class="st">&quot;surrogate&quot;</span>) <span class="op">~</span><span class="st"> &quot;Surrogate datasets&quot;</span>,</span>
+<span id="cb9-31"><a href="#cb9-31"></a>                                             <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> &quot;Real dataset&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-32"><a href="#cb9-32"></a><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">y =</span> spearman_strength_degree,</span>
+<span id="cb9-33"><a href="#cb9-33"></a>             <span class="dt">x =</span> User)) <span class="op">+</span></span>
+<span id="cb9-34"><a href="#cb9-34"></a><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span></span>
+<span id="cb9-35"><a href="#cb9-35"></a><span class="st">  </span><span class="kw">geom_segment</span>(<span class="kw">aes</span>(<span class="dt">y =</span> <span class="fl">0.95</span>, </span>
+<span id="cb9-36"><a href="#cb9-36"></a>                   <span class="dt">x =</span> User, </span>
+<span id="cb9-37"><a href="#cb9-37"></a>                   <span class="dt">yend =</span> spearman_strength_degree, </span>
+<span id="cb9-38"><a href="#cb9-38"></a>                   <span class="dt">xend =</span> User), </span>
+<span id="cb9-39"><a href="#cb9-39"></a>               <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>) <span class="op">+</span></span>
+<span id="cb9-40"><a href="#cb9-40"></a><span class="st">  </span><span class="co"># geom_vline(xintercept = 1.5) +</span></span>
+<span id="cb9-41"><a href="#cb9-41"></a><span class="st">  </span><span class="kw">theme_bw</span>() <span class="op">+</span></span>
+<span id="cb9-42"><a href="#cb9-42"></a><span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="ot">NULL</span>,</span>
+<span id="cb9-43"><a href="#cb9-43"></a>       <span class="dt">y =</span> <span class="ot">NULL</span>,</span>
+<span id="cb9-44"><a href="#cb9-44"></a>       <span class="dt">title =</span> <span class="st">&quot;Spearman correlation between strength centrality and node degree&quot;</span>,</span>
+<span id="cb9-45"><a href="#cb9-45"></a>       <span class="dt">caption =</span> <span class="ot">NULL</span>) <span class="op">+</span></span>
+<span id="cb9-46"><a href="#cb9-46"></a><span class="st">  </span><span class="kw">theme</span>(<span class="dt">panel.grid.minor.x =</span> <span class="kw">element_blank</span>(),</span>
+<span id="cb9-47"><a href="#cb9-47"></a>        <span class="dt">panel.grid.major.x =</span> <span class="kw">element_blank</span>(),</span>
+<span id="cb9-48"><a href="#cb9-48"></a>        <span class="dt">axis.ticks.x =</span> <span class="kw">element_blank</span>(),</span>
+<span id="cb9-49"><a href="#cb9-49"></a>        <span class="dt">axis.text.x =</span> <span class="kw">element_blank</span>()) <span class="op">+</span></span>
+<span id="cb9-50"><a href="#cb9-50"></a><span class="st">  </span><span class="kw">facet_grid</span>(<span class="op">~</span>surrogate, <span class="dt">scales =</span> <span class="st">&quot;free_x&quot;</span>)</span></code></pre></div>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-9-1.png" width="2100" /></p>
+<p>We can observe that the correlation between degree and strength centrality is the lowest in real data; with 19 surrogates, if all data was random, this would only happen 1/20 (i.e. 5%) of the time, which can be considered as the p-value of this test.</p>
+<div id="scatterplots" class="section level2 tabset">
+<h2 class="tabset">Scatterplots</h2>
+<p>Below are scatterplots of node degree and node strength.</p>
+<p><strong>Real data</strong></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>userlist &lt;-<span class="st"> </span>emadata_nested_wrangled_both_recnets_nodes_plots <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">filter</span>(stringr<span class="op">::</span><span class="kw">str_detect</span>(<span class="dt">string =</span> User,</span>
+<span id="cb10-3"><a href="#cb10-3"></a>                                    <span class="dt">pattern =</span> <span class="st">&quot;surrogate&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">pull</span>(User)</span>
+<span id="cb10-5"><a href="#cb10-5"></a></span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="co">#### Show non-surrogate plot</span></span>
+<span id="cb10-7"><a href="#cb10-7"></a><span class="kw">show</span>(strength_degree[<span class="op">!</span>emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>User <span class="op">%in%</span><span class="st"> </span>userlist, ]<span class="op">$</span>strength_degree_plot[[<span class="dv">1</span>]])</span></code></pre></div>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-12-1.png" width="2100" /></p>
+<p><strong>Surrogate data</strong></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="co">#### Show the rest of the plots in tabset</span></span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="cf">for</span>(i <span class="cf">in</span> userlist){</span>
+<span id="cb11-3"><a href="#cb11-3"></a></span>
+<span id="cb11-4"><a href="#cb11-4"></a><span class="kw">cat</span>(<span class="st">&#39;</span><span class="ch">\n\n</span><span class="st">###&#39;</span>, i, <span class="st">&#39;</span><span class="ch">\n\n</span><span class="st">  &#39;</span>)</span>
+<span id="cb11-5"><a href="#cb11-5"></a>  </span>
+<span id="cb11-6"><a href="#cb11-6"></a><span class="kw">show</span>(strength_degree[emadata_nested_wrangled_both_recnets_nodes_plots<span class="op">$</span>User <span class="op">==</span><span class="st"> </span>i, ]<span class="op">$</span>strength_degree_plot[[<span class="dv">1</span>]])</span>
+<span id="cb11-7"><a href="#cb11-7"></a></span>
+<span id="cb11-8"><a href="#cb11-8"></a>}</span></code></pre></div>
+<div id="moti_p10_surrogate1" class="section level3">
+<h3>Moti_P10_surrogate1</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-1.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate2" class="section level3">
+<h3>Moti_P10_surrogate2</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-2.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate3" class="section level3">
+<h3>Moti_P10_surrogate3</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-3.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate4" class="section level3">
+<h3>Moti_P10_surrogate4</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-4.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate5" class="section level3">
+<h3>Moti_P10_surrogate5</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-5.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate6" class="section level3">
+<h3>Moti_P10_surrogate6</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-6.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate7" class="section level3">
+<h3>Moti_P10_surrogate7</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-7.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate8" class="section level3">
+<h3>Moti_P10_surrogate8</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-8.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate9" class="section level3">
+<h3>Moti_P10_surrogate9</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-9.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate10" class="section level3">
+<h3>Moti_P10_surrogate10</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-10.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate11" class="section level3">
+<h3>Moti_P10_surrogate11</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-11.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate12" class="section level3">
+<h3>Moti_P10_surrogate12</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-12.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate13" class="section level3">
+<h3>Moti_P10_surrogate13</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-13.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate14" class="section level3">
+<h3>Moti_P10_surrogate14</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-14.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate15" class="section level3">
+<h3>Moti_P10_surrogate15</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-15.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate16" class="section level3">
+<h3>Moti_P10_surrogate16</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-16.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate17" class="section level3">
+<h3>Moti_P10_surrogate17</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-17.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate18" class="section level3">
+<h3>Moti_P10_surrogate18</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-18.png" width="2100" /></p>
+</div>
+<div id="moti_p10_surrogate19" class="section level3">
+<h3>Moti_P10_surrogate19</h3>
+<p><img src="Recurrence-plots-surrogates_files/figure-html/unnamed-chunk-13-19.png" width="2100" /></p>
+<hr />
+<p><span class="math inline">\(~\)</span></p>
+</div>
+</div>
+</div>
+<div id="session-information" class="section level1">
+<h1>Session information</h1>
+<p>Description of the R environment can be found below.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>devtools<span class="op">::</span><span class="kw">session_info</span>()</span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="co">## - Session info ---------------------------------------------------------------</span></span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="co">##  setting  value                       </span></span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="co">##  version  R version 4.0.1 (2020-06-06)</span></span>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="co">##  os       Windows 10 x64              </span></span>
+<span id="cb12-6"><a href="#cb12-6"></a><span class="co">##  system   x86_64, mingw32             </span></span>
+<span id="cb12-7"><a href="#cb12-7"></a><span class="co">##  ui       RTerm                       </span></span>
+<span id="cb12-8"><a href="#cb12-8"></a><span class="co">##  language (EN)                        </span></span>
+<span id="cb12-9"><a href="#cb12-9"></a><span class="co">##  collate  Finnish_Finland.1252        </span></span>
+<span id="cb12-10"><a href="#cb12-10"></a><span class="co">##  ctype    Finnish_Finland.1252        </span></span>
+<span id="cb12-11"><a href="#cb12-11"></a><span class="co">##  tz       Europe/Helsinki             </span></span>
+<span id="cb12-12"><a href="#cb12-12"></a><span class="co">##  date     2021-03-13                  </span></span>
+<span id="cb12-13"><a href="#cb12-13"></a><span class="co">## </span></span>
+<span id="cb12-14"><a href="#cb12-14"></a><span class="co">## - Packages -------------------------------------------------------------------</span></span>
+<span id="cb12-15"><a href="#cb12-15"></a><span class="co">##  package     * version date       lib source                               </span></span>
+<span id="cb12-16"><a href="#cb12-16"></a><span class="co">##  assertthat    0.2.1   2019-03-21 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-17"><a href="#cb12-17"></a><span class="co">##  backports     1.1.10  2020-09-15 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-18"><a href="#cb12-18"></a><span class="co">##  bookdown    * 0.21    2020-10-13 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-19"><a href="#cb12-19"></a><span class="co">##  broom         0.7.2   2020-10-20 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-20"><a href="#cb12-20"></a><span class="co">##  callr         3.5.1   2020-10-13 [1] CRAN (R 4.0.1)                       </span></span>
+<span id="cb12-21"><a href="#cb12-21"></a><span class="co">##  casnet        0.1.6   2020-10-19 [1] Github (fredhasselman/casnet@e9e231e)</span></span>
+<span id="cb12-22"><a href="#cb12-22"></a><span class="co">##  cellranger    1.1.0   2016-07-27 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-23"><a href="#cb12-23"></a><span class="co">##  cli           2.2.0   2020-11-20 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-24"><a href="#cb12-24"></a><span class="co">##  codetools     0.2-16  2018-12-24 [2] CRAN (R 4.0.1)                       </span></span>
+<span id="cb12-25"><a href="#cb12-25"></a><span class="co">##  colorspace    1.4-1   2019-03-18 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-26"><a href="#cb12-26"></a><span class="co">##  crayon        1.3.4   2017-09-16 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-27"><a href="#cb12-27"></a><span class="co">##  curl          4.3     2019-12-02 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-28"><a href="#cb12-28"></a><span class="co">##  DBI           1.1.0   2019-12-15 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-29"><a href="#cb12-29"></a><span class="co">##  dbplyr        2.0.0   2020-11-03 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-30"><a href="#cb12-30"></a><span class="co">##  desc          1.2.0   2018-05-01 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-31"><a href="#cb12-31"></a><span class="co">##  devtools      2.3.2   2020-09-18 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-32"><a href="#cb12-32"></a><span class="co">##  digest        0.6.27  2020-10-24 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-33"><a href="#cb12-33"></a><span class="co">##  dplyr       * 1.0.2   2020-08-18 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-34"><a href="#cb12-34"></a><span class="co">##  ellipsis      0.3.1   2020-05-15 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-35"><a href="#cb12-35"></a><span class="co">##  evaluate      0.14    2019-05-28 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-36"><a href="#cb12-36"></a><span class="co">##  fansi         0.4.1   2020-01-08 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-37"><a href="#cb12-37"></a><span class="co">##  farver        2.0.3   2020-01-16 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-38"><a href="#cb12-38"></a><span class="co">##  fastmap       1.0.1   2019-10-08 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-39"><a href="#cb12-39"></a><span class="co">##  forcats     * 0.5.0   2020-03-01 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-40"><a href="#cb12-40"></a><span class="co">##  fs            1.5.0   2020-07-31 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-41"><a href="#cb12-41"></a><span class="co">##  generics      0.1.0   2020-10-31 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-42"><a href="#cb12-42"></a><span class="co">##  ggplot2     * 3.3.2   2020-06-19 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-43"><a href="#cb12-43"></a><span class="co">##  glue          1.4.2   2020-08-27 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-44"><a href="#cb12-44"></a><span class="co">##  gtable        0.3.0   2019-03-25 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-45"><a href="#cb12-45"></a><span class="co">##  haven         2.3.1   2020-06-01 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-46"><a href="#cb12-46"></a><span class="co">##  highr         0.8     2019-03-20 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-47"><a href="#cb12-47"></a><span class="co">##  hms           0.5.3   2020-01-08 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-48"><a href="#cb12-48"></a><span class="co">##  htmltools     0.5.0   2020-06-16 [1] CRAN (R 4.0.1)                       </span></span>
+<span id="cb12-49"><a href="#cb12-49"></a><span class="co">##  httpuv        1.5.4   2020-06-06 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-50"><a href="#cb12-50"></a><span class="co">##  httr          1.4.2   2020-07-20 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-51"><a href="#cb12-51"></a><span class="co">##  igraph        1.2.6   2020-10-06 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-52"><a href="#cb12-52"></a><span class="co">##  invctr        0.1.0   2019-03-07 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-53"><a href="#cb12-53"></a><span class="co">##  jsonlite      1.7.1   2020-09-07 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-54"><a href="#cb12-54"></a><span class="co">##  knitr       * 1.30    2020-09-22 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-55"><a href="#cb12-55"></a><span class="co">##  labeling      0.4.2   2020-10-20 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-56"><a href="#cb12-56"></a><span class="co">##  later         1.1.0.1 2020-06-05 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-57"><a href="#cb12-57"></a><span class="co">##  lattice       0.20-41 2020-04-02 [2] CRAN (R 4.0.1)                       </span></span>
+<span id="cb12-58"><a href="#cb12-58"></a><span class="co">##  lifecycle     0.2.0   2020-03-06 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-59"><a href="#cb12-59"></a><span class="co">##  lubridate     1.7.9.2 2020-11-13 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-60"><a href="#cb12-60"></a><span class="co">##  magrittr      2.0.1   2020-11-17 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-61"><a href="#cb12-61"></a><span class="co">##  Matrix        1.2-18  2019-11-27 [2] CRAN (R 4.0.1)                       </span></span>
+<span id="cb12-62"><a href="#cb12-62"></a><span class="co">##  memoise       1.1.0   2017-04-21 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-63"><a href="#cb12-63"></a><span class="co">##  mime          0.9     2020-02-04 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-64"><a href="#cb12-64"></a><span class="co">##  modelr        0.1.8   2020-05-19 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-65"><a href="#cb12-65"></a><span class="co">##  munsell       0.5.0   2018-06-12 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-66"><a href="#cb12-66"></a><span class="co">##  patchwork   * 1.1.0   2020-11-09 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-67"><a href="#cb12-67"></a><span class="co">##  pillar        1.4.7   2020-11-20 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-68"><a href="#cb12-68"></a><span class="co">##  pkgbuild      1.1.0   2020-07-13 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-69"><a href="#cb12-69"></a><span class="co">##  pkgconfig     2.0.3   2019-09-22 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-70"><a href="#cb12-70"></a><span class="co">##  pkgload       1.1.0   2020-05-29 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-71"><a href="#cb12-71"></a><span class="co">##  plyr          1.8.6   2020-03-03 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-72"><a href="#cb12-72"></a><span class="co">##  prettyunits   1.1.1   2020-01-24 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-73"><a href="#cb12-73"></a><span class="co">##  processx      3.4.4   2020-09-03 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-74"><a href="#cb12-74"></a><span class="co">##  promises      1.1.1   2020-06-09 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-75"><a href="#cb12-75"></a><span class="co">##  proxy         0.4-24  2020-04-25 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-76"><a href="#cb12-76"></a><span class="co">##  ps            1.4.0   2020-10-07 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-77"><a href="#cb12-77"></a><span class="co">##  purrr       * 0.3.4   2020-04-17 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-78"><a href="#cb12-78"></a><span class="co">##  quadprog      1.5-8   2019-11-20 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-79"><a href="#cb12-79"></a><span class="co">##  quantmod      0.4.17  2020-03-31 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-80"><a href="#cb12-80"></a><span class="co">##  R6            2.5.0   2020-10-28 [1] CRAN (R 4.0.1)                       </span></span>
+<span id="cb12-81"><a href="#cb12-81"></a><span class="co">##  Rcpp          1.0.5   2020-07-06 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-82"><a href="#cb12-82"></a><span class="co">##  readr       * 1.4.0   2020-10-05 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-83"><a href="#cb12-83"></a><span class="co">##  readxl        1.3.1   2019-03-13 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-84"><a href="#cb12-84"></a><span class="co">##  remotes       2.2.0   2020-07-21 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-85"><a href="#cb12-85"></a><span class="co">##  reprex        0.3.0   2019-05-16 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-86"><a href="#cb12-86"></a><span class="co">##  rlang         0.4.9   2020-11-26 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-87"><a href="#cb12-87"></a><span class="co">##  rmarkdown     2.5     2020-10-21 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-88"><a href="#cb12-88"></a><span class="co">##  rprojroot     2.0.2   2020-11-15 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-89"><a href="#cb12-89"></a><span class="co">##  rstudioapi    0.13    2020-11-12 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-90"><a href="#cb12-90"></a><span class="co">##  rvest         0.3.6   2020-07-25 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-91"><a href="#cb12-91"></a><span class="co">##  scales        1.1.1   2020-05-11 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-92"><a href="#cb12-92"></a><span class="co">##  sessioninfo   1.1.1   2018-11-05 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-93"><a href="#cb12-93"></a><span class="co">##  shiny       * 1.5.0   2020-06-23 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-94"><a href="#cb12-94"></a><span class="co">##  stringi       1.5.3   2020-09-09 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-95"><a href="#cb12-95"></a><span class="co">##  stringr     * 1.4.0   2019-02-10 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-96"><a href="#cb12-96"></a><span class="co">##  testthat      3.0.0   2020-10-31 [1] CRAN (R 4.0.1)                       </span></span>
+<span id="cb12-97"><a href="#cb12-97"></a><span class="co">##  tibble      * 3.0.4   2020-10-12 [1] CRAN (R 4.0.1)                       </span></span>
+<span id="cb12-98"><a href="#cb12-98"></a><span class="co">##  tidyr       * 1.1.2   2020-08-27 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-99"><a href="#cb12-99"></a><span class="co">##  tidyselect    1.1.0   2020-05-11 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-100"><a href="#cb12-100"></a><span class="co">##  tidyverse   * 1.3.0   2019-11-21 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-101"><a href="#cb12-101"></a><span class="co">##  tseries       0.10-47 2019-06-05 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-102"><a href="#cb12-102"></a><span class="co">##  TTR           0.24.2  2020-09-01 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-103"><a href="#cb12-103"></a><span class="co">##  usethis       1.6.3   2020-09-17 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-104"><a href="#cb12-104"></a><span class="co">##  vctrs         0.3.4   2020-08-29 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-105"><a href="#cb12-105"></a><span class="co">##  viridisLite   0.3.0   2018-02-01 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-106"><a href="#cb12-106"></a><span class="co">##  withr         2.3.0   2020-09-22 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-107"><a href="#cb12-107"></a><span class="co">##  xfun          0.19    2020-10-30 [1] CRAN (R 4.0.3)                       </span></span>
+<span id="cb12-108"><a href="#cb12-108"></a><span class="co">##  xml2          1.3.2   2020-04-23 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-109"><a href="#cb12-109"></a><span class="co">##  xtable        1.8-4   2019-04-21 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-110"><a href="#cb12-110"></a><span class="co">##  xts           0.12.1  2020-09-09 [1] CRAN (R 4.0.2)                       </span></span>
+<span id="cb12-111"><a href="#cb12-111"></a><span class="co">##  yaml          2.2.1   2020-02-01 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-112"><a href="#cb12-112"></a><span class="co">##  zoo           1.8-8   2020-05-02 [1] CRAN (R 4.0.0)                       </span></span>
+<span id="cb12-113"><a href="#cb12-113"></a><span class="co">## </span></span>
+<span id="cb12-114"><a href="#cb12-114"></a><span class="co">## [1] C:/LocalData/hema/rlibs</span></span>
+<span id="cb12-115"><a href="#cb12-115"></a><span class="co">## [2] C:/Program Files/R/R-4.0.1/library</span></span>
+<span id="cb12-116"><a href="#cb12-116"></a></span>
+<span id="cb12-117"><a href="#cb12-117"></a>pander<span class="op">::</span><span class="kw">pander</span>(<span class="kw">sessionInfo</span>())</span></code></pre></div>
+<p><strong>R version 4.0.1 (2020-06-06)</strong></p>
+<p><strong>Platform:</strong> x86_64-w64-mingw32/x64 (64-bit)</p>
+<p><strong>locale:</strong> <em>LC_COLLATE=Finnish_Finland.1252</em>, <em>LC_CTYPE=Finnish_Finland.1252</em>, <em>LC_MONETARY=Finnish_Finland.1252</em>, <em>LC_NUMERIC=C</em> and <em>LC_TIME=Finnish_Finland.1252</em></p>
+<p><strong>attached base packages:</strong> <em>stats</em>, <em>graphics</em>, <em>grDevices</em>, <em>utils</em>, <em>datasets</em>, <em>methods</em> and <em>base</em></p>
+<p><strong>other attached packages:</strong> <em>patchwork(v.1.1.0)</em>, <em>bookdown(v.0.21)</em>, <em>knitr(v.1.30)</em>, <em>shiny(v.1.5.0)</em>, <em>forcats(v.0.5.0)</em>, <em>stringr(v.1.4.0)</em>, <em>dplyr(v.1.0.2)</em>, <em>purrr(v.0.3.4)</em>, <em>readr(v.1.4.0)</em>, <em>tidyr(v.1.1.2)</em>, <em>tibble(v.3.0.4)</em>, <em>ggplot2(v.3.3.2)</em> and <em>tidyverse(v.1.3.0)</em></p>
+<p><strong>loaded via a namespace (and not attached):</strong> <em>fs(v.1.5.0)</em>, <em>usethis(v.1.6.3)</em>, <em>invctr(v.0.1.0)</em>, <em>xts(v.0.12.1)</em>, <em>lubridate(v.1.7.9.2)</em>, <em>devtools(v.2.3.2)</em>, <em>httr(v.1.4.2)</em>, <em>rprojroot(v.2.0.2)</em>, <em>tools(v.4.0.1)</em>, <em>backports(v.1.1.10)</em>, <em>R6(v.2.5.0)</em>, <em>DBI(v.1.1.0)</em>, <em>colorspace(v.1.4-1)</em>, <em>withr(v.2.3.0)</em>, <em>prettyunits(v.1.1.1)</em>, <em>tidyselect(v.1.1.0)</em>, <em>processx(v.3.4.4)</em>, <em>curl(v.4.3)</em>, <em>compiler(v.4.0.1)</em>, <em>cli(v.2.2.0)</em>, <em>rvest(v.0.3.6)</em>, <em>xml2(v.1.3.2)</em>, <em>desc(v.1.2.0)</em>, <em>labeling(v.0.4.2)</em>, <em>tseries(v.0.10-47)</em>, <em>scales(v.1.1.1)</em>, <em>quadprog(v.1.5-8)</em>, <em>callr(v.3.5.1)</em>, <em>proxy(v.0.4-24)</em>, <em>digest(v.0.6.27)</em>, <em>rmarkdown(v.2.5)</em>, <em>pkgconfig(v.2.0.3)</em>, <em>htmltools(v.0.5.0)</em>, <em>sessioninfo(v.1.1.1)</em>, <em>casnet(v.0.1.6)</em>, <em>dbplyr(v.2.0.0)</em>, <em>fastmap(v.1.0.1)</em>, <em>highr(v.0.8)</em>, <em>rlang(v.0.4.9)</em>, <em>readxl(v.1.3.1)</em>, <em>TTR(v.0.24.2)</em>, <em>rstudioapi(v.0.13)</em>, <em>quantmod(v.0.4.17)</em>, <em>farver(v.2.0.3)</em>, <em>generics(v.0.1.0)</em>, <em>zoo(v.1.8-8)</em>, <em>jsonlite(v.1.7.1)</em>, <em>magrittr(v.2.0.1)</em>, <em>Matrix(v.1.2-18)</em>, <em>Rcpp(v.1.0.5)</em>, <em>munsell(v.0.5.0)</em>, <em>fansi(v.0.4.1)</em>, <em>lifecycle(v.0.2.0)</em>, <em>stringi(v.1.5.3)</em>, <em>yaml(v.2.2.1)</em>, <em>pkgbuild(v.1.1.0)</em>, <em>plyr(v.1.8.6)</em>, <em>grid(v.4.0.1)</em>, <em>promises(v.1.1.1)</em>, <em>crayon(v.1.3.4)</em>, <em>lattice(v.0.20-41)</em>, <em>haven(v.2.3.1)</em>, <em>pander(v.0.6.3)</em>, <em>hms(v.0.5.3)</em>, <em>ps(v.1.4.0)</em>, <em>pillar(v.1.4.7)</em>, <em>igraph(v.1.2.6)</em>, <em>pkgload(v.1.1.0)</em>, <em>codetools(v.0.2-16)</em>, <em>reprex(v.0.3.0)</em>, <em>glue(v.1.4.2)</em>, <em>evaluate(v.0.14)</em>, <em>remotes(v.2.2.0)</em>, <em>modelr(v.0.1.8)</em>, <em>vctrs(v.0.3.4)</em>, <em>httpuv(v.1.5.4)</em>, <em>testthat(v.3.0.0)</em>, <em>cellranger(v.1.1.0)</em>, <em>gtable(v.0.3.0)</em>, <em>assertthat(v.0.2.1)</em>, <em>xfun(v.0.19)</em>, <em>mime(v.0.9)</em>, <em>xtable(v.1.8-4)</em>, <em>broom(v.0.7.2)</em>, <em>later(v.1.1.0.1)</em>, <em>viridisLite(v.0.3.0)</em>, <em>memoise(v.1.1.0)</em> and <em>ellipsis(v.0.3.1)</em></p>
+<!-- </div> -->
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

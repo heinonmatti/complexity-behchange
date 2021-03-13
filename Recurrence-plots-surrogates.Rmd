@@ -1,0 +1,1358 @@
+---
+title: "Surrogate data analysis"
+---
+<!-- <div style="line-height: 1.7em;"> -->
+
+This document presents an investigation into how the results differ from patterns derived from random data.
+
+Some code involving data preprocessing is omitted here for clarity of presentation. It can be found in the source code for this document, [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/Recurrence-plots-surrogates.Rmd). 
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE,
+                      message = FALSE,
+                      error = FALSE,
+                      cache = TRUE, 
+                      collapse = TRUE,
+                      eval = TRUE,
+                      dpi = 300)
+
+```
+
+```{r rqa-dataprep, echo = FALSE}
+
+
+number_of_surrogate_participants <- 20
+
+emadata <- readr::read_csv("./data/EMA_data_Moti_P10.csv")
+
+emadata_nested <- emadata %>% dplyr::group_by(User) %>% 
+                  dplyr::select(#autonomy, competence, relatedness,
+                                pleasure, interest, importance,
+                                situation_requires = required, 
+                                anxiety_guilt_avoidance = anxiety_guilt, 
+                                another_wants = for_others,
+                                Date = dateTime,
+                                User,
+                                task) %>% 
+                  na.omit() %>% ### NOTE! NAs removed!
+  tidyr::nest() 
+
+# Show sample size for each participant:
+# emadata_nested %>% 
+#   mutate(n = map_dbl(data, nrow))
+
+set.seed(10)
+
+emadata_nested_wrangled_interim <- emadata_nested %>%
+  dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(.x, 
+                                                       date = as.Date(Date),
+                                                       timediff = c(NA, diff(Date))))) %>% 
+  # Filter out answers less than 15 minutes from the last one, then remove the difference variable
+  dplyr::mutate(data = purrr::map(data, ~dplyr::filter(.x, timediff > 15))) %>% 
+  dplyr::mutate(data = purrr::map(data, ~dplyr::select(.x, -timediff))) %>% 
+  # Create three datasets, where one daily observation is randomly selected from those available:
+  dplyr::mutate(sample1 = purrr::map(.x = data, 
+                                     .f = ~dplyr::group_by(.x, date) %>% 
+                                       dplyr::sample_n(., size = 1, replace = FALSE) %>% 
+                                       dplyr::ungroup())) %>% 
+  dplyr::mutate(sample2 = purrr::map(.x = data, 
+                                     .f = ~dplyr::group_by(.x, date) %>% 
+                                       dplyr::sample_n(., size = 1, replace = FALSE) %>% 
+                                       dplyr::ungroup())) %>% 
+  dplyr::mutate(sample3 = purrr::map(.x = data, 
+                                     .f = ~dplyr::group_by(.x, date) %>% 
+                                       dplyr::sample_n(., size = 1, replace = FALSE) %>% 
+                                       dplyr::ungroup())) %>% 
+  # Create "task-normed" variables, where the previous instance of the task is substracted from the current one:
+  dplyr::mutate(taskNormed = purrr::map(data, ~dplyr::group_by(., task))) %>%
+  dplyr::mutate(taskNormed = purrr::map(taskNormed, ~dplyr::mutate_if(.x, is.numeric, ~(.-lag(.))))) %>%
+  dplyr::mutate(taskNormed = purrr::map(taskNormed, ~na.omit(.x))) %>%
+  dplyr::mutate(taskNormed = purrr::map(taskNormed, ~dplyr::ungroup(.x))) %>%
+  dplyr::mutate(taskNormed = purrr::map(taskNormed, ~dplyr::mutate_if(.x, 
+                                                                      is.numeric, 
+                                                                      ~scales::rescale(.x, 
+                                                                                       to = c(0, 49))))) %>%
+  # # Take daily averages to ensure ~equally spaced observations: 
+  dplyr::mutate(data_daily = purrr::map(data, 
+                                        ~dplyr::group_by(., date))) %>%
+  dplyr::mutate(data_daily = purrr::map(data_daily, 
+                                        ~dplyr::summarise_if(.x, is.numeric, mean, na.rm = TRUE))) %>%
+  # Remove day and task variables
+  dplyr::mutate(data_with_tasks_and_dates = data,
+                data = purrr::map(data, ~dplyr::select(.x, -Date, -date, -task))) %>% 
+  dplyr::mutate(taskNormed = purrr::map(taskNormed, ~dplyr::select(.x, -Date, -date, -task))) %>%
+  dplyr::mutate(data_daily_with_tasks_and_dates = data_daily,
+                data_daily = purrr::map(data_daily, ~dplyr::select(.x, -date))) %>% 
+  # Normalise all numeric variables
+  dplyr::mutate(data_standardised = purrr::map(data, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~((.x / max(.x)))))) %>% 
+  dplyr::mutate(sample1_standardised = purrr::map(sample1, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~((.x / max(.x)))))) %>%
+  dplyr::mutate(sample2_standardised = purrr::map(sample2, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~((.x / max(.x)))))) %>%
+  dplyr::mutate(sample3_standardised = purrr::map(sample3, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~((.x / max(.x)))))) %>%
+  dplyr::mutate(data_daily_standardised = purrr::map(data_daily, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~((.x / max(.x)))))) %>% 
+  dplyr::mutate(taskNormed_standardised = purrr::map(taskNormed, ~dplyr::mutate_if(.x, is.numeric,
+                                                           ~((.x / max(.x)))))) %>% 
+  # Retain first and last observation of the day:
+  dplyr::mutate(data_firstlast_divided_by_max = purrr::map(.x = data_with_tasks_and_dates, 
+                                           .f = ~dplyr::group_by(.x, date) %>% 
+                                             dplyr::arrange(Date) %>%
+                                             dplyr::filter(row_number() == 1 | row_number() == n()) %>% 
+                                             dplyr::ungroup() %>% 
+                                             dplyr::mutate_if(., is.numeric,
+                                                              ~(. / max(., na.rm = TRUE)))),
+                data_firstlast_divided_by_max_with_tasks_and_dates = data_firstlast_divided_by_max,
+                data_firstlast_divided_by_max = purrr::map(data_firstlast_divided_by_max, 
+                                                           ~dplyr::select(.x, -Date, -date, -task)))
+
+emadata_nested_wrangled <- emadata_nested_wrangled_interim %>%
+  # Duplicate the data for every participant
+  slice(rep(1:n(), each = number_of_surrogate_participants)) %>% 
+  dplyr::group_by(User) %>% 
+  # Rename 19 of duplicate rows to contain "surrogate_xx"
+  dplyr::mutate(User = dplyr::case_when(dplyr::row_number() != 1 ~ paste0(User, 
+                                                                          "_surrogate",
+                                                                          dplyr::row_number()-1),
+                                         TRUE ~ User)) %>% 
+  dplyr::ungroup() %>% 
+  # # Z-SCORE TRANSFORM THE DATA TO EXIT BOUNDED SCALE:
+  # dplyr::mutate(data_firstlast_divided_by_max = purrr::map(.x = data_firstlast_divided_by_max,
+  #                                                          .f = ~.x %>% 
+  #                                                            dplyr::mutate(across(everything(), 
+  #                                                                                 ~base::scale(.))))) %>%
+  # For the rows where User contains "surrogate", create surrogate data with amplitude adjusted fourier transform 
+  dplyr::mutate(data_firstlast_divided_by_max = dplyr::case_when(stringr::str_detect(string = User,
+                                                            pattern = "surrogate") ~ 
+                                          purrr::map(.x = data_firstlast_divided_by_max,
+                                                     .f = ~purrr::map_df(.x,
+                                                                         .f = ~tseries::surrogate(., 
+                                                                                                  ns = 1, 
+                                                                                                  fft = TRUE, 
+                                                                                                  amplitude = TRUE))),
+                                        TRUE ~ data_firstlast_divided_by_max))
+
+
+
+# testi <- emadata_nested_wrangled_surrogates %>% 
+#   dplyr::mutate(histograms_1 = purrr::map(.x = data,
+#                                           .f = ~.x %>% 
+#                                             tidyr::pivot_longer(cols = everything()) %>% 
+#                                             ggplot(aes(x = name,
+#                                                        y = value)) +
+#                                             geom_density() 
+#                                             )))
+# 
+# testi$data[[2]] %>% 
+#   tidyr::pivot_longer(cols = everything()) %>% 
+#   ggplot(aes(fill = name,
+#              x = value)) +
+#            geom_density()
+
+# testraw <- emadata_nested_wrangled_interim$data_firstlast_divided_by_max[[1]][["pleasure"]]
+# testmean <- rep(emadata_nested_wrangled_interim$data_firstlast_divided_by_max[[1]][["pleasure"]] %>% mean(.),
+#                 length(emadata_nested_wrangled_interim$data_firstlast_divided_by_max[[1]][["pleasure"]]))
+# testsd <- rep(emadata_nested_wrangled_interim$data_firstlast_divided_by_max[[1]][["pleasure"]] %>% sd(.),
+#                 length(emadata_nested_wrangled_interim$data_firstlast_divided_by_max[[1]][["pleasure"]]))
+#   
+# (testraw - testmean)/testsd
+# 
+# emadata_nested_wrangled$data_firstlast_divided_by_max[[1]][["pleasure"]]
+
+```
+
+
+```{r firstlast-weighted, echo = FALSE, results = "hide", fig.show='hide'}
+##### Recurrence network demonstration {.tabset}
+# 
+#### Here's the 6-dimensional motivation system's recurrence plot, weighted by similarity.
+
+set.seed(100)
+
+recurrence_rate <- 0.1
+
+#######################
+
+# si = similarity under the radius
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled %>% 
+  dplyr::mutate(RN = purrr::map(.x = data_firstlast_divided_by_max,
+                                .f =  ~casnet::rn(.x, 
+                                                  doEmbed = FALSE, 
+                                                  weighted = TRUE, 
+                                                  weightedBy = "si", 
+                                                  targetValue = recurrence_rate,
+                                                  emRad = NA)))
+
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(graph_from_adjacency = purrr::map(.x = RN,
+                                                  .f = ~igraph::graph_from_adjacency_matrix(.x, 
+                                                                                            weighted = TRUE, 
+                                                                                            mode = "upper", 
+                                                                                            diag = FALSE)))
+
+# Edges with their distances
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(edges_with_distances = purrr::map(.x = graph_from_adjacency,
+                                                  .f = ~igraph::E(.x)$weight),
+                graph_from_adjacency_orig = graph_from_adjacency)
+
+# Larger values are closer to the state; inverse of weight makes it more intuitive
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets)) {
+igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$weight <- (1/emadata_nested_wrangled_both_recnets$edges_with_distances[[i]])
+}
+# A later note to self: Now weight is a measure of distance; how far apart two time points are
+# (under the radius, i.e. they're reasonably similar to begin with)
+
+####### To check:
+# igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[1]])$weight
+# igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency_orig[[1]])$weight
+
+emadata_nested_wrangled_both_recnets <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(RN_plot = purrr::map(.x = RN,
+                                .f =  ~casnet::rn_plot(.x,
+                                                       plotDimensions = TRUE,
+                                                       xlab = "6-dimensional motivation system",
+                                                       ylab = "6-dimensional motivation system")))
+
+# Make node size equal to strength. Strength is the sum of a node's edge weights.
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets)) {
+igraph::V(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$size <- (igraph::strength(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]]))
+}
+
+# Rescaling weight as "width"; varies between 5 and 10
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets)) {
+igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$width <- 
+  casnet::elascer(igraph::E(emadata_nested_wrangled_both_recnets$graph_from_adjacency[[i]])$weight, lo = 5, hi = 10)
+}
+emadata_nested_wrangled_both_recnets$RN_plot[[1]]
+```
+
+```{r firstlast-attractor-extraction, fig.show='hide', echo = FALSE}
+### The lengthy code chunk below extracts and marks attractors in the data.
+
+# Get number of maximally connected node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets %>% 
+  dplyr::mutate(strongest_day = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~which.max(igraph::strength(.x))
+                                     ))
+
+
+
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(list_of_edges = purrr::map(.x = graph_from_adjacency,
+                                     .f =  ~igraph::get.data.frame(.x)
+                                     ))
+
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = 
+                  purrr::map2(.x = data_firstlast_divided_by_max,
+                              .y = graph_from_adjacency,
+                              .f = ~{
+                                data.frame(.x, 
+                                           strength = igraph::strength(.y),
+                                           degree = igraph::degree(.y)) %>% 
+                                  dplyr::mutate(time = dplyr::row_number()) %>% 
+                                  tidyr::pivot_longer(cols = c(-strength, -degree, -time))
+                              }
+  ))
+
+# Extract nodes (i.e. times) which connect to the strongest (i.e. most connected) node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = strongest_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+
+# Get number of 2nd maximally connected node, which doesn't connect to the 1st
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(secondary_attractor_day = purrr::map2(.x = graph_from_adjacency,
+                                                      .y = connecting_to_strongest,
+                                                      .f =  ~{
+                                                        data.frame(strength = igraph::strength(.x), 
+                                                                   time = 1:length(igraph::strength(.x))) %>% 
+                                                          dplyr::filter(!time %in% .y) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
+                                                          dplyr::slice(1) %>% 
+                                                          dplyr::pull(time)
+                                                      }                                                    
+  ))
+
+# Extract nodes (i.e. times) which connect to the 2nd strongest node, which doesn't connect to the 1st
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_2nd_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = secondary_attractor_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+# Save as a variable in the dataset
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_2nd_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_2nd_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+# Get number of 3rd maximally connected node, which doesn't connect to the 1st or second
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(tertiary_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
+                                                      ..2 = connecting_to_strongest,
+                                                      ..3 = connecting_to_2nd_strongest),
+                                                      .f =  ~{
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
+                                                          dplyr::filter(!time %in% ..2, 
+                                                                        !time %in% ..3) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
+                                                          dplyr::slice(1) %>% 
+                                                          dplyr::pull(time)
+                                                      }                                                    
+  ))
+
+# Extract nodes (i.e. times) which connect to the 3rd strongest node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_3rd_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = tertiary_attractor_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+# Save as a variable
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_3rd_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_3rd_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+# Get number of 4th maximally connected node, which doesn't connect to the 1st, 2nd, or 3rd
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(fourth_attractor_day = purrr::pmap(list(..1 = graph_from_adjacency,
+                                                      ..2 = connecting_to_strongest,
+                                                      ..3 = connecting_to_2nd_strongest,
+                                                      ..4 = connecting_to_3rd_strongest),
+                                                      .f =  ~{
+                                                        data.frame(strength = igraph::strength(..1), 
+                                                                   time = 1:length(igraph::strength(..1))) %>% 
+                                                          dplyr::filter(!time %in% ..2, 
+                                                                        !time %in% ..3, 
+                                                                        !time %in% ..4) %>% 
+                                                          dplyr::arrange(desc(strength)) %>% 
+                                                          dplyr::slice(1) %>% 
+                                                          dplyr::pull(time)
+                                                      }                                                    
+  ))
+
+# Extract nodes (i.e. times) which connect to the 4th strongest node
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(connecting_to_4th_strongest = purrr::map2(.x = list_of_edges,
+                                                      .y = fourth_attractor_day,
+                                                      .f = ~{
+                                                        .x %>% dplyr::filter(from == .y | to == .y) %>% 
+                                                          dplyr::arrange(weight) %>% 
+                                                          tidyr::pivot_longer(cols = c(from, to),
+                                                                              values_to = "node") %>% 
+                                                          dplyr::distinct(node, 
+                                                                          #.keep_all = TRUE
+                                                          ) %>% 
+                                                          dplyr::pull(node)
+                                                      }
+                                                      )
+  )
+
+# Save as a variable
+emadata_nested_wrangled_both_recnets_nodes <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = purrr::map2(.x = all_nodes_with_strengths,
+                                                       .y = connecting_to_4th_strongest,
+                                                       .f = ~{
+                                                         dplyr::mutate(.x,
+                                                                       connecting_to_4th_strongest = 
+                                                                         dplyr::case_when(time %in% .y ~ TRUE,
+                                                                                          TRUE ~ FALSE))
+                                                       }
+  ))
+
+################### Make plots
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes %>% 
+  dplyr::mutate(all_nodes_with_strengths = 
+                  purrr::map(.x = all_nodes_with_strengths,
+                             .f = ~{
+                               dplyr::mutate(.x,
+                                             attractors = dplyr::case_when(
+                                               strength == 0 ~ "Unique",
+                                               connecting_to_strongest == TRUE ~ "1st",
+                                               connecting_to_2nd_strongest == TRUE ~ "2nd",
+                                               connecting_to_3rd_strongest == TRUE ~ "3rd",
+                                               connecting_to_4th_strongest == TRUE ~ "4th",
+                                               TRUE ~ "Uncategorised"),
+                                             attractors = factor(attractors,
+                                                                 levels = c("1st",
+                                                                            "2nd",
+                                                                            "3rd",
+                                                                            "4th",
+                                                                            "Uncategorised",
+                                                                            "Unique")),
+                                             name = factor(name,
+                                                           levels = emadata_nested_wrangled$data[[1]] %>% names,
+                                                           labels = emadata_nested_wrangled$data[[1]] %>% names) %>% 
+                                               forcats::fct_drop()) %>% 
+                                 dplyr::group_by(attractors, name) %>% 
+                                 dplyr::mutate(n = n()) %>% 
+                                 dplyr::ungroup() %>%
+                                 dplyr::mutate(maxtime = max(time),
+                                               percentage_of_total =
+                                                 (n / maxtime) %>% scales::percent(accuracy = 0.1),
+                                               proportion_of_total = n/maxtime,
+                                               attractors_n = 
+                                                 factor(paste0(attractors,
+                                                               " (n = ", n, "; ", 
+                                                               percentage_of_total, ")")))
+                             }
+                  ))
+
+
+```
+
+```{r firstlast-spiralgraph, fig.show='hide', echo = FALSE}
+### Spiral graph with colored nodes {.tabset}
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+  dplyr::mutate(node_colors = purrr::map(.x = all_nodes_with_strengths,
+                                         .f = ~{tidyr::pivot_wider(.x, names_from = name) %>%
+                                             dplyr::pull(attractors)}))
+
+for (i in 1:nrow(emadata_nested_wrangled_both_recnets_nodes_plots)) {
+levels(emadata_nested_wrangled_both_recnets_nodes_plots$node_colors[[i]]) <- 
+  c(viridisLite::plasma(4, 
+                      end = 0.8, 
+                      direction = -1), "gray48", "white")
+  }
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(spiralgraph_epochs = purrr::pmap(list(..1 = graph_from_adjacency,
+                                          ..2 = node_colors,
+                                          ..3 = User),
+                                     .f =  ~casnet::make_spiral_graph(g = ..1, 
+                                                                      arcs = 4, 
+                                                                      # a = .1, 
+                                                                      # b = 2, 
+                                                                      markTimeBy = TRUE,
+                                                                      markEpochsBy = ..2,
+                                                                      epochColours = ..2,
+                                                                      showEpochLegend = FALSE,
+                                                                      scaleEdgeSize = 1/10,
+                                                                      scaleVertexSize = c(1, 5),
+                                                                      showSizeLegend = FALSE,
+                                                                      sizeLabel = "Node strength",
+                                                                      type = "Euler",
+                                                                      # alphaE = 0.1
+                                                                      # title = ..3
+                                     )))
+
+# emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +
+#   theme(plot.margin=grid::unit(c(0,0,0,0), "mm"))
+
+# ggsave(filename = "./figures/recnetwork.png",
+#        width = 7, 
+#        height = 7)
+
+# emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
+
+# Make pdf of plots
+plist <- emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs
+# plist <- plist %>% purrr::flatten()
+
+# pdf(file = "./surrogate_spiral_plots_needs.pdf",
+#     width = 11.69,
+#     height = 8.27)
+# 
+# for (i in seq(1, length(plist), 4)) {
+#   gridExtra::grid.arrange(grobs = plist[i:(i+3)],
+#                ncol = 2, nrow = 2)
+# }
+# 
+# dev.off()
+
+emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +
+  ggtitle("Real data")
+```
+<!-- Below is the same graph for each surrogate data series. -->
+
+```{r firstlast-spiralgraph-surrogates, fig.show='hide', echo = FALSE}
+userlist <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::filter(stringr::str_detect(string = User,
+                                    pattern = "surrogate")) %>% 
+  dplyr::pull(User)
+
+# for(i in userlist){
+# 
+# emadata_nested_wrangled_both_recnets_nodes_plots[emadata_nested_wrangled_both_recnets_nodes_plots$User == i, ]$spiralgraph_epochs[[1]] %>% 
+#     show()
+# 
+# cat('\n\n###', i, '\n\n  ')
+# }
+
+```
+
+Here is the figure depicting the attractor patterns found in the main analysis: 
+
+```{r attractor-plots, echo = FALSE}
+### Attractor plot {.tabset}
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+  dplyr::mutate(observations = purrr::map_dbl(.x = data_firstlast_divided_by_max,
+                                              .f = ~nrow(.)))
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+  dplyr::mutate(observations_daily = purrr::map_dbl(.x = data_firstlast_divided_by_max,
+                                              .f = ~nrow(.)))
+
+
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(
+    attractor_plots = 
+      purrr::pmap(list(..1 = all_nodes_with_strengths,
+                       ..2 = observations,
+                       ..3 = observations_daily,
+                       ..4 = User),
+                  .f = ~{
+                    dplyr::mutate(..1,
+                                  strength_rescaled = 
+                                    scales::rescale(strength, to = c(0.3, 1.1)),
+                                  alpha_strength = ifelse(strength_rescaled == 0.3, 
+                                                          0.5, 
+                                                          strength_rescaled)) %>% 
+                      ggplot(data = .,
+                             aes(x = forcats::fct_rev(name), 
+                                 y = value, 
+                                 size = strength_rescaled,
+                                 alpha = alpha_strength,
+                                 color = attractors_n)) +
+                      scale_size_identity() +
+                      scale_alpha_identity() +
+                      geom_point(aes(alpha = alpha_strength)) +
+                      geom_line(aes(group = time,
+                                    alpha = alpha_strength)) +
+                      scale_color_manual(values = c(viridisLite::plasma(4, 
+                                                                        end = 0.8, 
+                                                                        direction = -1), 
+                                                    "gray40", "gray50")) +
+                      # scale_y_continuous(breaks = 0:1, 
+                      #                    labels = 0:1,
+                      #                    minor_breaks = 0:1) + #scales::label_percent(accuracy = 1)) +
+                      theme_bw() +
+                      theme(legend.position = "none") +
+                      labs(y = NULL,
+                           x = NULL,
+                           title = paste0("Participant \"", ..4, "\" - based on ", ..2, " data points")) +
+                      facet_wrap(~attractors_n) +
+                      coord_flip(#ylim = c(0, 1)
+                                 )
+                  }
+      ))
+
+emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots[[1]]
+# emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
+
+# Save this to be used for the task analysis later; otherwise overwritten by sensitivity analyses:
+firstlast_emadata_nested_wrangled_both_recnets_nodes_plots <- 
+  emadata_nested_wrangled_both_recnets_nodes_plots
+
+# cowplot::save_plot("./figures/attractors.png", 
+#                    emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots[[1]], 
+#                    dpi = 300,
+#                    base_height = 11.69/2)
+
+
+# # Make pdf of plots
+# plist <- purrr::map(emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots, ~ .x + theme(axis.text.y = element_blank(),
+#                                                                               axis.text.x = element_blank(),
+#                                                                               title = element_blank()))
+# # plist <- plist %>% purrr::flatten()
+# 
+# pdf(file = "./surrogate_attractor_plots_motivations.pdf",
+#     width = 11.69,
+#     height = 8.27)
+# 
+# # for (i in seq(1, length(plist), 6)) {
+#   gridExtra::grid.arrange(grobs = plist,
+#                ncol = 4, nrow = 5)
+# # }
+# 
+# dev.off()
+
+```
+
+# Surrogate data analysis
+
+Surrogate data analysis is a method for testing hypotheses about temporal structure in time series data. We use the Amplitude Adjusted Fourier Transform to create surrogate data. This data is a transformation of the original time series; a shuffled version, which in the case of Amplitude Adjusted Fourier Transform also attempts to preserve certain properties such as the original autocorrelation function while destroying any non-linear temporal structure. 
+
+Comparing the results from real data against surrogates, hence allows us to answer the question "Would it be common for this analysis to find patterns from data where none exist?"
+
+```{r firstlast-attractors-surrogates, fig.show='hide', echo = FALSE}
+### Here are the same plots for surrogate data:
+
+userlist <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::filter(stringr::str_detect(string = User,
+                                    pattern = "surrogate")) %>% 
+  dplyr::pull(User)
+
+# for(i in userlist){
+# 
+# emadata_nested_wrangled_both_recnets_nodes_plots[ emadata_nested_wrangled_both_recnets_nodes_plots$User == i, ]$attractor_plots[[1]] %>% 
+#     print()
+# 
+# cat('\n\n###', i, '\n\n  ')
+# }
+
+```
+
+<!-- ### Strongest patterns in same plot -->
+
+```{r strongest_patterns, fig.show='hide', echo = FALSE}
+
+# adata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+#   dplyr::mutate(
+#     attractor_plots = 
+#       purrr::pmap(list(..1 = all_nodes_with_strengths,
+#                        ..2 = observations,
+#                        ..3 = observations_daily,
+#                        ..4 = User,
+#                        ..5 = max_connected_day,
+#                        ..6 = secondary_attractor_day,
+#                        ..7 = tertiary_attractor_day,
+#                        ..8 = fourth_attractor_day),
+#                   .f = ~{
+#                     dplyr::mutate(..1,
+#                                   strength_rescaled = 
+#                                     scales::rescale(strength, to = c(0.3, 1.5)),
+#                                   alpha_strength = ifelse(strength_rescaled == 0.3, 
+#                                                           0.5, 
+#                                                           strength_rescaled)) %>%
+#                       dplyr::filter(time %in% c(..5, ..6, ..7, ..8)) %>% 
+#                       dplyr::mutate(value = dplyr::case_when(
+#                         name == "Amotivation" | name == "Extrinsic" | name == "Introjected" ~
+#                           8 - value,
+#                         TRUE ~ value)) %>% 
+#                       ggplot(data = .,
+#                              aes(x = forcats::fct_rev(name), 
+#                                  y = value, 
+#                                  size = strength_rescaled,
+#                                  alpha = alpha_strength,
+#                                  color = attractors_n)) +
+#                       scale_size_identity() +
+#                       scale_alpha_identity() +
+#                       geom_point(aes(alpha = alpha_strength)) +
+#                       geom_line(aes(group = time,
+#                                     alpha = alpha_strength)) +
+#                       scale_color_manual(values = c(viridisLite::plasma(4, 
+#                                                                         end = 0.8, 
+#                                                                         direction = -1), 
+#                                                     "gray40", "gray50")) +
+#                       # scale_y_continuous(breaks = 0:1, 
+#                       #                    labels = 0:1,
+#                       #                    minor_breaks = 0:1) + #scales::label_percent(accuracy = 1)) +
+#                       theme_bw() +
+#                       theme(legend.position = "none") +
+#                       labs(y = NULL,
+#                            x = NULL,
+#                            title = paste0("Participant \"", ..4, "\" - based on ", ..2, " data points")) +
+#                       # facet_wrap(~attractors_n) +
+#                       coord_flip(
+#                         ylim = c(0, 1)
+#                         )
+#                   }
+#       ))
+# 
+# adata_nested_wrangled_both_recnets_nodes_plots$attractor_plots
+
+```
+
+# Comparing surrogates to observed data 
+
+The next figure depicts the minimums and maximums of the previous figure as bounds for the attractors. Overlaid in grey are the results where the same analysis has been applied to the `r nrow(emadata_nested_wrangled_both_recnets_nodes_plots) - 1` surrogate participants (i.e. the original data shuffled while retaining some linear properties such as autocovariance). 
+
+Our classification rule categorises any pattern which could belong to several attractors, as belonging to the strongest one -- hence there are more classified as the first than the second, more in second than the third, and so on. We can readily observe, that the grey lines do not match the bounds very well. This means that the original attractors are not commonly observed in data without non-linear structure.
+
+Each of the `r nrow(emadata_nested_wrangled_both_recnets_nodes_plots) - 1` surrogate participants have `r emadata_nested_wrangled_both_recnets_nodes_plots$observations[[1]]` configurations (i.e. time points) of six variables, making the total number of grey lines `r (nrow(emadata_nested_wrangled_both_recnets_nodes_plots) - 1)*emadata_nested_wrangled_both_recnets_nodes_plots$observations[[1]]`.
+
+```{r}
+minmax_test <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(minmax = purrr::map(.x = all_nodes_with_strengths,
+                                    .f = ~.x %>% 
+                                      dplyr::group_by(name, attractors) %>% 
+                                      dplyr::mutate(min_or_max = dplyr::case_when(value == min(value) ~ "mini",
+                                                                                  value == max(value) ~ "maxi")) %>% 
+                                      dplyr::select(name, value, min_or_max, attractors) %>% 
+                                      dplyr::filter(!is.na(min_or_max)) %>%
+                                      dplyr::distinct(value, .keep_all = TRUE) %>% 
+                                      dplyr::ungroup() %>% 
+                                      tidyr::pivot_wider(names_from = min_or_max,
+                                                         values_from = value) %>%
+                                      dplyr::arrange(attractors, name)))
+
+datalists <- emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[2:nrow(emadata_nested_wrangled_both_recnets_nodes_plots)] 
+
+surrogate_data <-  
+  purrr::imap(.x = datalists, ~dplyr::mutate(.x, 
+                                             case = .y,
+                                             time_case = paste0(time, "_", .y)) %>% 
+  dplyr::group_by(attractors) %>% 
+  dplyr::filter(strength == max(strength)) %>% 
+    dplyr::ungroup()) %>% 
+  dplyr::bind_rows()
+
+surrogate_data_all <-  
+  purrr::imap(.x = datalists, ~dplyr::mutate(.x, 
+                                             case = .y,
+                                             time_case = paste0(time, "_", .y))) %>% 
+                dplyr::bind_rows()
+
+minmax_test$minmax[[1]] %>% 
+  ggplot(aes(x = forcats::fct_rev(name),
+             color = attractors,
+             group = attractors)) +
+      geom_ribbon(data = minmax_test$minmax[[1]],
+              aes(ymin = mini,
+                  ymax = maxi,
+                  fill = attractors),
+              alpha = 1) + 
+  geom_line(data = surrogate_data_all,
+            # combined_data %>%
+            # tidyr::pivot_longer(cols = c(interest, pleasure, importance,
+            #                              situation_requires, anxiety_guilt_avoidance, another_wants)) %>%
+            # dplyr::filter(within_bounds == "Surrogates within bounds"),
+            aes(y = value,
+                x = forcats::fct_rev(name),
+                group = time_case),
+            alpha = 0.05,
+            size = 0.75,
+            colour = "grey") +
+  scale_fill_manual(values = c(viridisLite::plasma(4, 
+                                                   end = 0.8, 
+                                                   direction = -1), 
+                               "gray40", "gray50")) +
+  scale_color_manual(values = c(viridisLite::plasma(4, 
+                                                    end = 0.8, 
+                                                    direction = -1), 
+                                "gray40", "gray50")) +
+  # geom_point(data = surrogate_data_all %>% dplyr::filter(time_case == "45_1") %>%
+  #              dplyr::mutate(attractors = as.character("4th")),
+  #            aes(x = forcats::fct_rev(name),
+  #                y = value,
+  #                size = 2,
+  #                alpha = 1),
+  #            shape = 8,
+  #            colour = "black") +
+  coord_flip(ylim = c(0, 1)) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(y = NULL,
+       x = NULL) +
+  facet_wrap(~attractors)
+ 
+```
+
+```{r}
+
+df_minmax <- minmax_test$minmax[[1]] %>% 
+  dplyr::group_by(attractors) %>% 
+  tidyr::nest() %>% 
+  dplyr::mutate(data = purrr::map2(.x = data,
+                                   .y = attractors,
+                                     .f = ~.x %>% 
+                                     setNames(paste0(names(.), "_", .y))))
+
+real_data_bounds <- dplyr::bind_cols(df_minmax$data)
+
+# real_data_bounds %>% dplyr::select_if(is.numeric)
+
+```
+
+In the next table, these results are quantified. Recall that each pattern is clustered within the "surrogate person". Some number of these configurations fit within the bounds of each of the attractors derived from the original data: If this number significantly differs from the numbers observed in the real data, we can infer that the observed configurations tap into non-linear temporal structure instead of randomness alone.  
+
+```{r}
+surrogate_data_all_cleaned <- surrogate_data_all %>% 
+  dplyr::select(time, name, value, case, time_case, attractors, strength) %>% 
+  tidyr::pivot_wider(names_from = name,
+                     values_from = value)
+  
+real_data <- minmax_test$minmax[[1]] %>% 
+  tidyr::pivot_wider(names_from = name,
+                     values_from = c(mini, maxi),
+                     )
+  
+combined_data <- dplyr::full_join(surrogate_data_all_cleaned, real_data, by = "attractors") %>% 
+  rowwise() %>% 
+  dplyr::mutate(within_bounds = dplyr::case_when(pleasure <= maxi_pleasure & 
+                                                   pleasure >= mini_pleasure &
+                                                  interest <= maxi_interest & 
+                                                   interest >= mini_interest &
+                                                  importance <= maxi_importance & 
+                                                   importance >= mini_importance &
+                                                  situation_requires <= maxi_situation_requires & 
+                                                   situation_requires >= mini_situation_requires &
+                                                  anxiety_guilt_avoidance <= maxi_anxiety_guilt_avoidance & 
+                                                   anxiety_guilt_avoidance >= mini_anxiety_guilt_avoidance &
+                                                  another_wants <= maxi_another_wants & 
+                                                   another_wants >= mini_another_wants ~ "Surrogates within bounds",
+                                                 TRUE ~ "Surrogates out of bounds")) %>% 
+  dplyr::ungroup()
+
+```
+
+```{r}
+
+attractor_prevalence_table_1 <- surrogate_data_all %>% 
+  # dplyr::group_by(attractors) %>% 
+  dplyr::count(attractors,
+               name = "n in surrogates") %>% 
+  dplyr::mutate(`Proportion in surrogates` = (`n in surrogates`/sum(`n in surrogates`)) %>% 
+                  round(., digits = 2))
+
+attractor_prevalence_table2 <- emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]] %>% 
+  tidyr::pivot_wider(names_from = name,
+                     values_from = value) %>% 
+  dplyr::count(attractors, name = "n in real data") %>% 
+  dplyr::mutate(`Proportion in real data` = (`n in real data`/sum(`n in real data`)) %>% 
+                  round(., digits = 2)) %>% 
+  dplyr::select(-attractors)
+
+# dplyr::bind_cols(attractor_prevalence_table_1, attractor_prevalence_table2) %>% 
+#   knitr::kable()
+
+surrogate_data_all_cleaned <- surrogate_data_all %>% 
+  dplyr::select(time, name, value, case, time_case, attractors, strength) %>% 
+  tidyr::pivot_wider(names_from = name,
+                     values_from = value)
+  
+real_data <- minmax_test$minmax[[1]] %>% 
+  tidyr::pivot_wider(names_from = name,
+                     values_from = c(mini, maxi),
+                     )
+
+########## MINMAX table with proportions of patterns in attractors, compared to real data
+# surrogate_data_all %>% 
+#   dplyr::group_by(attractors, case) %>% 
+#   tidyr::pivot_wider(names_from = name,
+#                      values_from = value) %>% 
+#   dplyr::summarise(`n in surrogates` = n()) %>% 
+#   dplyr::group_by(case) %>% 
+#   dplyr::mutate(`Proportion in surrogates` = (`n in surrogates`/sum(`n in surrogates`)) %>% 
+#                   round(., digits = 2)) %>% 
+#   dplyr::group_by(attractors) %>% 
+#   dplyr::summarise(`Min proportion in surrogates`= min(`Proportion in surrogates`),
+#                    `Max proportion in surrogates`= max(`Proportion in surrogates`)) %>% 
+#   dplyr::bind_cols(., attractor_prevalence_table2) %>% 
+#   knitr::kable()
+
+```
+
+Table below shows, how many of the surrogate configurations would fit the bounds of each observed attractor. The results give credence to the proposal that the attractors observed in real data (first row) indeed tap into temporal information in the time series.
+ 
+```{r}
+df <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(patterns = purrr::map(.x = data_firstlast_divided_by_max,
+                                      .f = ~.x %>% 
+                                        dplyr::mutate(time = dplyr::row_number()) %>% 
+                                        tidyr::pivot_longer(cols = -time) %>%
+                                        tidyr::pivot_wider(names_from = time,
+                                                           values_from = value)),
+                real_data_bounds = rep(list(real_data_bounds %>% dplyr::select_if(is.numeric)),
+                                       nrow(emadata_nested_wrangled_both_recnets_nodes_plots)),
+                ) %>% 
+  dplyr::select(User, real_data_bounds, patterns)
+
+df_attractors_within_bounds <- df %>% 
+  dplyr::mutate(inside_1st = purrr::map2_dbl(.x = real_data_bounds,
+                                             .y = patterns,
+                                             .f = ~as_tibble(.x[["maxi_1st"]] >= .y & 
+                                                               .x[["mini_1st"]] <= .y) %>% 
+                                               # Result is a vector of 6 TRUE/FALSE values per timepoint
+                                               dplyr::summarise(across(.cols = -name, 
+                                                                       ~all(.))) %>% 
+                                               # Result is just one value per timepoint, TRUE if all within bounds
+                                               tidyr::pivot_longer(cols = everything()) %>% 
+                                               # Result is a data frame with columns for timepoint and TRUE/FALSE value
+                                               dplyr::summarise(n = sum(value)) %>% 
+                                               dplyr::pull(n)),
+                inside_2nd = purrr::map2_dbl(.x = real_data_bounds,
+                                             .y = patterns,
+                                             .f = ~as_tibble(.x[["maxi_2nd"]] >= .y & 
+                                                               .x[["mini_2nd"]] <= .y) %>% 
+                                               # Result is a vector of 6 TRUE/FALSE values per timepoint
+                                               dplyr::summarise(across(.cols = -name, 
+                                                                       ~all(.))) %>% 
+                                               # Result is just one value per timepoint, TRUE if all within bounds
+                                               tidyr::pivot_longer(cols = everything()) %>% 
+                                               # Result is a data frame with columns for timepoint and TRUE/FALSE value
+                                               dplyr::summarise(n = sum(value)) %>% 
+                                               dplyr::pull(n)),
+                inside_3rd = purrr::map2_dbl(.x = real_data_bounds,
+                                             .y = patterns,
+                                             .f = ~as_tibble(.x[["maxi_3rd"]] >= .y & 
+                                                               .x[["mini_3rd"]] <= .y) %>% 
+                                               # Result is a vector of 6 TRUE/FALSE values per timepoint
+                                               dplyr::summarise(across(.cols = -name, 
+                                                                       ~all(.))) %>% 
+                                               # Result is just one value per timepoint, TRUE if all within bounds
+                                               tidyr::pivot_longer(cols = everything()) %>% 
+                                               # Result is a data frame with columns for timepoint and TRUE/FALSE value
+                                               dplyr::summarise(n = sum(value)) %>% 
+                                               dplyr::pull(n)),
+                inside_4th = purrr::map2_dbl(.x = real_data_bounds,
+                                             .y = patterns,
+                                             .f = ~as_tibble(.x[["maxi_4th"]] >= .y & 
+                                                               .x[["mini_4th"]] <= .y) %>% 
+                                               # Result is a vector of 6 TRUE/FALSE values per timepoint
+                                               dplyr::summarise(across(.cols = -name, 
+                                                                       ~all(.))) %>% 
+                                               # Result is just one value per timepoint, TRUE if all within bounds
+                                               tidyr::pivot_longer(cols = everything()) %>% 
+                                               # Result is a data frame with columns for timepoint and TRUE/FALSE value
+                                               dplyr::summarise(n = sum(value)) %>% 
+                                               dplyr::pull(n)),
+                inside_Uncategorised = purrr::map2_dbl(.x = real_data_bounds,
+                                             .y = patterns,
+                                             .f = ~as_tibble(.x[["maxi_Uncategorised"]] >= .y & 
+                                                               .x[["mini_Uncategorised"]] <= .y) %>% 
+                                               # Result is a vector of 6 TRUE/FALSE values per timepoint
+                                               dplyr::summarise(across(.cols = -name, 
+                                                                       ~all(.))) %>% 
+                                               # Result is just one value per timepoint, TRUE if all within bounds
+                                               tidyr::pivot_longer(cols = everything()) %>% 
+                                               # Result is a data frame with columns for timepoint and TRUE/FALSE value
+                                               dplyr::summarise(n = sum(value)) %>% 
+                                               dplyr::pull(n)),
+                inside_Unique = purrr::map2_dbl(.x = real_data_bounds,
+                                             .y = patterns,
+                                             .f = ~as_tibble(.x[["maxi_Unique"]] >= .y & 
+                                                               .x[["mini_Unique"]] <= .y) %>% 
+                                               # Result is a vector of 6 TRUE/FALSE values per timepoint
+                                               dplyr::summarise(across(.cols = -name, 
+                                                                       ~all(.))) %>% 
+                                               # Result is just one value per timepoint, TRUE if all within bounds
+                                               tidyr::pivot_longer(cols = everything()) %>% 
+                                               # Result is a data frame with columns for timepoint and TRUE/FALSE value
+                                               dplyr::summarise(n = sum(value)) %>% 
+                                               dplyr::pull(n)))
+
+attractor_table_per_person <- df_attractors_within_bounds %>% 
+  dplyr::select(-real_data_bounds,
+                -patterns,
+                -inside_Uncategorised,
+                -inside_Unique) 
+
+attractor_table_per_person %>% 
+  knitr::kable()
+
+```
+Taking the averages of the columns above, excluding the real data (first row), we can observe the following:
+
+```{r}
+attractor_table_summary <- attractor_table_per_person %>% 
+  dplyr::filter(stringr::str_detect(string = User,
+                                    pattern = "surrogate")) %>% 
+  dplyr::summarise(across(where(is.numeric), ~mean(.) %>% round(., digits = 3)))
+
+attractor_table_summary %>% knitr::kable()
+
+```
+We find that, for example, on average `r attractor_table_summary %>% pull(inside_1st)` out of `r emadata_nested_wrangled_both_recnets_nodes_plots$observations[[1]]` surrogate time points would depict a pattern where all 6 values fit within the bounds of what was identified as the first attractor. 
+
+
+
+```{r include = FALSE, eval = FALSE}
+
+combined_data %>% 
+  dplyr::count(within_bounds, attractors) %>% 
+  # dplyr::tally() %>% 
+  tidyr::pivot_wider(names_from = within_bounds,
+                     values_from = n,
+                     values_fill = 0) %>% 
+  dplyr::rename(Attractor = attractors) %>% 
+  dplyr::mutate(`Proportion within bounds` = (`Surrogates within bounds` / 
+                  (`Surrogates within bounds` + `Surrogates out of bounds`)) %>% 
+                  round(., digits = 2)) %>% 
+  knitr::kable()
+  
+```
+
+To gain insight into why this happens, we can examine the radius which defines whether a value is deemed "recurring" or not in the recurrence plot. We chose this radius such, that `r scales::percent(recurrence_rate)` of the points on the plot recur. In the figure below, we can observe that when the same analysis is conducted on data stripped of non-linear structure, the radius required to achieve the aforementioned recurrence rate is vastly larger. 
+
+```{r}
+purrr::map(emadata_nested_wrangled_both_recnets$RN, 
+           ~ base::attr(., "emRad") %>% 
+             tibble::as_tibble()) %>% 
+  dplyr::bind_rows() %>% 
+  dplyr::mutate(User = emadata_nested_wrangled_both_recnets$User,
+                surrogate = dplyr::case_when(stringr::str_detect(
+                                                string = User,
+                                                pattern = "surrogate") ~ "Surrogate datasets",
+                                                TRUE ~ "Real dataset")) %>% 
+  ggplot(aes(y = value,
+             x = User)) +
+  geom_point() +
+  geom_segment(aes(y = 0, 
+                   x = User, 
+                   yend = value, 
+                   xend = User), 
+               color = "black") +
+  # geom_vline(xintercept = 1.5) +
+  theme_bw() +
+  labs(x = NULL,
+       y = NULL,
+       title = paste0("Radius required to produce ", scales::percent(recurrence_rate), " recurrence rate")) +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  facet_grid(~surrogate, scales = "free_x")
+  # facet_wrap(~surrogate)
+
+  
+```
+
+# Strength vs. degree
+
+It is also interesting to examine, whether the relationship between node degree (i.e. how many times the configuration at a particular time point is deemed to recur) and strength centrality. Strength centrality in this context means a node's degree weighted by the configuration's similarity to those states it's deemed recurrent with.
+
+```{r, results = "asis", fig.show = "asis"}
+strength_degree <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::mutate(strength_degree_data = purrr::map(.x = all_nodes_with_strengths,
+                                                  .f = ~.x %>% 
+                                                    dplyr::group_by(time) %>% 
+                                                    dplyr::slice(1) %>% 
+                                                    dplyr::ungroup() %>% 
+                                                    dplyr::select(strength,
+                                                                  degree)),
+                spearman_strength_degree = purrr::map(.x = strength_degree_data,
+                                                      .f= ~cor(.x, method = "pearson")[2] %>% 
+                                                        round(., digits = 4)),
+                strength_degree_plot = purrr::pmap(list(..1 = strength_degree_data,
+                                                        ..2 = User,
+                                                        ..3 = spearman_strength_degree),
+                                                  .f = ~.x %>% 
+                                                    ggplot(aes(x = strength, 
+                                                               y = degree)) +
+                                                    geom_point() +
+                                                    theme_bw() +
+                                                    labs(title = ..2,
+                                                         caption = paste0("Spearman correlation: ", ..3))))
+
+# strength_degree$strength_degree_plot
+
+strength_degree %>% 
+  dplyr::select(User, spearman_strength_degree) %>% 
+  dplyr::mutate(spearman_strength_degree = purrr::map_dbl(.x = spearman_strength_degree,
+                                                          .f = ~.x)) %>% 
+  dplyr::mutate(surrogate = dplyr::case_when(stringr::str_detect(string = User,
+                                                                 pattern = "surrogate") ~ "Surrogate datasets",
+                                             TRUE ~ "Real dataset")) %>% 
+  ggplot(aes(y = spearman_strength_degree,
+             x = User)) +
+  geom_point() +
+  geom_segment(aes(y = 0.95, 
+                   x = User, 
+                   yend = spearman_strength_degree, 
+                   xend = User), 
+               color = "black") +
+  # geom_vline(xintercept = 1.5) +
+  theme_bw() +
+  labs(x = NULL,
+       y = NULL,
+       title = "Spearman correlation between strength centrality and node degree",
+       caption = NULL) +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  facet_grid(~surrogate, scales = "free_x")
+
+```
+
+We can observe that the correlation between degree and strength centrality is the lowest in real data; with 19 surrogates, if all data was random, this would only happen 1/20 (i.e. 5%) of the time, which can be considered as the p-value of this test.
+```{r, include = FALSE, echo = FALSE}
+strength_degree <- strength_degree %>%
+  dplyr::mutate(strength_degree_densitydata =
+                  purrr::map2(.x = User,
+                              .y = strength_degree_data,
+                              .f = ~.y %>%
+                                dplyr::mutate(User = .x,
+                                              surrogate = dplyr::case_when(stringr::str_detect(
+                                                string = User,
+                                                pattern = "surrogate") ~ "Surrogate",
+                                                TRUE ~ "Real"),
+                                              time = dplyr::row_number())))
+
+densitydata <- strength_degree$strength_degree_densitydata %>%
+  dplyr::bind_rows() %>%
+  tidyr::pivot_longer(cols = c(strength, degree))
+# 
+# densitydata %>% 
+#   ggplot(aes(x = value,
+#              fill = surrogate,
+#              group = User)) +
+#     geom_density(data = densitydata %>% dplyr::filter(surrogate == "Surrogate"),
+#                  alpha = 0.1) +
+#     geom_density(data = densitydata %>% dplyr::filter(surrogate == "Real"),
+#                  alpha = 0.5) +
+#   guides(color = FALSE) +
+#   labs(x = NULL) +
+#   theme_bw() +
+#   theme(legend.title = element_blank()) +
+#     facet_wrap(~name, scales = "free")
+#   
+# densitydata %>% 
+#   dplyr::group_by(surrogate, time, name) %>%
+#   dplyr::summarise(maxi = max(value),
+#                    mini = min(value)) %>%
+#   ggplot(aes(x = time),
+#          fill = surrogate) +
+#   geom_ribbon(aes(ymin = mini, 
+#                   ymax = maxi,
+#                   fill = surrogate),
+#               alpha = 0.1) +
+#   geom_line(aes(y = maxi,
+#                 colour = surrogate)) +
+#   geom_line(aes(y = mini,
+#                 colour = surrogate)) +
+#   labs(y = NULL,
+#        x = "time") +
+#   guides(surrogate = FALSE) +
+#   facet_wrap(~name) +
+#   theme_bw()
+
+userlist <- purrr::map_chr(strength_degree[["strength_degree_densitydata"]],
+           ~.x %>% 
+             dplyr::distinct(User) %>% 
+             dplyr::pull()) %>% 
+  expand.grid(., .) %>% 
+  dplyr::rename(Data1 = Var1,
+                Data2 = Var2)
+
+# kld_list_degree <- purrr::map(strength_degree[["strength_degree_densitydata"]],
+#            ~.x %>% dplyr::pull(degree)) %>% 
+#   expand.grid(., .) %>%
+#   mutate(out = map2_dbl(.x = Var1, .y = Var2, 
+#                         .f = ~LaplacesDemon::KLD(px = .x,
+#                                                  py = .y)$mean.sum.KLD)) %>%
+#   as_tibble()
+# 
+# dplyr::bind_cols(userlist, kld_list_degree) %>%
+#   dplyr::group_by(Data1) %>% 
+#   dplyr::summarise(mean_out = mean(out)) %>% 
+#   dplyr::mutate(User = Data1,
+#                 surrogate = dplyr::case_when(stringr::str_detect(string = User,
+#                                                                  pattern = "surrogate") ~ "Surrogate datasets",
+#                                              TRUE ~ "Real dataset")) %>% 
+#   ggplot(aes(y = mean_out,
+#              x = User)) +
+#   geom_point() +
+#   geom_segment(aes(y = 0, 
+#                    x = User, 
+#                    yend = mean_out, 
+#                    xend = User), 
+#                color = "black") +
+#   # geom_vline(xintercept = 1.5) +
+#   theme_bw() +
+#   labs(x = NULL,
+#        y = NULL,
+#        title = "Degree divergence",
+#        caption = "Values indicate a dataset's mean Kullback-Leibler divergence from distributions of all other datasets") +
+#   theme(panel.grid.minor.x = element_blank(),
+#         panel.grid.major.x = element_blank(),
+#         axis.ticks.x = element_blank(),
+#         axis.text.x = element_blank()) +
+#   facet_grid(~surrogate, scales = "free_x")
+
+```
+
+```{r, include = FALSE, echo = FALSE}
+
+# kld_list_strength <- purrr::map(strength_degree[["strength_degree_densitydata"]],
+#            ~.x %>% dplyr::pull(strength)) %>% 
+#   expand.grid(., .) %>%
+#   mutate(out = map2_dbl(.x = Var1, .y = Var2, 
+#                         .f = ~LaplacesDemon::KLD(px = .x,
+#                                                  py = .y)$mean.sum.KLD)) %>%
+#   as_tibble()
+# 
+# dplyr::bind_cols(userlist, kld_list_strength) %>%
+#   dplyr::group_by(Data1) %>% 
+#   dplyr::summarise(mean_out = mean(out)) %>% 
+#   dplyr::mutate(User = Data1,
+#                 surrogate = dplyr::case_when(stringr::str_detect(string = User,
+#                                                                  pattern = "surrogate") ~ "Surrogate datasets",
+#                                              TRUE ~ "Real dataset")) %>% 
+#   ggplot(aes(y = mean_out,
+#              x = User)) +
+#   geom_point() +
+#   geom_segment(aes(y = 0, 
+#                    x = User, 
+#                    yend = mean_out, 
+#                    xend = User), 
+#                color = "black") +
+#   # geom_vline(xintercept = 1.5) +
+#   theme_bw() +
+#   labs(x = NULL,
+#        y = NULL,
+#        title = "Strength divergence",
+#        caption = "Values indicate a dataset's mean Kullback-Leibler divergence from distributions of all other datasets") +
+#   theme(panel.grid.minor.x = element_blank(),
+#         panel.grid.major.x = element_blank(),
+#         axis.ticks.x = element_blank(),
+#         axis.text.x = element_blank()) +
+#   facet_grid(~surrogate, scales = "free_x")
+
+```
+
+## Scatterplots {.tabset}
+
+Below are scatterplots of node degree and node strength.
+
+**Real data**
+
+```{r, results = "asis", fig.show = "asis"}
+userlist <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
+  dplyr::filter(stringr::str_detect(string = User,
+                                    pattern = "surrogate")) %>% 
+  dplyr::pull(User)
+
+#### Show non-surrogate plot
+show(strength_degree[!emadata_nested_wrangled_both_recnets_nodes_plots$User %in% userlist, ]$strength_degree_plot[[1]])
+```
+
+**Surrogate data**
+
+```{r, results = "asis", fig.show = "asis"}
+#### Show the rest of the plots in tabset
+for(i in userlist){
+
+cat('\n\n###', i, '\n\n  ')
+  
+show(strength_degree[emadata_nested_wrangled_both_recnets_nodes_plots$User == i, ]$strength_degree_plot[[1]])
+
+}
+
+
+
+```
+
+
+---
+
+$~$
+
+# Session information
+
+Description of the R environment can be found below.
+
+```{r session-info, results = 'markup'}
+devtools::session_info()
+
+pander::pander(sessionInfo())
+```
+
+<!-- </div> -->
+
+
+```{r echo = FALSE, include = FALSE}
+# surrogate_data_all %>%
+#   tidyr::pivot_wider(names_from = name,
+#                      values_from = value) %>%
+#   rowwise() %>%
+#   dplyr::mutate(sum_connecting = sum(connecting_to_strongest,
+#                                         connecting_to_2nd_strongest,
+#                                         connecting_to_3rd_strongest,
+#                                         connecting_to_4th_strongest)) %>%
+#   dplyr::select(time, sum_connecting, attractors) %>%
+#   dplyr::arrange(desc(sum_connecting)) %>%
+#   dplyr::filter(attractors == "4th")
+#   dplyr::group_by(attractors) %>%
+#   dplyr::summarise(sum = sum(sum_connecting))
+  
+# emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]] %>% 
+#   tidyr::pivot_wider(names_from = name,
+#                      values_from = value) %>%
+#   rowwise() %>%
+#   dplyr::mutate(sum_connecting = sum(connecting_to_strongest,
+#                                         connecting_to_2nd_strongest,
+#                                         connecting_to_3rd_strongest,
+#                                         connecting_to_4th_strongest)) %>%
+#   dplyr::select(time, sum_connecting, attractors) %>%
+#   dplyr::arrange(desc(sum_connecting)) %>%
+#   dplyr::filter(sum_connecting>1) %>% 
+#   # dplyr::filter(attractors == "4th")
+#   dplyr::group_by(attractors) %>%
+#   dplyr::summarise(sum = sum(sum_connecting))
+# 
+# emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]] %>% 
+#   tidyr::pivot_wider(names_from = name,
+#                      values_from = value) %>%
+#   rowwise() %>%
+#   dplyr::mutate(sum_connecting = sum(connecting_to_strongest,
+#                                         connecting_to_2nd_strongest,
+#                                         connecting_to_3rd_strongest,
+#                                         connecting_to_4th_strongest)) %>%
+#   dplyr::filter(# connecting_to_strongest == FALSE &
+#                   # connecting_to_2nd_strongest == FALSE & 
+#                   # connecting_to_3rd_strongest == TRUE & 
+#                   connecting_to_4th_strongest == TRUE
+#                   )
+```
