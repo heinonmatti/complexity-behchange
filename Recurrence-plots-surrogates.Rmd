@@ -1083,19 +1083,7 @@ strength_degree <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
                                                                   degree)),
                 spearman_strength_degree = purrr::map(.x = strength_degree_data,
                                                       .f= ~cor(.x, method = "pearson")[2] %>% 
-                                                        round(., digits = 4)),
-                strength_degree_plot = purrr::pmap(list(..1 = strength_degree_data,
-                                                        ..2 = User,
-                                                        ..3 = spearman_strength_degree),
-                                                  .f = ~.x %>% 
-                                                    ggplot(aes(x = strength, 
-                                                               y = degree)) +
-                                                    geom_point() +
-                                                    theme_bw() +
-                                                    labs(title = ..2,
-                                                         caption = paste0("Spearman correlation: ", ..3))))
-
-# strength_degree$strength_degree_plot
+                                                        round(., digits = 4)))
 
 strength_degree %>% 
   dplyr::select(User, spearman_strength_degree) %>% 
@@ -1269,6 +1257,35 @@ Below are scatterplots of node degree and node strength.
 **Real data**
 
 ```{r, results = "asis", fig.show = "asis"}
+
+maxdegree <- dplyr::bind_rows(strength_degree$strength_degree_data) %>% 
+  dplyr::summarise(across(everything(), max)) %>%
+  dplyr::pull(degree)
+maxstrength <- dplyr::bind_rows(strength_degree$strength_degree_data) %>% 
+  dplyr::summarise(across(everything(), max)) %>%
+  dplyr::pull(strength)
+
+strength_degree <- strength_degree %>% 
+  dplyr::mutate(strength_degree_plot = purrr::pmap(list(..1 = strength_degree_data,
+                                                        ..2 = User,
+                                                        ..3 = spearman_strength_degree),
+                                                  .f = ~.x %>% 
+                                                    ggplot(aes(x = strength, 
+                                                               y = degree)) +
+                                                    geom_point() +
+                                                    theme_bw() +
+                                                    coord_cartesian(xlim = c(0, ceiling(maxstrength/5)*5),
+                                                                    ylim = c(0, ceiling(maxdegree/5)*5)) +
+                                                    scale_y_continuous(breaks = seq(from = 0, 
+                                                                                    to = ceiling(maxdegree/5)*5, 
+                                                                                    by = 5)) +
+                                                    scale_x_continuous(breaks = seq(from = 0, 
+                                                                                    to = ceiling(maxstrength/5)*5, 
+                                                                                    by = 5)) +
+                                                    labs(title = ..2,
+                                                         caption = paste0("Spearman correlation: ", ..3))))
+
+
 userlist <- emadata_nested_wrangled_both_recnets_nodes_plots %>% 
   dplyr::filter(stringr::str_detect(string = User,
                                     pattern = "surrogate")) %>% 
@@ -1289,8 +1306,6 @@ cat('\n\n###', i, '\n\n  ')
 show(strength_degree[emadata_nested_wrangled_both_recnets_nodes_plots$User == i, ]$strength_degree_plot[[1]])
 
 }
-
-
 
 ```
 

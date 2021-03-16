@@ -5,8 +5,6 @@ utils
 grDevices
 graphics
 stats
-shiny
-knitr
 tidyverse
 ggplot2
 tibble
@@ -16,5 +14,7 @@ purrr
 dplyr
 stringr
 forcats
+shiny
+knitr
 bookdown
 patchwork
