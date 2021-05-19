@@ -245,18 +245,6 @@ rejected_vars_per_test$name <- test_nested$data[[1]]$name
 rejected_vars_per_test <- rejected_vars_per_test %>% 
   dplyr::select(name, everything())
 
-
-# DT::datatable(test_results,
-#               options = list(pageLength = 11),
-#               caption = "P-values (or maximum p-values in case of McLeod-Li test) 
-#               for tests of assumptions of data-generating processes") %>%
-#     DT::formatRound(columns = colnames(test_results), digits=3)
-
-# test_results %>% summarise_if(is.numeric, ~((sum(.<0.05) / nrow(test_results)) %>% scales::percent())) %>% 
-#   knitr::kable(caption = paste0("Percentage of ", 
-#                                 nrow(test_results), 
-#                                 " assumption tests indicating deviance at the p < 0.05 level"))
-
 ```
 
 ```{r result_alphaLo}
@@ -734,9 +722,7 @@ DT::datatable(tests_number_of_series %>%
               options = list(pageLength = 12),
               caption = paste0("Number of time series (out of number of participants = 20) 
                                where H0 is rejected at p<", 
-                               alphaLevel)) #%>%
-    # DT::formatRound(columns = colnames(test_results), digits=3)
-
+                               alphaLevel)) 
 ```
 
 ## Full table (alpha = `r alphaLevel`)
@@ -748,7 +734,7 @@ DT::datatable(tests_number_of_series,
               caption = paste0("Number of time series (out of number of participants = 20) 
                                where H0 is rejected at p<", 
                                alphaLevel)) #%>%
-    # DT::formatRound(columns = colnames(test_results), digits=3)
+
 
 ```
 
@@ -764,7 +750,7 @@ DT::datatable(alphaLo_tests_number_of_series %>%
               caption = paste0("Number of time series (out of number of participants = 20) 
                                where H0 is rejected at p<", 
                                alphaLo %>% round(., 4))) #%>%
-    # DT::formatRound(columns = colnames(test_results), digits=3)
+
 
 ```
 
@@ -777,7 +763,7 @@ DT::datatable(alphaLo_tests_number_of_series,
               caption = paste0("Number of time series (out of number of participants = 20) 
                                where H0 is rejected at p<", 
                                alphaLo %>% round(., 4))) #%>%
-    # DT::formatRound(columns = colnames(test_results), digits=3)
+
 
 ```
 

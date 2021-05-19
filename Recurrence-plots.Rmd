@@ -196,7 +196,9 @@ emadata_nested_wrangled_both_withMeasures <- emadata_nested_wrangled_both %>%
 # cowplot::save_plot("./figures/rqa_biplot.png", rqa_plot, dpi = 300)
 ```
 
-While Figure above presents an auto-recurrence plot of a single time series, similar matrices can be used to represent the progression and recurrent states of entire systems over time: Recurrence plots are, in essence, visualisations of (Euclidean) distance matrices, and the distance in a cell can in principle be calculated for an arbitrary number of variables. Figure below presents actual data from one participant, where---instead of single values---the time points consist of configurations of six motivation-related variables (the same as in manuscript's Figure with the time-varying vector autoregressive model). The thresholding rule in the right panel of the plot is "preserve only 5% of the closest configurations", with closeness defined as proximity of coordinates in six-dimensional space. A visual inspection of Figure below shows that the recurrent states mostly happen in the second half of the study period. Quantifying patterns produced by recurrence plots, that is, deriving complexity measures from them, can tell important information about the system the data represents. 
+While Figure above presents an auto-recurrence plot of a single time series, similar matrices can be used to represent the progression and recurrent states of entire systems over time: Recurrence plots are, in essence, visualisations of distance matrices*, and the distance in a cell can in principle be calculated for an arbitrary number of variables. Figure below presents actual data from one participant, where---instead of single values---the time points consist of configurations of six motivation-related variables (the same as in manuscript's Figure with the time-varying vector autoregressive model). The thresholding rule in the right panel of the plot is "preserve only 5% of the closest configurations", with closeness defined as proximity of coordinates in six-dimensional space. A visual inspection of Figure below shows that the recurrent states mostly happen in the second half of the study period. Quantifying patterns produced by recurrence plots, that is, deriving complexity measures from them, can tell important information about the system the data represents. 
+
+*We used the Euclidean distance, which can be problematic under fat tails. But given that the analysis aims to unveil oft-recurring configurations instead of rare extreme ones, this is less of a concern: Extreme states would simply show up as unique or uncategorised in the analysis.
 
 ```{r rqa-biplot, fig.height = 3.71, fig.width = 6, fig.cap = "A 6-variable motivation system of a single participant. Panel A depicts an unthresholded distance matrix, where each cell represents a measurement occasion, with red colours indicating the value is close to the corresponding time point on the other axis, while blue colours indicate the contrary, and white implies an intermediate distance. Panel B is a recurrence plot, where this unthresholded plot has been binarised with the rule of retaining only 5% of the closest recurrences. Drawn with R package casnet."}
 
@@ -655,7 +657,8 @@ attractor_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
                                          dplyr::slice(-1) %>%  
                                          dplyr::group_by(previousone, nextone) %>% 
                                          dplyr::summarise(n = n()) %>% 
-                                         dplyr::mutate(freq = n / sum(n)) %>% 
+                                         dplyr::mutate(freq = ((n / sum(n)) * 100) %>% 
+                                                         round(., digits = 0)) %>% 
                                          dplyr::select(-n) %>%
                                          data.table::dcast(previousone ~ nextone)))
 
@@ -676,12 +679,16 @@ attractor_plots <- attractor_plots %>%
                                                     ggplot(aes(x = previousone,
                                                                y = nextone)) +
                                                     geom_tile(aes(fill = value),
-                                                              colour = "black") +
+                                                              colour = "black",
+                                                              size = 0.4) +
+                                                    # geom_text(aes(label = ifelse(is.na(value),
+                                                    #                              ".00",
+                                                    #                              (gsub("0\\.",
+                                                    #                                    "\\.",
+                                                    #                                    (sprintf("%.2f", value))))))) +
                                                     geom_text(aes(label = ifelse(is.na(value),
-                                                                                 ".00",
-                                                                                 (gsub("0\\.",
-                                                                                       "\\.",
-                                                                                       (sprintf("%.2f", value))))))) +
+                                                                                 "0",
+                                                                                 value))) +
                                                     scale_fill_gradient(low = "white", 
                                                                         high = "red", 
                                                                         na.value = "grey",
@@ -739,14 +746,15 @@ attractor_plots <- attractor_plots %>%
 relative_freq_network <- grid::rasterGrob(png::readPNG("./figures/transition_network_Moti_P10.png"), 
                                           interpolate = TRUE)
 
-knitr::include_graphics("./figures/transition_grid_network.png") 
-
 png(filename = "figures/transition_grid_network.png",
     height = 210*(2/3), width = 297, units = "mm", res = 300)
 cowplot::plot_grid(attractor_plots$relative_freqs_plots[[1]],
                                           relative_freq_network,
-                                          nrow = 1, labels = c("A", "B"))
+                                          nrow = 1, labels = c("A)", "B)"))
 dev.off()
+
+knitr::include_graphics("./figures/transition_grid_network.png") 
+
 ```
 
 ## Robustness to recurrence rate {.tabset}
@@ -3316,7 +3324,7 @@ In this robustness check, we perform the analysis using Chebyshev distance inste
 Here's the 6-dimensional motivation system's recurrence plot, weighted by similarity.
 
 ```{r firstlast-weighted-rr-distancemax}
-recurrence_rate <- 0.06
+recurrence_rate <- 0.05
 
 set.seed(100)
 

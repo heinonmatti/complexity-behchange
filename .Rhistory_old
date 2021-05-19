@@ -1,0 +1,512 @@
+scaleEdgeSize = 1/10,
+scaleVertexSize = c(1, 5),
+showSizeLegend = FALSE,
+sizeLabel = "Node strength",
+type = "Euler",
+# alphaE = 0.1
+# title = ..3
+)))
+# emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +
+#   theme(plot.margin=grid::unit(c(0,0,0,0), "mm"))
+# ggsave(filename = "./figures/recnetwork.png",
+#        width = 7,
+#        height = 7)
+# emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
+# Make pdf of plots
+plist <- emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs
+# plist <- plist %>% purrr::flatten()
+# pdf(file = "./surrogate_spiral_plots_needs.pdf",
+#     width = 11.69,
+#     height = 8.27)
+#
+# for (i in seq(1, length(plist), 4)) {
+#   gridExtra::grid.arrange(grobs = plist[i:(i+3)],
+#                ncol = 2, nrow = 2)
+# }
+#
+# dev.off()
+emadata_nested_wrangled_both_recnets_nodes_plots$spiralgraph_epochs[[1]] +
+ggtitle("Real data")
+userlist <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+dplyr::filter(stringr::str_detect(string = User,
+pattern = "surrogate")) %>%
+dplyr::pull(User)
+for(i in userlist){
+emadata_nested_wrangled_both_recnets_nodes_plots[emadata_nested_wrangled_both_recnets_nodes_plots$User == i, ]$spiralgraph_epochs[[1]] %>%
+show()
+cat('\n\n###', i, '\n\n  ')
+}
+### Attractor plot {.tabset}
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+dplyr::mutate(observations = purrr::map_dbl(.x = data_firstlast_divided_by_max,
+.f = ~nrow(.)))
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+dplyr::mutate(observations_daily = purrr::map_dbl(.x = data_firstlast_divided_by_max,
+.f = ~nrow(.)))
+emadata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+dplyr::mutate(
+attractor_plots =
+purrr::pmap(list(..1 = all_nodes_with_strengths,
+..2 = observations,
+..3 = observations_daily,
+..4 = User),
+.f = ~{
+dplyr::mutate(..1,
+strength_rescaled =
+scales::rescale(strength, to = c(0.3, 1.1)),
+alpha_strength = ifelse(strength_rescaled == 0.3,
+0.5,
+strength_rescaled)) %>%
+ggplot(data = .,
+aes(x = forcats::fct_rev(name),
+y = value,
+size = strength_rescaled,
+alpha = alpha_strength,
+color = attractors_n)) +
+scale_size_identity() +
+scale_alpha_identity() +
+geom_point(aes(alpha = alpha_strength)) +
+geom_line(aes(group = time,
+alpha = alpha_strength)) +
+scale_color_manual(values = c(viridisLite::plasma(4,
+end = 0.8,
+direction = -1),
+"gray40", "gray50")) +
+# scale_y_continuous(breaks = 0:1,
+#                    labels = 0:1,
+#                    minor_breaks = 0:1) + #scales::label_percent(accuracy = 1)) +
+theme_bw() +
+theme(legend.position = "none") +
+labs(y = NULL,
+x = NULL,
+title = paste0("Participant \"", ..4, "\" - based on ", ..2, " data points")) +
+facet_wrap(~attractors_n) +
+coord_flip(#ylim = c(0, 1)
+)
+}
+))
+emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots[[1]]
+# emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]]
+# Save this to be used for the task analysis later; otherwise overwritten by sensitivity analyses:
+firstlast_emadata_nested_wrangled_both_recnets_nodes_plots <-
+emadata_nested_wrangled_both_recnets_nodes_plots
+# cowplot::save_plot("./figures/attractors.png",
+#                    emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots[[1]],
+#                    dpi = 300,
+#                    base_height = 11.69/2)
+# # Make pdf of plots
+# plist <- purrr::map(emadata_nested_wrangled_both_recnets_nodes_plots$attractor_plots, ~ .x + theme(axis.text.y = element_blank(),
+#                                                                               axis.text.x = element_blank(),
+#                                                                               title = element_blank()))
+# # plist <- plist %>% purrr::flatten()
+#
+# pdf(file = "./surrogate_attractor_plots_motivations.pdf",
+#     width = 11.69,
+#     height = 8.27)
+#
+# # for (i in seq(1, length(plist), 6)) {
+#   gridExtra::grid.arrange(grobs = plist,
+#                ncol = 4, nrow = 5)
+# # }
+#
+# dev.off()
+### Here are the same plots for surrogate data:
+userlist <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+dplyr::filter(stringr::str_detect(string = User,
+pattern = "surrogate")) %>%
+dplyr::pull(User)
+for(i in userlist){
+emadata_nested_wrangled_both_recnets_nodes_plots[ emadata_nested_wrangled_both_recnets_nodes_plots$User == i, ]$attractor_plots[[1]] %>%
+print()
+cat('\n\n###', i, '\n\n  ')
+}
+# adata_nested_wrangled_both_recnets_nodes_plots <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+#   dplyr::mutate(
+#     attractor_plots =
+#       purrr::pmap(list(..1 = all_nodes_with_strengths,
+#                        ..2 = observations,
+#                        ..3 = observations_daily,
+#                        ..4 = User,
+#                        ..5 = max_connected_day,
+#                        ..6 = secondary_attractor_day,
+#                        ..7 = tertiary_attractor_day,
+#                        ..8 = fourth_attractor_day),
+#                   .f = ~{
+#                     dplyr::mutate(..1,
+#                                   strength_rescaled =
+#                                     scales::rescale(strength, to = c(0.3, 1.5)),
+#                                   alpha_strength = ifelse(strength_rescaled == 0.3,
+#                                                           0.5,
+#                                                           strength_rescaled)) %>%
+#                       dplyr::filter(time %in% c(..5, ..6, ..7, ..8)) %>%
+#                       dplyr::mutate(value = dplyr::case_when(
+#                         name == "Amotivation" | name == "Extrinsic" | name == "Introjected" ~
+#                           8 - value,
+#                         TRUE ~ value)) %>%
+#                       ggplot(data = .,
+#                              aes(x = forcats::fct_rev(name),
+#                                  y = value,
+#                                  size = strength_rescaled,
+#                                  alpha = alpha_strength,
+#                                  color = attractors_n)) +
+#                       scale_size_identity() +
+#                       scale_alpha_identity() +
+#                       geom_point(aes(alpha = alpha_strength)) +
+#                       geom_line(aes(group = time,
+#                                     alpha = alpha_strength)) +
+#                       scale_color_manual(values = c(viridisLite::plasma(4,
+#                                                                         end = 0.8,
+#                                                                         direction = -1),
+#                                                     "gray40", "gray50")) +
+#                       # scale_y_continuous(breaks = 0:1,
+#                       #                    labels = 0:1,
+#                       #                    minor_breaks = 0:1) + #scales::label_percent(accuracy = 1)) +
+#                       theme_bw() +
+#                       theme(legend.position = "none") +
+#                       labs(y = NULL,
+#                            x = NULL,
+#                            title = paste0("Participant \"", ..4, "\" - based on ", ..2, " data points")) +
+#                       # facet_wrap(~attractors_n) +
+#                       coord_flip(
+#                         ylim = c(0, 1)
+#                         )
+#                   }
+#       ))
+#
+# adata_nested_wrangled_both_recnets_nodes_plots$attractor_plots
+minmax_test <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+dplyr::mutate(minmax = purrr::map(.x = all_nodes_with_strengths,
+.f = ~.x %>%
+dplyr::group_by(name, attractors) %>%
+dplyr::mutate(min_or_max = dplyr::case_when(value == min(value) ~ "mini",
+value == max(value) ~ "maxi")) %>%
+dplyr::select(name, value, min_or_max, attractors) %>%
+dplyr::filter(!is.na(min_or_max)) %>%
+dplyr::distinct(value, .keep_all = TRUE) %>%
+tidyr::pivot_wider(names_from = min_or_max,
+values_from = value) %>%
+dplyr::arrange(attractors, name)))
+datalists <- emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[2:nrow(emadata_nested_wrangled_both_recnets_nodes_plots)]
+surrogate_data <-
+purrr::imap(.x = datalists, ~dplyr::mutate(.x,
+case = .y,
+time_case = paste0(time, "_", .y)) %>%
+dplyr::group_by(attractors) %>%
+dplyr::filter(strength == max(strength))) %>%
+dplyr::bind_rows()
+surrogate_data_all <-
+purrr::imap(.x = datalists, ~dplyr::mutate(.x,
+case = .y,
+time_case = paste0(time, "_", .y))) %>%
+dplyr::bind_rows()
+minmax_test$minmax[[1]] %>%
+ggplot(aes(x = forcats::fct_rev(name),
+color = attractors,
+group = attractors)) +
+geom_ribbon(data = minmax_test$minmax[[1]],
+aes(ymin = mini,
+ymax = maxi,
+fill = attractors),
+alpha = 1) +
+geom_line(data = surrogate_data_all,
+# combined_data %>%
+# tidyr::pivot_longer(cols = c(interest, pleasure, importance,
+#                              situation_requires, anxiety_guilt_avoidance, another_wants)) %>%
+# dplyr::filter(within_bounds == "Surrogates within bounds"),
+aes(y = value,
+x = forcats::fct_rev(name),
+group = time_case),
+alpha = 0.05,
+size = 0.75,
+colour = "grey") +
+scale_fill_manual(values = c(viridisLite::plasma(4,
+end = 0.8,
+direction = -1),
+"gray40", "gray50")) +
+scale_color_manual(values = c(viridisLite::plasma(4,
+end = 0.8,
+direction = -1),
+"gray40", "gray50")) +
+coord_flip(ylim = c(0, 1)) +
+theme_bw() +
+theme(legend.position = "none") +
+labs(y = NULL,
+x = NULL) +
+facet_wrap(~attractors)
+attractor_prevalence_table_1 <- surrogate_data_all %>%
+# dplyr::group_by(attractors) %>%
+dplyr::count(attractors,
+name = "n in surrogates") %>%
+dplyr::mutate(`Proportion in surrogates` = (`n in surrogates`/sum(`n in surrogates`)) %>%
+round(., digits = 2))
+attractor_prevalence_table2 <- emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]] %>%
+tidyr::pivot_wider(names_from = name,
+values_from = value) %>%
+dplyr::count(attractors, name = "n in real data") %>%
+dplyr::mutate(`Proportion in real data` = (`n in real data`/sum(`n in real data`)) %>%
+round(., digits = 2)) %>%
+dplyr::select(-attractors)
+dplyr::bind_cols(attractor_prevalence_table_1, attractor_prevalence_table2) %>%
+knitr::kable()
+surrogate_data_all %>%
+dplyr::group_by(attractors, case) %>%
+tidyr::pivot_wider(names_from = name,
+values_from = value) %>%
+dplyr::summarise(`n in surrogates` = n()) %>%
+dplyr::group_by(case) %>%
+dplyr::mutate(`Proportion in surrogates` = (`n in surrogates`/sum(`n in surrogates`)) %>%
+round(., digits = 2)) %>%
+dplyr::group_by(attractors) %>%
+dplyr::summarise(`Min proportion in surrogates`= min(`Proportion in surrogates`),
+`Max proportion in surrogates`= max(`Proportion in surrogates`)) %>%
+dplyr::bind_cols(., attractor_prevalence_table2) %>%
+knitr::kable()
+surrogate_data_all_cleaned <- surrogate_data_all %>%
+dplyr::select(time, name, value, case, time_case, attractors, strength) %>%
+tidyr::pivot_wider(names_from = name,
+values_from = value)
+real_data <- minmax_test$minmax[[1]] %>%
+tidyr::pivot_wider(names_from = name,
+values_from = c(mini, maxi),
+)
+combined_data <- dplyr::full_join(surrogate_data_all_cleaned, real_data, by = "attractors") %>%
+rowwise() %>%
+dplyr::mutate(within_bounds = dplyr::case_when(pleasure <= maxi_pleasure &
+pleasure >= mini_pleasure &
+interest <= maxi_interest &
+interest >= mini_interest &
+importance <= maxi_importance &
+importance >= mini_importance &
+situation_requires <= maxi_situation_requires &
+situation_requires >= mini_situation_requires &
+anxiety_guilt_avoidance <= maxi_anxiety_guilt_avoidance &
+anxiety_guilt_avoidance >= mini_anxiety_guilt_avoidance &
+another_wants <= maxi_another_wants &
+another_wants >= mini_another_wants ~ "Surrogates within bounds",
+TRUE ~ "Surrogates out of bounds"))
+combined_data %>%
+dplyr::count(within_bounds, attractors) %>%
+# dplyr::tally() %>%
+tidyr::pivot_wider(names_from = within_bounds,
+values_from = n,
+values_fill = 0) %>%
+dplyr::rename(Attractor = attractors) %>%
+dplyr::mutate(`Proportion within bounds` = (`Surrogates within bounds` /
+(`Surrogates within bounds` + `Surrogates out of bounds`)) %>%
+round(., digits = 2)) %>%
+knitr::kable()
+strength_degree <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+dplyr::mutate(strength_degree_data = purrr::map(.x = all_nodes_with_strengths,
+.f = ~.x %>%
+dplyr::group_by(time) %>%
+dplyr::slice(1) %>%
+dplyr::ungroup() %>%
+dplyr::select(strength,
+degree)),
+spearman_strength_degree = purrr::map(.x = strength_degree_data,
+.f= ~cor(.x, method = "pearson")[2] %>%
+round(., digits = 4)),
+strength_degree_plot = purrr::pmap(list(..1 = strength_degree_data,
+..2 = User,
+..3 = spearman_strength_degree),
+.f = ~.x %>%
+ggplot(aes(x = strength,
+y = degree)) +
+geom_point() +
+theme_bw() +
+labs(title = ..2,
+caption = paste0("Spearman correlation: ", ..3))))
+# strength_degree$strength_degree_plot
+strength_degree <- strength_degree %>%
+dplyr::mutate(strength_degree_densitydata =
+purrr::map2(.x = User,
+.y = strength_degree_data,
+.f = ~.y %>%
+dplyr::mutate(User = .x,
+surrogate = dplyr::case_when(stringr::str_detect(
+string = User,
+pattern = "surrogate") ~ "Surrogate",
+TRUE ~ "Real"),
+time = dplyr::row_number())))
+densitydata <- strength_degree$strength_degree_densitydata %>%
+dplyr::bind_rows() %>%
+tidyr::pivot_longer(cols = c(strength, degree))
+#
+# densitydata %>%
+#   ggplot(aes(x = value,
+#              fill = surrogate,
+#              group = User)) +
+#     geom_density(data = densitydata %>% dplyr::filter(surrogate == "Surrogate"),
+#                  alpha = 0.1) +
+#     geom_density(data = densitydata %>% dplyr::filter(surrogate == "Real"),
+#                  alpha = 0.5) +
+#   guides(color = FALSE) +
+#   labs(x = NULL) +
+#   theme_bw() +
+#   theme(legend.title = element_blank()) +
+#     facet_wrap(~name, scales = "free")
+#
+# densitydata %>%
+#   dplyr::group_by(surrogate, time, name) %>%
+#   dplyr::summarise(maxi = max(value),
+#                    mini = min(value)) %>%
+#   ggplot(aes(x = time),
+#          fill = surrogate) +
+#   geom_ribbon(aes(ymin = mini,
+#                   ymax = maxi,
+#                   fill = surrogate),
+#               alpha = 0.1) +
+#   geom_line(aes(y = maxi,
+#                 colour = surrogate)) +
+#   geom_line(aes(y = mini,
+#                 colour = surrogate)) +
+#   labs(y = NULL,
+#        x = "time") +
+#   guides(surrogate = FALSE) +
+#   facet_wrap(~name) +
+#   theme_bw()
+userlist <- purrr::map_chr(strength_degree[["strength_degree_densitydata"]],
+~.x %>%
+dplyr::distinct(User) %>%
+dplyr::pull()) %>%
+expand.grid(., .) %>%
+dplyr::rename(Data1 = Var1,
+Data2 = Var2)
+kld_list_degree <- purrr::map(strength_degree[["strength_degree_densitydata"]],
+~.x %>% dplyr::pull(degree)) %>%
+expand.grid(., .) %>%
+mutate(out = map2_dbl(.x = Var1, .y = Var2,
+.f = ~LaplacesDemon::KLD(px = .x,
+py = .y)$mean.sum.KLD)) %>%
+as_tibble()
+dplyr::bind_cols(userlist, kld_list_degree) %>%
+dplyr::group_by(Data1) %>%
+dplyr::summarise(mean_out = mean(out)) %>%
+dplyr::mutate(User = Data1,
+surrogate = dplyr::case_when(stringr::str_detect(string = User,
+pattern = "surrogate") ~ "Surrogate datasets",
+TRUE ~ "Real dataset")) %>%
+ggplot(aes(y = mean_out,
+x = User)) +
+geom_point() +
+geom_segment(aes(y = 0,
+x = User,
+yend = mean_out,
+xend = User),
+color = "black") +
+# geom_vline(xintercept = 1.5) +
+theme_bw() +
+labs(x = NULL,
+y = NULL,
+title = "Degree divergence",
+caption = "Values indicate a dataset's mean Kullback-Leibler divergence from distributions of all other datasets") +
+theme(panel.grid.minor.x = element_blank(),
+panel.grid.major.x = element_blank(),
+axis.ticks.x = element_blank(),
+axis.text.x = element_blank()) +
+facet_grid(~surrogate, scales = "free_x")
+kld_list_strength <- purrr::map(strength_degree[["strength_degree_densitydata"]],
+~.x %>% dplyr::pull(strength)) %>%
+expand.grid(., .) %>%
+mutate(out = map2_dbl(.x = Var1, .y = Var2,
+.f = ~LaplacesDemon::KLD(px = .x,
+py = .y)$mean.sum.KLD)) %>%
+as_tibble()
+dplyr::bind_cols(userlist, kld_list_strength) %>%
+dplyr::group_by(Data1) %>%
+dplyr::summarise(mean_out = mean(out)) %>%
+dplyr::mutate(User = Data1,
+surrogate = dplyr::case_when(stringr::str_detect(string = User,
+pattern = "surrogate") ~ "Surrogate datasets",
+TRUE ~ "Real dataset")) %>%
+ggplot(aes(y = mean_out,
+x = User)) +
+geom_point() +
+geom_segment(aes(y = 0,
+x = User,
+yend = mean_out,
+xend = User),
+color = "black") +
+# geom_vline(xintercept = 1.5) +
+theme_bw() +
+labs(x = NULL,
+y = NULL,
+title = "Strength divergence",
+caption = "Values indicate a dataset's mean Kullback-Leibler divergence from distributions of all other datasets") +
+theme(panel.grid.minor.x = element_blank(),
+panel.grid.major.x = element_blank(),
+axis.ticks.x = element_blank(),
+axis.text.x = element_blank()) +
+facet_grid(~surrogate, scales = "free_x")
+purrr::map(emadata_nested_wrangled_both_recnets$RN,
+~ base::attr(., "emRad") %>%
+tibble::as_tibble()) %>%
+dplyr::bind_rows() %>%
+dplyr::mutate(User = emadata_nested_wrangled_both_recnets$User,
+surrogate = dplyr::case_when(stringr::str_detect(
+string = User,
+pattern = "surrogate") ~ "Surrogate datasets",
+TRUE ~ "Real dataset")) %>%
+ggplot(aes(y = value,
+x = User)) +
+geom_point() +
+geom_segment(aes(y = 0,
+x = User,
+yend = value,
+xend = User),
+color = "black") +
+# geom_vline(xintercept = 1.5) +
+theme_bw() +
+labs(x = NULL,
+y = NULL,
+title = "Radius required to produce 5% recurrence rate") +
+theme(panel.grid.minor.x = element_blank(),
+panel.grid.major.x = element_blank(),
+axis.ticks.x = element_blank(),
+axis.text.x = element_blank()) +
+facet_grid(~surrogate, scales = "free_x")
+# facet_wrap(~surrogate)
+devtools::session_info()
+pander::pander(sessionInfo())
+emadata_nested_wrangled_both_recnets_nodes_plots$all_nodes_with_strengths[[1]] %>%
+rowwise() %>%
+dplyr::transmute(attractor_connections_true = sum(connecting_to_strongest,
+connecting_to_2nd_strongest,
+connecting_to_3rd_strongest,
+connecting_to_4th_strongest)) %>%
+table()
+df <- emadata_nested_wrangled_both_recnets_nodes_plots %>%
+dplyr::mutate(attractor_sums = purrr::map_df(.x = all_nodes_with_strengths,
+.f = ~.x %>%
+rowwise() %>%
+dplyr::transmute(attractor_connections_true = sum(connecting_to_strongest,
+connecting_to_2nd_strongest,
+connecting_to_3rd_strongest,
+connecting_to_4th_strongest)) %>%
+table()))
+df$attractor_sums
+install.packages("papaja")
+install.packages("papaja")
+install.packages("papaja")
+rmarkdown::render(input = "_complexity-manuscript.Rmd", output_format = "papaja::apa7_word", encoding = "UTF-8")
+devtools::install_github("crsh/papaja")
+devtools::install_github("crsh/papaja")
+install.packages(c("backports", "bayestestR", "behaviorchange", "BFpack", "BGGM", "BH", "brio", "broom", "caTools", "clue", "colorspace", "cowplot", "cpp11", "crosstalk", "data.table", "DBI", "dbplyr", "desc", "DescTools", "DiceDesign", "diffobj", "dplyr", "DT", "e1071", "effectsize", "emmeans", "expm", "FactoMineR", "farver", "fastmap", "FatTailsR", "fdrtool", "fitdistrplus", "forcats", "forecast", "FSA", "furrr", "gdtools", "GGally", "ggeffects", "ggforce", "ggplot2", "ggraph", "ggrepel", "ggridges", "ggsignif", "ggstance", "ggtext", "git2r", "gitcreds", "glmnet", "gplots", "greybox", "gridGraphics", "gridtext", "hexbin", "Hmisc", "hms", "htmltools", "htmlwidgets", "httpuv", "ifultools", "imager", "imputeTS", "infer", "insight", "ipred", "isoband", "jsonlite", "kableExtra", "knitr", "labelled", "lamW", "lava", "lavaan", "lifecycle", "lme4", "lubridate", "magick", "maptools", "mathjaxr", "MatrixModels", "matrixStats", "memoise", "mgm", "mice", "parallelly", "parameters", "Pareto", "parsnip", "patchwork", "pbkrtest", "performance", "pixmap", "pkgbuild", "pkgload", "plotly", "plotrix", "pracma", "pROC", "processx", "promises", "proxy", "ps", "psych", "qgraph", "quantmod", "quantreg", "rayimage", "Rcpp", "RcppArmadillo", "RcppEigen", "RcppParallel", "RcppThread", "RCurl", "Rdpack", "reprex", "rgl", "RHRV", "rio", "rlang", "rmarkdown", "RNifti", "rsample", "rstatix", "rticles", "rvest", "shiny", "sjmisc", "sjPlot", "sjstats", "smooth", "sp", "SparseM", "splus2R", "SQUAREM", "systemfonts", "testthat", "tibble", "tidyr", "tiff", "tinytex", "tkrplot", "tseries", "tune", "ufs", "usethis", "utf8", "waldo", "vctrs", "vistime", "withr", "workflows", "XML", "zoo"))
+install.packages(c("backports", "bayestestR", "behaviorchange", "BFpack", "BGGM", "BH", "brio", "broom", "caTools", "clue", "colorspace", "cowplot", "cpp11", "crosstalk", "data.table", "DBI", "dbplyr", "desc", "DescTools", "DiceDesign", "diffobj", "dplyr", "DT", "e1071", "effectsize", "emmeans", "expm", "FactoMineR", "farver", "fastmap", "FatTailsR", "fdrtool", "fitdistrplus", "forcats", "forecast", "FSA", "furrr", "gdtools", "GGally", "ggeffects", "ggforce", "ggplot2", "ggraph", "ggrepel", "ggridges", "ggsignif", "ggstance", "ggtext", "git2r", "gitcreds", "glmnet", "gplots", "greybox", "gridGraphics", "gridtext", "hexbin", "Hmisc", "hms", "htmltools", "htmlwidgets", "httpuv", "ifultools", "imager", "imputeTS", "infer", "insight", "ipred", "isoband", "jsonlite", "kableExtra", "knitr", "labelled", "lamW", "lava", "lavaan", "lifecycle", "lme4", "lubridate", "magick", "maptools", "mathjaxr", "MatrixModels", "matrixStats", "memoise", "mgm", "mice", "parallelly", "parameters", "Pareto", "parsnip", "patchwork", "pbkrtest", "performance", "pixmap", "pkgbuild", "pkgload", "plotly", "plotrix", "pracma", "pROC", "processx", "promises", "proxy", "ps", "psych", "qgraph", "quantmod", "quantreg", "rayimage", "Rcpp", "RcppArmadillo", "RcppEigen", "RcppParallel", "RcppThread", "RCurl", "Rdpack", "reprex", "rgl", "RHRV", "rio", "rlang", "rmarkdown", "RNifti", "rsample", "rstatix", "rticles", "rvest", "shiny", "sjmisc", "sjPlot", "sjstats", "smooth", "sp", "SparseM", "splus2R", "SQUAREM", "systemfonts", "testthat", "tibble", "tidyr", "tiff", "tinytex", "tkrplot", "tseries", "tune", "ufs", "usethis", "utf8", "waldo", "vctrs", "vistime", "withr", "workflows", "XML", "zoo"))
+install.packages(c("backports", "bayestestR", "behaviorchange", "BFpack", "BGGM", "BH", "brio", "broom", "caTools", "clue", "colorspace", "cowplot", "cpp11", "crosstalk", "data.table", "DBI", "dbplyr", "desc", "DescTools", "DiceDesign", "diffobj", "dplyr", "DT", "e1071", "effectsize", "emmeans", "expm", "FactoMineR", "farver", "fastmap", "FatTailsR", "fdrtool", "fitdistrplus", "forcats", "forecast", "FSA", "furrr", "gdtools", "GGally", "ggeffects", "ggforce", "ggplot2", "ggraph", "ggrepel", "ggridges", "ggsignif", "ggstance", "ggtext", "git2r", "gitcreds", "glmnet", "gplots", "greybox", "gridGraphics", "gridtext", "hexbin", "Hmisc", "hms", "htmltools", "htmlwidgets", "httpuv", "ifultools", "imager", "imputeTS", "infer", "insight", "ipred", "isoband", "jsonlite", "kableExtra", "knitr", "labelled", "lamW", "lava", "lavaan", "lifecycle", "lme4", "lubridate", "magick", "maptools", "mathjaxr", "MatrixModels", "matrixStats", "memoise", "mgm", "mice", "parallelly", "parameters", "Pareto", "parsnip", "patchwork", "pbkrtest", "performance", "pixmap", "pkgbuild", "pkgload", "plotly", "plotrix", "pracma", "pROC", "processx", "promises", "proxy", "ps", "psych", "qgraph", "quantmod", "quantreg", "rayimage", "Rcpp", "RcppArmadillo", "RcppEigen", "RcppParallel", "RcppThread", "RCurl", "Rdpack", "reprex", "rgl", "RHRV", "rio", "rlang", "rmarkdown", "RNifti", "rsample", "rstatix", "rticles", "rvest", "shiny", "sjmisc", "sjPlot", "sjstats", "smooth", "sp", "SparseM", "splus2R", "SQUAREM", "systemfonts", "testthat", "tibble", "tidyr", "tiff", "tinytex", "tkrplot", "tseries", "tune", "ufs", "usethis", "utf8", "waldo", "vctrs", "vistime", "withr", "workflows", "XML", "zoo"))
+install.packages(c("backports", "bayestestR", "behaviorchange", "BFpack", "BGGM", "BH", "brio", "broom", "caTools", "clue", "colorspace", "cowplot", "cpp11", "crosstalk", "data.table", "DBI", "dbplyr", "desc", "DescTools", "DiceDesign", "diffobj", "dplyr", "DT", "e1071", "effectsize", "emmeans", "expm", "FactoMineR", "farver", "fastmap", "FatTailsR", "fdrtool", "fitdistrplus", "forcats", "forecast", "FSA", "furrr", "gdtools", "GGally", "ggeffects", "ggforce", "ggplot2", "ggraph", "ggrepel", "ggridges", "ggsignif", "ggstance", "ggtext", "git2r", "gitcreds", "glmnet", "gplots", "greybox", "gridGraphics", "gridtext", "hexbin", "Hmisc", "hms", "htmltools", "htmlwidgets", "httpuv", "ifultools", "imager", "imputeTS", "infer", "insight", "ipred", "isoband", "jsonlite", "kableExtra", "knitr", "labelled", "lamW", "lava", "lavaan", "lifecycle", "lme4", "lubridate", "magick", "maptools", "mathjaxr", "MatrixModels", "matrixStats", "memoise", "mgm", "mice", "parallelly", "parameters", "Pareto", "parsnip", "patchwork", "pbkrtest", "performance", "pixmap", "pkgbuild", "pkgload", "plotly", "plotrix", "pracma", "pROC", "processx", "promises", "proxy", "ps", "psych", "qgraph", "quantmod", "quantreg", "rayimage", "Rcpp", "RcppArmadillo", "RcppEigen", "RcppParallel", "RcppThread", "RCurl", "Rdpack", "reprex", "rgl", "RHRV", "rio", "rlang", "rmarkdown", "RNifti", "rsample", "rstatix", "rticles", "rvest", "shiny", "sjmisc", "sjPlot", "sjstats", "smooth", "sp", "SparseM", "splus2R", "SQUAREM", "systemfonts", "testthat", "tibble", "tidyr", "tiff", "tinytex", "tkrplot", "tseries", "tune", "ufs", "usethis", "utf8", "waldo", "vctrs", "vistime", "withr", "workflows", "XML", "zoo"))
+devtools::install_github("crsh/papaja")
+rmarkdown::render(input = "_complexity-manuscript.Rmd", output_format = "papaja::apa6_word", encoding = "UTF-8")
+devtools::install_github("crsh/papaja")
+devtools::install_github("crsh/papaja")
+install.packages("rlanfg")
+install.packages("rlang")
+devtools::install_github("crsh/papaja")
+?papaja
+rmarkdown::render(input = "_complexity-manuscript.Rmd", output_format = "papaja::apa6_word", encoding = "UTF-8")
+?papaja::apa
+rmarkdown::render(input = "_complexity-manuscript.Rmd", output_format = "papaja::apa6_word", encoding = "UTF-8")
+rmarkdown::render(input = "_complexity-manuscript.Rmd", output_format = "papaja::apa6_word", encoding = "UTF-8")
+rmarkdown::render(input = "_complexity-manuscript.Rmd", output_format = "papaja::apa6_word", encoding = "UTF-8")
+warnings()
+sessionInfo()
