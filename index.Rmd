@@ -8,8 +8,8 @@ title: "Complexity index"
 This site is a companion web page to a manuscript about studying behaviour change mechanisms in complex systems. See top bar for navigation.
 
 * GitHub repository for the files can be found [here](https://github.com/heinonmatti/complexity-behchange).  
-* The manuscript can be found [here](https://psyarxiv.com/fxgw4).
-* Manuscript source code can be found [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/_complexity-manuscript.Rmd).
+* The manuscript can be found [here](https://www.mdpi.com/2076-328X/11/5/77) and an earlier preprint version [here](https://psyarxiv.com/fxgw4).
+* Preprint source code can be found [here](https://raw.githubusercontent.com/heinonmatti/complexity-behchange/master/_complexity-manuscript.Rmd).
 
 Additional learning materials:
 
